@@ -1,3 +1,280 @@
----
-layout: default
----
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대한민국 인공지능 행동계획 상세 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 모달 팝업 애니메이션 */
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <header class="bg-indigo-900 text-white py-6 shadow-lg">
+        <div class="container mx-auto px-6">
+            <h1 class="text-3xl font-extrabold tracking-tight">대한민국 인공지능 행동계획 대시보드</h1>
+            <p class="mt-2 text-indigo-200">2026~2028 국가인공지능전략위원회 핵심 과제 99선 현황판</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 flex flex-col justify-center">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">총 정책 축</h2>
+                    <p class="text-4xl font-bold text-slate-800 mt-2">3<span class="text-lg font-normal text-slate-400">개</span></p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500 flex flex-col justify-center">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">12대 전략 분야</h2>
+                    <p class="text-4xl font-bold text-slate-800 mt-2">12<span class="text-lg font-normal text-slate-400">개</span></p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500 flex flex-col justify-center">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">세부 추진 과제</h2>
+                    <p class="text-4xl font-bold text-slate-800 mt-2 text-purple-600">99<span class="text-lg font-normal text-slate-400">개</span></p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center justify-center border border-slate-100">
+                <h3 class="text-sm font-semibold text-slate-600 mb-2">정책 축별 과제 비중</h3>
+                <div class="relative w-48 h-48">
+                    <canvas id="taskChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+            상세 전략 분야 (클릭하여 세부과제 확인)
+        </h2>
+        
+        <div id="policy-container" class="space-y-8">
+            </div>
+
+    </main>
+
+    <div id="task-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col modal-enter">
+            <div id="modal-header" class="px-6 py-4 border-b rounded-t-xl flex justify-between items-center text-white">
+                <h3 id="modal-title" class="text-xl font-bold">전략 분야</h3>
+                <button onclick="closeModal()" class="text-white hover:text-gray-200 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-sm text-slate-500 mb-4 pb-2 border-b">해당 분야의 세부 과제 목록입니다.</p>
+                <ul id="modal-list" class="space-y-3">
+                    </ul>
+            </div>
+            <div class="px-6 py-4 border-t bg-slate-50 rounded-b-xl flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-800 text-slate-400 py-6 mt-12 text-center text-sm">
+        <p>본 대시보드는 2026. 2. 25 발표된 '대한민국 인공지능 행동계획'을 바탕으로 제작되었습니다.</p>
+    </footer>
+
+    <script>
+        // 대한민국 인공지능 행동계획 데이터 구조화
+        const policyData = [
+            {
+                axis: "I. AI 혁신 생태계 조성",
+                desc: "인프라 확충, 초거대 모델 선점 및 규제 혁신",
+                color: "blue",
+                bgColor: "bg-blue-50",
+                borderColor: "border-blue-200",
+                titleColor: "text-blue-900",
+                areas: [
+                    { title: "1. AI 고속도로 구축", tasks: ["GPU, NPU 등 핵심 AI 컴퓨팅 인프라 확충", "지속가능한 AI 데이터센터 생태계 구축", "AI 서비스 기반 고도화를 통한 접근성 제고", "국가데이터 통합플랫폼 기반 민간·공공 데이터 연계", "AI 데이터 공유 생태계 활성화", "보건의료 AI 고도화 학습데이터 확충", "국가 과학 AI 통합 인프라 구축", "국가 AI·데이터 거버넌스 정립", "민간·공공 AI 보안 생태계 활성화", "AI 기반 사이버 보안 체계 구축", "넥스트 AI 안보 위협 대응 및 협력"] },
+                    { title: "2. 차세대 AI기술 선점", tasks: ["피지컬AI, 휴머노이드, AI 반도체 차세대 기술 확보", "(가칭)국가 초지능 연구소 설립", "기초과학 및 전략 과학기술 분야 AI 혁신"] },
+                    { title: "3. AI 핵심인재 확보", tasks: ["AI시대 국가교육 체계 혁신 실행계획 수립", "초중등 국가 교육과정 및 교과서 체제 재구조화", "연속적인 디지털·AI 교육 필수 이수", "초중등 AI 실습 교육 플랫폼 구축", "평가 제도 및 입시 제도 혁신", "AI시대 교사 양성 및 연수체계 혁신", "정보 교사 임용 확대 및 교원 전문성 강화", "AI영재교육 체계 재설계", "대학 및 대학원 AI 인재 양성", "산업 AX 역량 제고를 위한 인재 양성", "최고 수준 AI 전문가 유지 및 유치", "AI 인재 경력 단절 해소"] },
+                    { title: "4. AI 모델 확보", tasks: ["범용 AI파운데이션 모델 확보", "산업별 수요 기반 AI 파운데이션 모델 확보", "핵심 과학 분야 AI 기반 모델 확보", "보건의료 특화 AI파운데이션 모델 확보"] },
+                    { title: "5. AI 규제혁신", tasks: ["개인정보·미개방 산업 데이터 활용 규제 정비", "저작물 활용 및 유통 생태계 활성화", "규제 합리화 AI 산업생태계 조성", "국가 AI 대전환 뒷받침 AI 법제 환경 조성", "스타트업·중소기업 공정 성장 생태계 조성"] }
+                ]
+            },
+            {
+                axis: "II. 범국가 AI기반 대전환",
+                desc: "산업, 공공, 지역, 국방 등 국가 체계 전면 혁신",
+                color: "emerald",
+                bgColor: "bg-emerald-50",
+                borderColor: "border-emerald-200",
+                titleColor: "text-emerald-900",
+                areas: [
+                    { title: "6. 산업 AX", tasks: ["산업별 AI 에이전트 개발 및 수요 발굴", "제조 AI 2030 전략 수립", "자율주행 차량 중심 교통·물류 전환", "바이오·헬스 5대 강국 도약", "금융산업 혁신성장 및 대전환", "자율운항 선박/수산업 혁신", "기후 위기 대응 및 지속가능 에너지", "농산업의 AI 대전환", "AI 가치평가 체계 확립", "150조원+ 국민 성장 펀드 조성", "AX 스프린트 프로젝트", "AI 바우처를 통한 초기 시장 창출", "한국형 AI 풀스택 수출 전략", "AI 데카콘 기업 육성"] },
+                    { title: "7. 공공 AX", tasks: ["AI-Native 공무원 협업체계", "AI 업무관리 플랫폼 구축", "공공 정보화 사업 클라우드 전환", "공공분야 AI챔피언 양성", "공공 AI 영향평가", "공공부문 AI 윤리기준 마련", "적극행정 인센티브 및 면책", "성과 평가 시행", "최고의 대국민 서비스 제공", "투명성 증대 공공데이터 공개", "AI 보조교사 도입 및 교육행정 혁신", "공공시장의 AI 테스트베드화", "K-Gov AX 모델 글로벌 확산", "공공AX 거버넌스 구축", "디지털 포용성 확대"] },
+                    { title: "8. 지역 AX", tasks: ["5극 3특 K-AI 특화 시범도시 육성", "권역별 성장엔진 기반 AX 혁신 벨트", "지역 산단 인프라 거점 탈바꿈", "지역 AX 기업 육성 및 창업 강화", "수요 맞춤형 인재 순환 생태계 조성"] },
+                    { title: "9. AI기반 문화강국", tasks: ["콘텐츠 창작 지원체계 구축", "K-컬처 산업 AX 활성화 지원", "문화콘텐츠 지속성장 가능성 확보", "K-콘텐츠/K-AI 동반 해외 진출"] },
+                    { title: "10. AI기반 국방강국", tasks: ["국방 AI 추진체계 재설계", "획득 제도 개편", "데이터/클라우드 기반 민군 협력", "군 간부 AI 학위과정 확대", "국방 AI 보안 역량 강화", "스마트 강군으로의 전환", "방산수출 4대 강국 진입"] }
+                ]
+            },
+            {
+                axis: "III. 글로벌 AI 기본사회 기여",
+                desc: "포용적 AI 복지 및 글로벌 거버넌스 주도",
+                color: "purple",
+                bgColor: "bg-purple-50",
+                borderColor: "border-purple-200",
+                titleColor: "text-purple-900",
+                areas: [
+                    { title: "11. AI 기본사회 실현", tasks: ["모두를 위한 AI 기본사회 추진계획", "추진 거버넌스 마련", "AI 윤리 확산·고도화", "AI 공론장 설계 및 운영", "모두의 AI 실험실 구축", "글로벌 얼라이언스 구성", "생애 경제 통합 전략 마련", "일자리 혁신 및 현장 역량 강화", "복지·돌봄의 접근성 확대", "AI 기본 의료의 구현", "AI 범죄 근절 및 대응 역량 강화", "포용적 금융안전망 구축", "전 국민 AI 역량 대전환", "교육격차 해소 지원체계 강화", "AI 교육정책 연구체계 구축", "교육 AI서비스 평가/확산체계 구축"] },
+                    { title: "12. 글로벌 AI 이니셔티브", tasks: ["글로벌 사회 기여 AI 이니셔티브", "전략적 글로벌 AI 협력체계 구축", "선도형 글로벌 AI 안전 거버넌스 구축"] }
+                ]
+            }
+        ];
+
+        // 색상 맵핑 유틸리티
+        const colorClasses = {
+            blue: { bgHover: 'hover:bg-blue-50', borderFocus: 'focus:border-blue-500', headerBg: 'bg-blue-600', icon: 'text-blue-500' },
+            emerald: { bgHover: 'hover:bg-emerald-50', borderFocus: 'focus:border-emerald-500', headerBg: 'bg-emerald-600', icon: 'text-emerald-500' },
+            purple: { bgHover: 'hover:bg-purple-50', borderFocus: 'focus:border-purple-500', headerBg: 'bg-purple-600', icon: 'text-purple-500' }
+        };
+
+        // 화면 렌더링 함수
+        function renderDashboard() {
+            const container = document.getElementById('policy-container');
+            
+            policyData.forEach((axisData) => {
+                const colors = colorClasses[axisData.color];
+                
+                // 축 컨테이너 생성
+                const axisDiv = document.createElement('div');
+                axisDiv.className = `bg-white rounded-xl shadow-sm overflow-hidden border ${axisData.borderColor}`;
+                
+                // 축 헤더
+                const headerHtml = `
+                    <div class="${axisData.bgColor} px-6 py-4 border-b ${axisData.borderColor}">
+                        <h3 class="text-xl font-bold ${axisData.titleColor}">${axisData.axis}</h3>
+                        <p class="text-sm text-slate-600 mt-1">${axisData.desc}</p>
+                    </div>
+                `;
+                
+                // 전략 분야 카드들
+                let areasHtml = `<div class="p-6"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                
+                axisData.areas.forEach((area) => {
+                    const taskCount = area.tasks.length;
+                    // 객체를 JSON 문자열로 변환하여 onclick 함수에 전달
+                    const areaJson = encodeURIComponent(JSON.stringify(area));
+                    const colorKey = axisData.color;
+                    
+                    areasHtml += `
+                        <div onclick="openModal('${areaJson}', '${colorKey}')" 
+                             class="p-5 bg-white rounded-xl border border-slate-200 cursor-pointer transition-all duration-200 ${colors.bgHover} hover:shadow-md hover:-translate-y-1 group">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-slate-800 group-hover:${axisData.titleColor} transition-colors">${area.title}</h4>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${axisData.bgColor} ${axisData.titleColor}">
+                                    ${taskCount}과제
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2 flex items-center">
+                                상세 보기 <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </p>
+                        </div>
+                    `;
+                });
+                areasHtml += `</div></div>`;
+                
+                axisDiv.innerHTML = headerHtml + areasHtml;
+                container.appendChild(axisDiv);
+            });
+        }
+
+        // 모달 열기
+        function openModal(areaJsonStr, colorKey) {
+            const area = JSON.parse(decodeURIComponent(areaJsonStr));
+            const modal = document.getElementById('task-modal');
+            const header = document.getElementById('modal-header');
+            const title = document.getElementById('modal-title');
+            const list = document.getElementById('modal-list');
+            
+            // 헤더 색상 설정
+            header.className = `px-6 py-4 border-b rounded-t-xl flex justify-between items-center text-white ${colorClasses[colorKey].headerBg}`;
+            
+            title.textContent = area.title;
+            
+            // 과제 리스트 렌더링
+            list.innerHTML = '';
+            area.tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = "flex items-start p-3 bg-slate-50 rounded-lg border border-slate-100";
+                li.innerHTML = `
+                    <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-white border border-slate-200 rounded-full text-xs font-bold ${colorClasses[colorKey].icon} mr-3 shadow-sm">${index + 1}</span>
+                    <span class="text-slate-700 font-medium leading-tight pt-0.5">${task}</span>
+                `;
+                list.appendChild(li);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+        }
+
+        // 모달 바깥 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('task-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // 차트 렌더링
+        function initChart() {
+            const ctx = document.getElementById('taskChart').getContext('2d');
+            
+            // 축별 과제 수 계산
+            const dataCounts = policyData.map(axis => 
+                axis.areas.reduce((sum, area) => sum + area.tasks.length, 0)
+            );
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AI 혁신 생태계', '범국가 대전환', '글로벌 AI 기본사회'],
+                    datasets: [{
+                        data: dataCounts, // [35, 45, 19]
+                        backgroundColor: [
+                            '#3b82f6', // blue-500
+                            '#10b981', // emerald-500
+                            '#8b5cf6'  // purple-500
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + '개 세부과제';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDashboard();
+            initChart();
+        });
+    </script>
+</body>
+</html>
