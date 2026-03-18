@@ -1,436 +1,995 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026년 국가 AI 재정사업 대시보드</title>
-    <style>
-        body {
-            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
-            margin: 0;
-            padding: 30px 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            color: #1a365d;
-            font-size: 2.2em;
-            margin-bottom: 10px;
-        }
-        .header p {
-            color: #4a5568;
-            font-size: 1.1em;
-        }
-        
-        /* 상단 테이블 섹션 */
-        .summary-section {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            padding: 25px;
-            margin-bottom: 40px;
-        }
-        .summary-section h2 {
-            margin-top: 0;
-            color: #2b6cb0;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 12px;
-            font-size: 1.5em;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #edf2f7;
-        }
-        th {
-            background-color: #f7fafc;
-            color: #2d3748;
-            font-weight: bold;
-        }
-        td:nth-child(2) {
-            text-align: left;
-        }
-        tr:hover {
-            background-color: #ebf8ff;
-        }
-        .highlight {
-            color: #c53030;
-            font-weight: bold;
-        }
-        .increase {
-            color: #2b6cb0;
-            font-weight: bold;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>대한민국 AI 생태계 맵 · 확장판</title>
+<style>
+:root {
+  --bg: #f4f7fb;
+  --surface: rgba(255,255,255,.82);
+  --surface-strong: #ffffff;
+  --text: #0f172a;
+  --text-sub: #475569;
+  --text-muted: #7b8aa4;
+  --line: #d9e1ee;
+  --line-strong: #c6d2e6;
+  --shadow: 0 18px 40px rgba(15,23,42,.08);
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --hero-grad: linear-gradient(135deg, #0f172a 0%, #14213d 42%, #1d4ed8 100%);
+  --chip-bg: #eef3fb;
+  --chip-text: #334155;
+  --card-pad: 16px;
+  --container: min(1440px, calc(100vw - 32px));
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(59,130,246,.12), transparent 28%),
+    radial-gradient(circle at left 12%, rgba(139,92,246,.08), transparent 24%),
+    var(--bg);
+  color: var(--text);
+}
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+.shell { width: var(--container); margin: 0 auto; }
+.hero {
+  margin: 18px auto 14px;
+  width: var(--container);
+  border-radius: 28px;
+  background: var(--hero-grad);
+  color: #fff;
+  padding: 28px 28px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15,23,42,.18);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.15), transparent 28%),
+    radial-gradient(circle at 80% 15%, rgba(255,255,255,.12), transparent 22%),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: auto, auto, 34px 34px;
+  pointer-events: none;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.4fr .95fr;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
+}
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.04;
+  letter-spacing: -1.1px;
+}
+.hero p {
+  margin: 0;
+  color: rgba(255,255,255,.84);
+  line-height: 1.65;
+  font-size: 15px;
+}
+.hero-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.12);
+  font-size: 12px;
+  color: rgba(255,255,255,.9);
+  backdrop-filter: blur(12px);
+}
+.hero-note .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96,165,250,.14);
+}
+.hero-right {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+  align-content: start;
+}
+.stat-card {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+}
+.stat-label {
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 34px);
+  line-height: 1;
+}
+.stat-sub {
+  margin-top: 8px;
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+}
+.toolbar-wrap {
+  position: sticky;
+  top: 10px;
+  z-index: 25;
+  width: var(--container);
+  margin: 0 auto 14px;
+}
+.toolbar {
+  background: rgba(255,255,255,.76);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(217,225,238,.9);
+  box-shadow: var(--shadow);
+  border-radius: 22px;
+  padding: 14px;
+}
+.toolbar-top {
+  display: grid;
+  grid-template-columns: 1.1fr auto auto;
+  gap: 12px;
+  align-items: center;
+}
+.searchbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 13px;
+}
+.searchbox svg { flex: 0 0 auto; color: #64748b; }
+.searchbox input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.pill-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+.pill {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text-sub);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition: .18s ease;
+}
+.pill:hover { border-color: #94a3b8; transform: translateY(-1px); }
+.pill.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15,23,42,.16);
+}
+.pill.soft.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  box-shadow: none;
+}
+.toolbar-bottom {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.info-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.info-chip {
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-sub);
+  background: var(--chip-bg);
+  border: 1px solid #dbe7f6;
+}
+.info-chip strong { color: var(--text); }
+.layer-nav {
+  width: var(--container);
+  margin: 0 auto 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.layer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  border: 1px solid var(--line);
+  color: var(--text-sub);
+  box-shadow: 0 10px 24px rgba(148,163,184,.08);
+}
+.layer-link .swatch {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.layout {
+  width: var(--container);
+  margin: 0 auto 36px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+.main-col {
+  min-width: 0;
+}
+.layer-section {
+  scroll-margin-top: 110px;
+  margin-bottom: 18px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(217,225,238,.88);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.layer-header {
+  display: grid;
+  grid-template-columns: 8px minmax(0,1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.72));
+  border-bottom: 1px solid rgba(217,225,238,.92);
+}
+.layer-accent {
+  width: 8px;
+  align-self: stretch;
+  border-radius: 999px;
+}
+.layer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.layer-title h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.5px;
+}
+.layer-title p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.layer-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.meta-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.layer-body {
+  padding: 18px 20px 20px;
+}
+.subgroup + .subgroup {
+  margin-top: 18px;
+}
+.subgroup-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.subgroup-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.subgroup-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+.entity-card {
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid var(--line);
+  padding: var(--card-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 162px;
+  cursor: pointer;
+  transition: .18s ease;
+  overflow: hidden;
+}
+.entity-card:hover {
+  transform: translateY(-2px);
+  border-color: #94a3b8;
+  box-shadow: 0 16px 36px rgba(15,23,42,.10);
+}
+.entity-card.selected {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29,78,216,.10), 0 16px 36px rgba(29,78,216,.12);
+}
+.entity-card.related {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,.08);
+}
+.entity-card.dim {
+  opacity: .42;
+}
+.entity-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--accent, #94a3b8);
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+.card-name {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.14;
+  letter-spacing: -.4px;
+}
+.type-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+.type-public { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.type-enterprise { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+.type-startup { background: #ecfeff; border-color: #67e8f9; color: #0f766e; }
+.card-focus {
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 11px;
+  color: #475569;
+}
+.card-summary {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-sub);
+}
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.tag {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1px solid #dde7f5;
+  font-size: 11px;
+  line-height: 1;
+}
+.aside {
+  position: sticky;
+  top: 110px;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(217,225,238,.9);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  min-height: 420px;
+  overflow: hidden;
+}
+.aside-head {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.78));
+}
+.aside-head .eyebrow {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.aside-body {
+  padding: 18px 20px 22px;
+}
+.placeholder {
+  color: var(--text-sub);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.detail-title {
+  margin: 4px 0 6px;
+  font-size: 28px;
+  line-height: 1.06;
+  letter-spacing: -.8px;
+}
+.detail-sub {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.detail-grid {
+  display: grid;
+  gap: 12px;
+}
+.detail-box {
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #dfebf7;
+}
+.detail-box h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #334155;
+}
+.detail-box p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-sub);
+}
+.small-list {
+  display: grid;
+  gap: 8px;
+}
+.small-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 11px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.small-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.small-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.small-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.shared-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.shared-tags span {
+  font-size: 10px;
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #6d28d9;
+}
+.footer {
+  width: var(--container);
+  margin: 0 auto 28px;
+  padding: 18px 20px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(217,225,238,.88);
+  border-radius: 20px;
+  color: var(--text-sub);
+  line-height: 1.7;
+  font-size: 13px;
+}
+.muted {
+  color: var(--text-muted);
+}
+.hidden { display: none !important; }
 
-        /* 하단 그리드 섹션 */
-        .grid-header {
-            color: #2b6cb0;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        .grid-card {
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .grid-card h3 {
-            margin-top: 0;
-            color: #2d3748;
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-        .dept-tag {
-            display: inline-block;
-            background-color: #e2e8f0;
-            color: #4a5568;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            align-self: flex-start;
-        }
-        
-        /* 예산 강조 스타일 */
-        .budget-highlight {
-            background-color: #ebf8ff;
-            color: #2b6cb0;
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 10px 15px;
-            border-radius: 6px;
-            border-left: 4px solid #3182ce;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        .budget-highlight span {
-            margin-right: 8px;
-            font-size: 1.2em;
-        }
-
-        /* 아코디언(상세내용) 스타일 */
-        details {
-            margin-top: auto;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background-color: #f7fafc;
-        }
-        summary {
-            padding: 12px 15px;
-            font-size: 1em;
-            font-weight: bold;
-            color: #2b6cb0;
-            cursor: pointer;
-            list-style: none;
-            position: relative;
-            outline: none;
-        }
-        summary::-webkit-details-marker {
-            display: none;
-        }
-        summary::after {
-            content: '▼';
-            position: absolute;
-            right: 15px;
-            color: #a0aec0;
-            font-size: 0.9em;
-            transition: transform 0.2s ease;
-        }
-        details[open] summary::after {
-            transform: rotate(180deg);
-        }
-        details[open] summary {
-            border-bottom: 1px solid #e2e8f0;
-            background-color: #ebf8ff;
-            border-radius: 8px 8px 0 0;
-        }
-        .details-content {
-            padding: 20px 15px;
-            background-color: #ffffff;
-            border-radius: 0 0 8px 8px;
-            line-height: 1.6;
-            color: #4a5568;
-            font-size: 0.95em;
-        }
-        .details-content ul {
-            margin-top: 10px;
-            padding-left: 20px;
-            margin-bottom: 0;
-        }
-        .details-content li {
-            margin-bottom: 5px;
-        }
-    </style>
+@media (max-width: 1120px) {
+  .hero-grid, .layout, .toolbar-top {
+    grid-template-columns: 1fr;
+  }
+  .aside {
+    position: static;
+    order: -1;
+  }
+}
+@media (max-width: 760px) {
+  :root { --container: calc(100vw - 20px); --card-pad: 14px; }
+  .hero { padding: 22px 18px 18px; border-radius: 24px; }
+  .toolbar { border-radius: 18px; }
+  .hero-right { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .card-grid { grid-template-columns: 1fr; }
+  .layer-header { grid-template-columns: 8px minmax(0,1fr); }
+  .layer-meta { grid-column: 2; justify-content: flex-start; }
+}
+</style>
 </head>
 <body>
-
-<div class="container">
-    <div class="header">
-        <h1>📊 2026년 국가 AI 재정사업 대시보드</h1>
-        <p>전체 예산 현황을 한눈에 파악하고, 각 카드를 눌러 세부 추진 내용을 확인하세요.</p>
+  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-note"><span class="dot"></span>대표 플레이어 중심 확장판 · 완전한 기업 총람은 아님</div>
+        <h1>대한민국 AI 생태계 맵</h1>
+        <p>
+          기존 HTML의 레이어 구조를 유지하되, 공공·연구기관과 산업AI·엔터프라이즈·의료AI·온디바이스·추론 인프라까지 범위를 넓혀
+          <strong>대표 기업/기관을 더 촘촘하게</strong> 넣은 버전이다. 한 기업이 여러 레이어에 걸칠 수 있기 때문에,
+          이 지도에서는 <strong>1차 배치</strong>만 두고 나머지는 태그로 표현했다.
+        </p>
+      </div>
+      <div class="hero-right" id="hero-stats"></div>
     </div>
+  </header>
 
-    <div class="summary-section">
-        <h2>💰 전체 예산 요약표 (2025년 대비)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>소관 부처</th>
-                    <th>세부 사업명</th>
-                    <th>2025년 본예산</th>
-                    <th>2026년 요구안</th>
-                    <th>증감 내역</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>개인정보보호위원회</td>
-                    <td>안전한 데이터 활용 지원</td>
-                    <td>3,564 백만원</td>
-                    <td><strong>6,456 백만원</strong></td>
-                    <td class="increase">+2,892 백만원 (+81.1%)</td>
-                </tr>
-                <tr>
-                    <td>개인정보보호위원회</td>
-                    <td>개인정보 안전활용 선도기술 개발(R&D)</td>
-                    <td>- (신규)</td>
-                    <td><strong>6,138 백만원</strong></td>
-                    <td class="increase">순증</td>
-                </tr>
-                <tr>
-                    <td>개인정보보호위원회</td>
-                    <td>신뢰기반의 AI 개인정보 보호·활용 기술개발(R&D)</td>
-                    <td>1,500 백만원</td>
-                    <td><strong>2,660 백만원</strong></td>
-                    <td class="increase">+1,160 백만원 (+77.3%)</td>
-                </tr>
-                <tr>
-                    <td>경찰청</td>
-                    <td>경찰정보화기반고도화 (정보화)</td>
-                    <td>77,006 백만원</td>
-                    <td><strong>78,334 백만원</strong></td>
-                    <td class="increase">+1,328 백만원 (+1.7%)</td>
-                </tr>
-                <tr>
-                    <td>경찰청</td>
-                    <td>112시스템운영 (정보화)</td>
-                    <td>16,186 백만원</td>
-                    <td><strong>20,916 백만원</strong></td>
-                    <td class="increase">+4,730 백만원 (+32.0%)</td>
-                </tr>
-                <tr>
-                    <td>경찰청</td>
-                    <td>불법마약류대응을위한현장기술개발(R&D)</td>
-                    <td>1,500 백만원</td>
-                    <td><strong>4,932 백만원</strong></td>
-                    <td class="increase">+3,432 백만원 (+222.8%)</td>
-                </tr>
-                <tr>
-                    <td>경찰청</td>
-                    <td>과학수사시스템구축 (정보화)</td>
-                    <td>7,990 백만원</td>
-                    <td><strong>4,126 백만원</strong></td>
-                    <td class="highlight">-3,864 백만원 (-48.4%)</td>
-                </tr>
-                <tr>
-                    <td>감사원</td>
-                    <td>전산운영경비 (정보화)</td>
-                    <td>16,111 백만원</td>
-                    <td><strong>10,300 백만원</strong></td>
-                    <td class="highlight">-5,811 백만원 (-36.1%)</td>
-                </tr>
-            </tbody>
-        </table>
+  <div class="toolbar-wrap">
+    <div class="toolbar">
+      <div class="toolbar-top">
+        <label class="searchbox">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input id="searchInput" type="text" placeholder="기업명, 제품명, 태그 검색…" autocomplete="off" />
+        </label>
+        <div class="pill-group" id="typeFilters"></div>
+        <div class="pill-group" id="tagFilters"></div>
+      </div>
+      <div class="toolbar-bottom">
+        <div class="info-line" id="infoLine"></div>
+        <div class="pill-group">
+          <button class="pill soft" id="resetBtn">필터 초기화</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <h2 class="grid-header">📁 세부 사업 내용 목록</h2>
-    <div class="grid-container">
-        
-        <div class="grid-card">
-            <span class="dept-tag">개인정보보호위원회</span>
-            <h3>안전한 데이터 활용 지원</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 6,456 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 안정적 제도 운영을 위한 모니터링, 가명정보 처리 지원 및 전문인력 공급, 데이터 분석 시설 지원 <br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>가명정보 활용 지원 인프라 운영 (5,742백만원)</li>
-                        <li>개인정보 이노베이션 존 구축 및 연계 허브 (3,702백만원)</li>
-                        <li>가명정보 지원 플랫폼 유지보수 (400백만원)</li>
-                    </ul>
-                </div>
-            </details>
+  <nav class="layer-nav" id="layerNav"></nav>
+
+  <div class="layout">
+    <main class="main-col" id="mainCol"></main>
+    <aside class="aside">
+      <div class="aside-head">
+        <div class="eyebrow">selected entity</div>
+      </div>
+      <div class="aside-body" id="detailPanel">
+        <div class="placeholder">
+          카드를 선택하면 상세 정보와 <strong>같은 태그로 연결된 플레이어</strong>가 나온다.<br/>
+          <span class="muted">이 연결은 투자/공급 계약이 아니라, 이 지도의 분류 태그가 겹치는 정도를 기준으로 계산한 유사도다.</span>
         </div>
+      </div>
+    </aside>
+  </div>
 
-        <div class="grid-card">
-            <span class="dept-tag">개인정보보호위원회</span>
-            <h3>개인정보 안전활용 선도기술 개발</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 6,138 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 개인정보 유·노출 사고 예방 및 신뢰받는 데이터 활용 생태계 구축을 위한 선도 기술 개발.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>원본데이터 안전활용 기술: 4,560백만원</li>
-                        <li>AI 프라이버시 리스크 대응 기술: 1,344백만원</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+  <footer class="footer">
+    이 맵은 <strong>대표 기업/기관 중심의 큐레이션</strong>이다. 한국 AI 생태계를 “전부” 담은 총람은 아니며, 
+    기업마다 <strong>모델·서비스·인프라·반도체</strong>를 동시에 수행하는 경우가 많기 때문에 1차 배치와 태그 표현을 병행했다.
+    <br/>
+    보강 시에는 기존 업로드 HTML의 레이어 구조를 참고하고, <strong>소버린 AI 참여 팀, 의료 AI, AI 반도체, 산업AI/추론 인프라</strong> 축을 중심으로 대표 플레이어를 추가했다.
+  </footer>
 
-        <div class="grid-card">
-            <span class="dept-tag">개인정보보호위원회</span>
-            <h3>신뢰기반 AI 개인정보 보호기술</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 2,660 백만원
-                    </div>
-                    <strong>사업 목적:</strong> AI에 대응한 개인정보 특화 기술개발을 통해 개인정보 침해 예방 등 안전 활용 지원.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>AI 대응 개인정보보호 강화기술 개발 (2,560백만원)</li>
-                        <li>기획 및 평가 관리비 (100백만원)</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+<script>
+const LAYERS = [{"id": "public", "name": "공공·정책·연구", "accent": "#2563eb", "desc": "거버넌스·R&D·표준·데이터 정책", "entities": [{"name": "과학기술정보통신부", "type": "public", "summary": "국가 AI 정책 총괄 부처", "tags": ["공공/연구", "정책", "거버넌스"], "focus": "정책 총괄"}, {"name": "국가인공지능위원회", "type": "public", "summary": "범정부 AI 전략·조정", "tags": ["공공/연구", "정책", "거버넌스"], "focus": "전략 조정"}, {"name": "한국지능정보사회진흥원", "type": "public", "summary": "공공 AI 확산·디지털정부", "tags": ["공공/연구", "공공AI", "데이터"], "focus": "NIA"}, {"name": "정보통신산업진흥원", "type": "public", "summary": "AI 산업 육성·기업 지원", "tags": ["공공/연구", "산업지원", "사업화"], "focus": "NIPA"}, {"name": "정보통신기획평가원", "type": "public", "summary": "ICT·AI R&D 기획·평가", "tags": ["공공/연구", "R&D", "기획"], "focus": "IITP"}, {"name": "한국전자통신연구원", "type": "public", "summary": "AI 원천기술 연구", "tags": ["공공/연구", "R&D", "모델"], "focus": "ETRI"}, {"name": "한국인터넷진흥원", "type": "public", "summary": "AI 보안·신뢰·디지털 안전", "tags": ["공공/연구", "보안/엔터프라이즈", "신뢰AI"], "focus": "KISA"}, {"name": "한국데이터산업진흥원", "type": "public", "summary": "데이터 생태계·유통·활용", "tags": ["공공/연구", "데이터/MLOps", "데이터정책"], "focus": "K-DATA"}, {"name": "한국정보통신기술협회", "type": "public", "summary": "AI 표준·시험인증", "tags": ["공공/연구", "표준", "신뢰AI"], "focus": "TTA"}, {"name": "개인정보보호위원회", "type": "public", "summary": "개인정보·AI 규율", "tags": ["공공/연구", "규제", "데이터정책"], "focus": "PIPC"}]}, {"id": "data", "name": "데이터·MLOps·인프라SW", "accent": "#06b6d4", "desc": "데이터 운영·모델 서빙·산업 AI 플랫폼", "entities": [{"name": "크라우드웍스", "type": "startup", "summary": "데이터 라벨링·AI 데이터 운영", "tags": ["데이터/MLOps", "데이터", "라벨링"], "focus": "DataOps"}, {"name": "슈퍼브에이아이", "type": "startup", "summary": "비전 데이터 파이프라인·MLOps", "tags": ["데이터/MLOps", "비전", "MLOps"], "focus": "Vision AI"}, {"name": "마인즈앤컴퍼니", "type": "startup", "summary": "기업 AI 도입·MLOps 컨설팅", "tags": ["데이터/MLOps", "엔터프라이즈", "MLOps"], "focus": "Consulting"}, {"name": "셀렉트스타", "type": "startup", "summary": "데이터 검증·평가·RLHF", "tags": ["데이터/MLOps", "평가", "정렬"], "focus": "Evaluation"}, {"name": "에이모", "type": "startup", "summary": "자율주행용 데이터 플랫폼", "tags": ["데이터/MLOps", "자율주행/로보틱스", "데이터"], "focus": "AIMMO"}, {"name": "테스트웍스", "type": "startup", "summary": "AI 데이터 구축·검증 서비스", "tags": ["데이터/MLOps", "데이터", "검증"], "focus": "Data QA"}, {"name": "아크릴", "type": "startup", "summary": "지식그래프·분석형 AI 플랫폼", "tags": ["데이터/MLOps", "지식그래프", "엔터프라이즈"], "focus": "Graph AI"}, {"name": "딥바이오", "type": "startup", "summary": "병리 이미지 분석·디지털 병리", "tags": ["의료AI", "데이터/MLOps", "비전"], "focus": "Pathology"}, {"name": "마키나락스", "type": "startup", "summary": "산업 특화 AI·운영 최적화", "tags": ["데이터/MLOps", "산업AI", "엔터프라이즈"], "focus": "Industrial AI"}, {"name": "VESSL AI", "type": "startup", "summary": "GPU 클라우드·MLOps 운영", "tags": ["데이터/MLOps", "클라우드", "인프라"], "focus": "GPU Ops"}, {"name": "FriendliAI", "type": "startup", "summary": "LLM 추론·서빙 인프라", "tags": ["데이터/MLOps", "LLM/모델", "인프라"], "focus": "Inference"}, {"name": "노타AI", "type": "startup", "summary": "온디바이스 AI 최적화", "tags": ["데이터/MLOps", "온디바이스", "비전"], "focus": "Optimization"}, {"name": "모레", "type": "startup", "summary": "AI 컴퓨팅 최적화·가속 SW", "tags": ["데이터/MLOps", "LLM/모델", "인프라"], "focus": "Compute SW"}, {"name": "씨이랩", "type": "startup", "summary": "비디오 분석·AI 인프라 솔루션", "tags": ["데이터/MLOps", "비전", "엔터프라이즈"], "focus": "Video AI"}]}, {"id": "model", "name": "AI 모델·에이전트·검색", "accent": "#8b5cf6", "desc": "파운데이션 모델·에이전트·검색 인터페이스", "entities": [{"name": "네이버", "type": "enterprise", "summary": "HyperCLOVA X 계열 모델", "tags": ["LLM/모델", "검색/생산성", "플랫폼"], "focus": "HyperCLOVA X"}, {"name": "LG AI Research", "type": "enterprise", "summary": "EXAONE 계열 모델", "tags": ["LLM/모델", "연구", "플랫폼"], "focus": "EXAONE"}, {"name": "업스테이지", "type": "startup", "summary": "Solar 계열 LLM", "tags": ["LLM/모델", "엔터프라이즈", "문서AI"], "focus": "Solar"}, {"name": "SK텔레콤", "type": "enterprise", "summary": "A.X 기반 AI 서비스 전략", "tags": ["LLM/모델", "통신", "플랫폼"], "focus": "A.X"}, {"name": "KT", "type": "enterprise", "summary": "국산 AI 모델·B2B 전개", "tags": ["LLM/모델", "통신", "엔터프라이즈"], "focus": "Mi:dm"}, {"name": "카카오", "type": "enterprise", "summary": "생성형 AI·서비스 실험", "tags": ["LLM/모델", "플랫폼", "검색/생산성"], "focus": "GenAI"}, {"name": "NC AI", "type": "startup", "summary": "멀티모달·콘텐츠 생성 AI", "tags": ["LLM/모델", "멀티모달/콘텐츠", "게임"], "focus": "VARCO"}, {"name": "Motif Technologies", "type": "startup", "summary": "소버린 AI 경쟁 참여 기업", "tags": ["LLM/모델", "에이전트", "플랫폼"], "focus": "Motif"}, {"name": "솔트룩스", "type": "startup", "summary": "LLM·에이전트·지식 서비스", "tags": ["LLM/모델", "에이전트", "엔터프라이즈"], "focus": "Agentic AI"}, {"name": "코난테크놀로지", "type": "startup", "summary": "NLP·검색·기업 AI", "tags": ["LLM/모델", "엔터프라이즈", "검색/생산성"], "focus": "NLP"}, {"name": "포티투마루", "type": "startup", "summary": "QA·도메인 특화 LLM", "tags": ["LLM/모델", "엔터프라이즈", "공공AI"], "focus": "42Maru"}, {"name": "올거나이즈", "type": "startup", "summary": "엔터프라이즈 AI 에이전트", "tags": ["에이전트", "보안/엔터프라이즈", "LLM/모델"], "focus": "Alli"}, {"name": "라이너", "type": "startup", "summary": "AI 검색·리서치 인터페이스", "tags": ["검색/생산성", "에이전트", "LLM/모델"], "focus": "Search"}, {"name": "뤼튼테크놀로지스", "type": "startup", "summary": "대중형 AI 에이전트 앱", "tags": ["에이전트", "검색/생산성", "LLM/모델"], "focus": "Wrtn"}]}, {"id": "service", "name": "AI 서비스", "accent": "#f59e0b", "desc": "생산성·의료·콘텐츠·보안·자율주행", "subgroups": [{"name": "생산성·교육", "entities": [{"name": "스캐터랩", "type": "startup", "summary": "대화형 AI 서비스", "tags": ["검색/생산성", "에이전트", "소비자"], "focus": "Conversational AI"}, {"name": "뤼이드", "type": "startup", "summary": "AI 튜터·에듀테크", "tags": ["검색/생산성", "교육", "서비스"], "focus": "Edu AI"}, {"name": "매스프레소", "type": "startup", "summary": "QANDA 기반 학습 AI", "tags": ["검색/생산성", "교육", "모바일"], "focus": "QANDA"}, {"name": "클래스팅", "type": "startup", "summary": "학교·학습용 AI 에듀 플랫폼", "tags": ["검색/생산성", "교육", "공공AI"], "focus": "EdTech"}]}, {"name": "의료 AI", "entities": [{"name": "루닛", "type": "startup", "summary": "암 진단·영상 분석 AI", "tags": ["의료AI", "비전", "상장"], "focus": "Imaging"}, {"name": "뷰노", "type": "startup", "summary": "생체신호·영상 의료 AI", "tags": ["의료AI", "비전", "상장"], "focus": "Clinical AI"}, {"name": "딥노이드", "type": "startup", "summary": "의료 영상·보안 판독 AI", "tags": ["의료AI", "비전", "상장"], "focus": "Deep:NEURO"}, {"name": "JLK", "type": "startup", "summary": "뇌졸중 중심 의료 AI", "tags": ["의료AI", "비전", "상장"], "focus": "Stroke AI"}, {"name": "메디웨일", "type": "startup", "summary": "안저 기반 질환 예측 AI", "tags": ["의료AI", "예측", "헬스케어"], "focus": "Retinal AI"}, {"name": "코어라인소프트", "type": "startup", "summary": "흉부 영상·폐질환 분석", "tags": ["의료AI", "비전", "상장"], "focus": "Thoracic AI"}, {"name": "에이아이트릭스", "type": "startup", "summary": "중환자·임상 예측 AI", "tags": ["의료AI", "예측", "병원"], "focus": "Vitals AI"}, {"name": "메디컬아이피", "type": "startup", "summary": "3D 디지털트윈 기반 의료 AI", "tags": ["의료AI", "디지털트윈", "영상"], "focus": "MEDIP"}, {"name": "메디컬에이아이", "type": "startup", "summary": "심전도·심장질환 의료 AI", "tags": ["의료AI", "예측", "헬스케어"], "focus": "AiTiA"}]}, {"name": "콘텐츠·멀티모달", "entities": [{"name": "트웰브랩스", "type": "startup", "summary": "비디오 이해·멀티모달 AI", "tags": ["멀티모달/콘텐츠", "비전", "글로벌"], "focus": "Video AI"}, {"name": "딥브레인AI", "type": "startup", "summary": "AI 휴먼·영상 생성", "tags": ["멀티모달/콘텐츠", "영상", "아바타"], "focus": "AI Human"}, {"name": "클레온", "type": "startup", "summary": "디지털 휴먼·더빙", "tags": ["멀티모달/콘텐츠", "아바타", "음성"], "focus": "Avatar"}, {"name": "네오사피엔스", "type": "startup", "summary": "AI 음성·TTS", "tags": ["멀티모달/콘텐츠", "음성", "글로벌"], "focus": "Typecast"}, {"name": "펄스나인", "type": "startup", "summary": "버추얼 휴먼·콘텐츠", "tags": ["멀티모달/콘텐츠", "아바타", "엔터테인먼트"], "focus": "Virtual Human"}, {"name": "마인드로직", "type": "startup", "summary": "AI 캐릭터·인터랙션", "tags": ["멀티모달/콘텐츠", "에이전트", "소비자"], "focus": "Character AI"}]}, {"name": "보안·엔터프라이즈", "entities": [{"name": "S2W", "type": "startup", "summary": "AI 기반 데이터 인텔리전스", "tags": ["보안/엔터프라이즈", "지식그래프", "데이터/MLOps"], "focus": "Data Intelligence"}]}, {"name": "자율주행·로보틱스", "entities": [{"name": "포티투닷", "type": "enterprise", "summary": "SDV·모빌리티 AI", "tags": ["자율주행/로보틱스", "플랫폼", "모빌리티"], "focus": "42dot"}, {"name": "서울로보틱스", "type": "startup", "summary": "3D 인식·산업 현장 자율화", "tags": ["자율주행/로보틱스", "비전", "모빌리티"], "focus": "3D Perception"}, {"name": "모빌테크", "type": "startup", "summary": "HD맵·자율주행 공간데이터", "tags": ["자율주행/로보틱스", "데이터", "모빌리티"], "focus": "HD Map"}, {"name": "라이드플럭스", "type": "startup", "summary": "자율주행 플랫폼", "tags": ["자율주행/로보틱스", "모빌리티", "서비스"], "focus": "Autonomy"}, {"name": "스트라드비젼", "type": "startup", "summary": "ADAS 비전 인식", "tags": ["자율주행/로보틱스", "비전", "온디바이스"], "focus": "Perception"}, {"name": "베어로보틱스", "type": "startup", "summary": "서비스 로봇·자율주행", "tags": ["자율주행/로보틱스", "로봇", "서비스"], "focus": "Servi"}]}]}, {"id": "cloud", "name": "클라우드·플랫폼·통신", "accent": "#10b981", "desc": "AI 클라우드·MSP·엔터프라이즈 IT", "entities": [{"name": "네이버클라우드", "type": "enterprise", "summary": "국산 AI 클라우드·API", "tags": ["클라우드", "플랫폼", "공공AI"], "focus": "Ncloud"}, {"name": "KT클라우드", "type": "enterprise", "summary": "AI·공공·금융 클라우드", "tags": ["클라우드", "플랫폼", "통신"], "focus": "KT Cloud"}, {"name": "NHN클라우드", "type": "enterprise", "summary": "클라우드·AI 서비스 인프라", "tags": ["클라우드", "플랫폼", "엔터프라이즈"], "focus": "NHN Cloud"}, {"name": "카카오클라우드", "type": "enterprise", "summary": "카카오 계열 클라우드", "tags": ["클라우드", "플랫폼", "엔터프라이즈"], "focus": "Kakao Cloud"}, {"name": "삼성SDS", "type": "enterprise", "summary": "엔터프라이즈 클라우드·AI", "tags": ["클라우드", "엔터프라이즈", "SI"], "focus": "Samsung SDS"}, {"name": "LG CNS", "type": "enterprise", "summary": "AX 전환·기업 클라우드", "tags": ["클라우드", "엔터프라이즈", "SI"], "focus": "AX"}, {"name": "SK C&C", "type": "enterprise", "summary": "AIX·클라우드·엔터프라이즈", "tags": ["클라우드", "엔터프라이즈", "SI"], "focus": "AIX"}, {"name": "메가존클라우드", "type": "startup", "summary": "클라우드 MSP·AI 구축", "tags": ["클라우드", "엔터프라이즈", "MSP"], "focus": "MSP"}, {"name": "베스핀글로벌", "type": "startup", "summary": "멀티클라우드·AI 운영", "tags": ["클라우드", "엔터프라이즈", "MSP"], "focus": "Bespin"}]}, {"id": "chip", "name": "AI 반도체·엣지", "accent": "#ef4444", "desc": "HBM·NPU·온디바이스·칩 IP", "entities": [{"name": "삼성전자", "type": "enterprise", "summary": "메모리·시스템 반도체", "tags": ["반도체", "HBM", "대기업"], "focus": "Samsung"}, {"name": "SK하이닉스", "type": "enterprise", "summary": "HBM·메모리 중심", "tags": ["반도체", "HBM", "대기업"], "focus": "SK hynix"}, {"name": "리벨리온", "type": "startup", "summary": "데이터센터용 AI 칩", "tags": ["반도체", "NPU", "데이터센터"], "focus": "Rebellions"}, {"name": "퓨리오사AI", "type": "startup", "summary": "AI 추론 가속기", "tags": ["반도체", "NPU", "데이터센터"], "focus": "FuriosaAI"}, {"name": "DeepX", "type": "startup", "summary": "온디바이스·엣지 AI 반도체", "tags": ["반도체", "온디바이스", "엣지"], "focus": "DEEPX"}, {"name": "HyperAccel", "type": "startup", "summary": "LLM 추론 가속 칩", "tags": ["반도체", "LLM/모델", "추론"], "focus": "LPU"}, {"name": "Mobilint", "type": "startup", "summary": "온프레미스·온디바이스 NPU", "tags": ["반도체", "온디바이스", "NPU"], "focus": "Mobilint"}, {"name": "오픈엣지테크놀로지", "type": "startup", "summary": "NPU·메모리 시스템 IP", "tags": ["반도체", "온디바이스", "IP"], "focus": "OPENEDGES"}]}];
 
-        <div class="grid-card">
-            <span class="dept-tag">경찰청</span>
-            <h3>경찰정보화기반고도화</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 78,334 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 경찰업무 관련 정보시스템 구축·운영 및 노후 인프라 교체를 통한 치안행정 효율성 제고.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>전국 관서 전산장비 운영 (34,318백만원)</li>
-                        <li>정보시스템 통합유지관리 (14,503백만원)</li>
-                        <li>사이버보안관제센터 운영 (5,006백만원)</li>
-                        <li>온나라 2.0 전환 등 시스템 개선 (7,968백만원)</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+const TYPE_META = {
+  all: {label: "전체"},
+  public: {label: "공공/연구"},
+  enterprise: {label: "대기업·통신·플랫폼"},
+  startup: {label: "스타트업·스케일업"}
+};
 
-        <div class="grid-card">
-            <span class="dept-tag">경찰청</span>
-            <h3>112시스템운영</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 20,916 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 안정적인 무중단 112 신고 서비스 제공 및 현장 경찰관 대응력 강화.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>112시스템 유지관리 (6,768백만원)</li>
-                        <li>112지원시스템 (6,400백만원)</li>
-                        <li>순찰차캠 영상관제 시스템 (5,812백만원)</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+const TAG_ORDER = [
+  "공공/연구","LLM/모델","에이전트","검색/생산성","데이터/MLOps","의료AI",
+  "멀티모달/콘텐츠","자율주행/로보틱스","클라우드","반도체","보안/엔터프라이즈","온디바이스"
+];
 
-        <div class="grid-card">
-            <span class="dept-tag">경찰청</span>
-            <h3>불법마약류대응 현장기술개발</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 4,932 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 첨단 과학기술을 접목하여 치안·관세 현장에서 활용 가능한 불법 마약류 탐지·검사 기술 고도화.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>마약수사통합시스템 (1,800백만원)</li>
-                        <li>다중어레이 복합센서 기반 AI 시스템: 1,500백만원</li>
-                        <li>현장 기술 개발(마이크로니들패치 등): 1,442백만원</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+const state = {
+  query: "",
+  type: "all",
+  tag: "all",
+  selected: null
+};
 
-        <div class="grid-card">
-            <span class="dept-tag">경찰청</span>
-            <h3>과학수사시스템구축</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 4,126 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 지능화·다변화된 범죄 대응을 위한 수사자료 관리 및 과학수사 지원 능력 강화.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>지문 및 전과기록 관리시스템 재구축 (2,338백만원)</li>
-                        <li>현장증거물 수집 자동화시스템 구축 (1,462백만원)</li>
-                        <li>전자수사자료표시스템 노후 장비 교체 (326백만원)</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+function flattenLayers(layers) {
+  const out = [];
+  layers.forEach(layer => {
+    if (layer.entities) {
+      layer.entities.forEach(entity => {
+        out.push({
+          ...entity,
+          layerId: layer.id,
+          layerName: layer.name,
+          layerDesc: layer.desc,
+          accent: layer.accent,
+          subgroup: null
+        });
+      });
+    }
+    (layer.subgroups || []).forEach(sub => {
+      sub.entities.forEach(entity => {
+        out.push({
+          ...entity,
+          layerId: layer.id,
+          layerName: layer.name,
+          layerDesc: layer.desc,
+          accent: layer.accent,
+          subgroup: sub.name
+        });
+      });
+    });
+  });
+  return out;
+}
 
-        <div class="grid-card">
-            <span class="dept-tag">감사원</span>
-            <h3>전산운영경비</h3>
-            <details>
-                <summary>세부 내용 보기</summary>
-                <div class="details-content">
-                    <div class="budget-highlight">
-                        <span>💰</span> 2026년 요구 예산: 10,300 백만원
-                    </div>
-                    <strong>사업 목적:</strong> 방대한 감사자료 관리 및 안정적인 시스템 구축·운영.<br><br>
-                    <strong>주요 예산 산출:</strong>
-                    <ul>
-                        <li>OASYS 구축·운영 (6,504백만원)</li>
-                        <li>감사자료분석시스템 구축·운영 (2,086백만원)</li>
-                        <li>사이버보안센터 구축·운영 (1,063백만원)</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
+const ENTITIES = flattenLayers(LAYERS);
 
+function typeLabel(type) {
+  return TYPE_META[type]?.label || type;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[s]);
+}
+
+function buildStats() {
+  const total = ENTITIES.length;
+  const publicCount = ENTITIES.filter(e => e.type === "public").length;
+  const enterpriseCount = ENTITIES.filter(e => e.type === "enterprise").length;
+  const startupCount = ENTITIES.filter(e => e.type === "startup").length;
+  const tagsCount = new Set(ENTITIES.flatMap(e => e.tags)).size;
+
+  const cards = [
+    {label: "총 엔티티", value: total, sub: "기업 + 기관"},
+    {label: "공공·연구", value: publicCount, sub: "정책 / R&D / 표준"},
+    {label: "대기업·통신", value: enterpriseCount, sub: "플랫폼 / 클라우드 / 계열"},
+    {label: "스타트업", value: startupCount, sub: "모델 / 서비스 / 칩"},
+  ];
+
+  document.getElementById("hero-stats").innerHTML = cards.map(card => `
+    <div class="stat-card">
+      <div class="stat-label">${card.label}</div>
+      <div class="stat-value">${card.value}</div>
+      <div class="stat-sub">${card.sub}</div>
     </div>
-</div>
+  `).join("");
 
+  const infoChips = [
+    `보이는 카드 <strong id="visibleCount"></strong>`,
+    `레이어 <strong>${LAYERS.length}</strong>개`,
+    `태그 <strong>${tagsCount}</strong>종`,
+    `선택 기준 <strong>대표 플레이어 중심</strong>`
+  ];
+
+  document.getElementById("infoLine").innerHTML = infoChips.map(t => `<span class="info-chip">${t}</span>`).join("");
+}
+
+function buildFilterChips() {
+  const typeWrap = document.getElementById("typeFilters");
+  const tagWrap = document.getElementById("tagFilters");
+
+  typeWrap.innerHTML = `
+    <span class="pill-label">유형</span>
+    ${Object.entries(TYPE_META).map(([key, meta]) => `
+      <button class="pill ${state.type === key ? "active" : ""}" data-type-key="${key}">${meta.label}</button>
+    `).join("")}
+  `;
+
+  tagWrap.innerHTML = `
+    <span class="pill-label">테마</span>
+    <button class="pill soft ${state.tag === "all" ? "active" : ""}" data-tag-key="all">전체</button>
+    ${TAG_ORDER.map(tag => `
+      <button class="pill soft ${state.tag === tag ? "active" : ""}" data-tag-key="${tag}">${tag}</button>
+    `).join("")}
+  `;
+
+  [...typeWrap.querySelectorAll("[data-type-key]")].forEach(btn => {
+    btn.onclick = () => {
+      state.type = btn.dataset.typeKey;
+      renderAll();
+    };
+  });
+
+  [...tagWrap.querySelectorAll("[data-tag-key]")].forEach(btn => {
+    btn.onclick = () => {
+      state.tag = btn.dataset.tagKey;
+      renderAll();
+    };
+  });
+}
+
+function buildLayerNav() {
+  const nav = document.getElementById("layerNav");
+  nav.innerHTML = LAYERS.map(layer => {
+    const total = countLayerEntities(layer);
+    return `
+      <a class="layer-link" href="#layer-${layer.id}">
+        <span class="swatch" style="background:${layer.accent}"></span>
+        <span>${layer.name}</span>
+        <span class="muted">· ${total}</span>
+      </a>
+    `;
+  }).join("");
+}
+
+function countLayerEntities(layer) {
+  let total = (layer.entities || []).length;
+  (layer.subgroups || []).forEach(sub => total += sub.entities.length);
+  return total;
+}
+
+function matches(entity) {
+  const q = state.query.trim().toLowerCase();
+  const hay = [entity.name, entity.summary, entity.focus || "", entity.layerName, entity.subgroup || "", ...(entity.tags || [])]
+    .join(" ")
+    .toLowerCase();
+  const queryOk = !q || hay.includes(q);
+  const typeOk = state.type === "all" || entity.type === state.type;
+  const tagOk = state.tag === "all" || (entity.tags || []).includes(state.tag);
+  return queryOk && typeOk && tagOk;
+}
+
+function visibleEntities() {
+  return ENTITIES.filter(matches);
+}
+
+function sameTagSimilarity(base, other) {
+  const a = new Set(base.tags || []);
+  const b = new Set(other.tags || []);
+  const shared = [...a].filter(tag => b.has(tag));
+  let score = shared.length * 10;
+  if (base.layerId === other.layerId) score += 3;
+  if (base.subgroup && base.subgroup === other.subgroup) score += 2;
+  return {shared, score};
+}
+
+function relatedEntities(selectedName) {
+  const base = ENTITIES.find(e => e.name === selectedName);
+  if (!base) return [];
+  return ENTITIES
+    .filter(e => e.name !== selectedName)
+    .map(e => {
+      const sim = sameTagSimilarity(base, e);
+      return {...e, shared: sim.shared, score: sim.score};
+    })
+    .filter(e => e.shared.length > 0)
+    .sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "ko"))
+    .slice(0, 8);
+}
+
+function renderLayerSection(layer) {
+  const visibleInLayer = [];
+
+  let bodyHtml = "";
+
+  if (layer.entities) {
+    const items = layer.entities
+      .map(entity => ENTITIES.find(e => e.name === entity.name))
+      .filter(Boolean)
+      .filter(matches);
+    visibleInLayer.push(...items);
+
+    bodyHtml += renderCardGrid(items);
+  }
+
+  (layer.subgroups || []).forEach(sub => {
+    const items = sub.entities
+      .map(entity => ENTITIES.find(e => e.name === entity.name))
+      .filter(Boolean)
+      .filter(matches);
+    visibleInLayer.push(...items);
+    if (items.length) {
+      bodyHtml += `
+        <div class="subgroup">
+          <div class="subgroup-head">
+            <div class="subgroup-title">${sub.name}</div>
+            <div class="subgroup-count">${items.length}개</div>
+          </div>
+          ${renderCardGrid(items)}
+        </div>
+      `;
+    }
+  });
+
+  if (!visibleInLayer.length) return "";
+
+  return `
+    <section class="layer-section" id="layer-${layer.id}">
+      <div class="layer-header">
+        <div class="layer-accent" style="background:${layer.accent}"></div>
+        <div class="layer-title">
+          <h2>${layer.name}</h2>
+          <p>${layer.desc}</p>
+        </div>
+        <div class="layer-meta">
+          <span class="meta-pill">보이는 카드 ${visibleInLayer.length}개</span>
+          <span class="meta-pill">전체 ${countLayerEntities(layer)}개</span>
+        </div>
+      </div>
+      <div class="layer-body">
+        ${bodyHtml}
+      </div>
+    </section>
+  `;
+}
+
+function renderCardGrid(items) {
+  return `
+    <div class="card-grid">
+      ${items.map(entity => renderCard(entity)).join("")}
+    </div>
+  `;
+}
+
+function renderCard(entity) {
+  const selected = state.selected === entity.name;
+  const relatedNames = state.selected ? relatedEntities(state.selected).map(e => e.name) : [];
+  const isRelated = state.selected && relatedNames.includes(entity.name);
+  const dim = state.selected && !selected && !isRelated;
+  return `
+    <article class="entity-card ${selected ? "selected" : ""} ${isRelated ? "related" : ""} ${dim ? "dim" : ""}" 
+             data-entity-name="${escapeHtml(entity.name)}"
+             style="--accent:${entity.accent}">
+      <div class="card-top">
+        <h3 class="card-name">${entity.name}</h3>
+        <span class="type-badge type-${entity.type}">${typeLabel(entity.type)}</span>
+      </div>
+      <div class="card-focus">${entity.focus || entity.layerName}</div>
+      <p class="card-summary">${entity.summary}</p>
+      <div class="tag-row">
+        ${(entity.tags || []).slice(0,4).map(tag => `<span class="tag">${tag}</span>`).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderMain() {
+  const main = document.getElementById("mainCol");
+  main.innerHTML = LAYERS.map(renderLayerSection).join("");
+  const cards = [...main.querySelectorAll("[data-entity-name]")];
+  cards.forEach(card => {
+    card.onclick = () => {
+      const name = card.dataset.entityName;
+      state.selected = state.selected === name ? null : name;
+      renderAll(false);
+    };
+  });
+  document.getElementById("visibleCount").textContent = visibleEntities().length;
+}
+
+function renderDetail() {
+  const panel = document.getElementById("detailPanel");
+  if (!state.selected) {
+    panel.innerHTML = `
+      <div class="placeholder">
+        카드를 선택하면 상세 정보와 <strong>같은 태그로 연결된 플레이어</strong>가 나온다.<br/>
+        <span class="muted">이 연결은 투자/공급 계약이 아니라, 이 지도의 분류 태그가 겹치는 정도를 기준으로 계산한 유사도다.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const entity = ENTITIES.find(e => e.name === state.selected);
+  const related = relatedEntities(state.selected);
+
+  panel.innerHTML = `
+    <div class="detail-grid">
+      <div>
+        <div class="type-badge type-${entity.type}" style="display:inline-flex">${typeLabel(entity.type)}</div>
+        <h3 class="detail-title">${entity.name}</h3>
+        <p class="detail-sub">${entity.layerName}${entity.subgroup ? ` · ${entity.subgroup}` : ""} · ${entity.focus || ""}</p>
+      </div>
+      <div class="detail-box">
+        <h4>설명</h4>
+        <p>${entity.summary}</p>
+      </div>
+      <div class="detail-box">
+        <h4>태그</h4>
+        <div class="tag-row">
+          ${(entity.tags || []).map(tag => `<span class="tag">${tag}</span>`).join("")}
+        </div>
+      </div>
+      <div class="detail-box">
+        <h4>비슷한 축의 플레이어</h4>
+        <div class="small-list">
+          ${related.length ? related.map(item => `
+            <div class="small-item">
+              <div class="small-item-top">
+                <div class="small-name">${item.name}</div>
+                <div class="small-meta">${item.layerName}</div>
+              </div>
+              <div class="shared-tags">
+                ${item.shared.map(tag => `<span>${tag}</span>`).join("")}
+              </div>
+            </div>
+          `).join("") : `<div class="muted">겹치는 태그 기반 연결이 없습니다.</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAll(rebuildFilters = true) {
+  const visibleNames = new Set(visibleEntities().map(e => e.name));
+  if (state.selected && !visibleNames.has(state.selected)) {
+    state.selected = null;
+  }
+  if (rebuildFilters) buildFilterChips();
+  renderMain();
+  renderDetail();
+}
+
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  state.query = e.target.value;
+  renderAll(false);
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  state.query = "";
+  state.type = "all";
+  state.tag = "all";
+  state.selected = null;
+  document.getElementById("searchInput").value = "";
+  renderAll();
+});
+
+buildStats();
+buildLayerNav();
+renderAll();
+</script>
 </body>
 </html>
