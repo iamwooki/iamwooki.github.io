@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>대한민국 AI 생태계 조감도</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --mono: 'DM Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); }
+body { font-family:'Noto Sans KR',sans-serif; color:#e2e8f0; }
+
+/* ── Canvas bg grid ── */
+#bg-canvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
+
+/* ── SVG main ── */
+#graph-svg { position:fixed; inset:0; z-index:1; }
+
+/* ── Top bar ── */
+.top-bar {
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; align-items:center; gap:14px;
+  padding:14px 24px;
+  background:linear-gradient(180deg,rgba(7,9,15,.95) 70%,transparent);
+  pointer-events:none;
+}
+.top-bar > * { pointer-events:auto; }
+.logo {
+  display:flex; flex-direction:column; gap:2px; margin-right:8px;
+}
+.logo-title {
+  font-size:15px; font-weight:900; letter-spacing:-.4px; color:#f1f5f9;
+}
+.logo-sub {
+  font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.3); letter-spacing:2px; text-transform:uppercase;
+}
+.search-box {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; padding:8px 12px; width:200px;
+}
+.search-box input {
+  background:transparent; border:0; outline:0; color:#e2e8f0;
+  font-family:'Noto Sans KR',sans-serif; font-size:12px; width:100%;
+}
+.search-box input::placeholder { color:rgba(255,255,255,.25); }
+.search-icon { color:rgba(255,255,255,.3); flex-shrink:0; }
+
+/* filter pills */
+.filter-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.f-pill {
+  font-family:var(--mono); font-size:10px; padding:5px 10px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.45); cursor:pointer; transition:.15s; white-space:nowrap;
+}
+.f-pill:hover { border-color:rgba(255,255,255,.3); color:#fff; }
+.f-pill.active { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.4); color:#fff; }
+.f-pill[data-layer="service"].active  { background:rgba(245,158,11,.15); border-color:#f59e0b; color:#fbbf24; }
+.f-pill[data-layer="model"].active    { background:rgba(139,92,246,.15); border-color:#8b5cf6; color:#a78bfa; }
+.f-pill[data-layer="data"].active     { background:rgba(6,182,212,.15);  border-color:#06b6d4; color:#22d3ee; }
+.f-pill[data-layer="cloud"].active    { background:rgba(16,185,129,.15); border-color:#10b981; color:#34d399; }
+.f-pill[data-layer="chip"].active     { background:rgba(239,68,68,.15);  border-color:#ef4444; color:#f87171; }
+
+/* ── Controls (right side) ── */
+.ctrl-panel {
+  position:fixed; top:50%; right:20px; transform:translateY(-50%);
+  z-index:30; display:flex; flex-direction:column; gap:8px;
+}
+.ctrl-btn {
+  width:36px; height:36px; border-radius:10px;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.5); cursor:pointer; font-size:16px;
+  display:flex; align-items:center; justify-content:center; transition:.15s;
+}
+.ctrl-btn:hover { background:rgba(255,255,255,.13); color:#fff; }
+
+/* ── Legend ── */
+.legend {
+  position:fixed; bottom:24px; left:24px; z-index:30;
+  display:flex; flex-direction:column; gap:6px;
+}
+.legend-item {
+  display:flex; align-items:center; gap:8px;
+  font-size:11px; color:rgba(255,255,255,.5);
+}
+.legend-swatch { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.legend-div { width:32px; height:1px; margin:4px 0; background:rgba(255,255,255,.08); }
+
+/* ── Detail panel ── */
+.detail-panel {
+  position:fixed; bottom:24px; right:24px; z-index:30;
+  width:280px; background:rgba(12,16,28,.92); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.1); border-radius:18px;
+  padding:20px; transition:opacity .25s,transform .25s;
+  opacity:0; transform:translateY(12px); pointer-events:none;
+}
+.detail-panel.visible { opacity:1; transform:translateY(0); pointer-events:auto; }
+.detail-layer {
+  font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:6px; opacity:.6;
+}
+.detail-name { font-size:22px; font-weight:800; letter-spacing:-.5px; margin-bottom:4px; line-height:1.1; }
+.detail-focus {
+  font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:6px;
+  display:inline-block; margin-bottom:10px;
+  background:rgba(255,255,255,.07); color:rgba(255,255,255,.5);
+}
+.detail-summary { font-size:12px; line-height:1.65; color:rgba(255,255,255,.6); margin-bottom:12px; }
+.detail-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
+.detail-tag {
+  font-size:10px; padding:4px 8px; border-radius:999px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.5);
+}
+.detail-related-title { font-family:var(--mono); font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:8px; }
+.related-list { display:flex; flex-direction:column; gap:4px; max-height:120px; overflow-y:auto; }
+.related-list::-webkit-scrollbar { width:3px; }
+.related-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
+.related-item {
+  display:flex; align-items:center; gap:8px;
+  font-size:11px; color:rgba(255,255,255,.5); padding:4px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.related-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.related-name { flex:1; font-weight:600; color:rgba(255,255,255,.75); }
+.related-layer { font-size:9px; font-family:var(--mono); }
+.close-btn {
+  position:absolute; top:14px; right:14px;
+  width:24px; height:24px; border-radius:6px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.3); cursor:pointer; font-size:12px;
+  display:flex; align-items:center; justify-content:center;
+}
+.close-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+
+/* ── Stats bar ── */
+.stats-bar {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  z-index:30; display:flex; gap:0;
+  background:rgba(12,16,28,.88); backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden;
+}
+.stat-item {
+  padding:10px 20px; display:flex; flex-direction:column; gap:2px;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+.stat-item:last-child { border-right:0; }
+.stat-val { font-size:18px; font-weight:800; color:#f1f5f9; line-height:1; }
+.stat-lbl { font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.3); letter-spacing:1px; text-transform:uppercase; }
+
+/* Node tooltip */
+.node-tooltip {
+  position:fixed; pointer-events:none; z-index:50;
+  background:rgba(12,16,28,.95); border:1px solid rgba(255,255,255,.12);
+  border-radius:10px; padding:8px 12px; font-size:12px;
+  opacity:0; transition:opacity .1s; max-width:180px;
+}
+.node-tooltip.visible { opacity:1; }
+.node-tooltip-name { font-weight:700; color:#f1f5f9; margin-bottom:2px; }
+.node-tooltip-sub  { color:rgba(255,255,255,.4); font-size:10px; font-family:var(--mono); }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<svg id="graph-svg"></svg>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <div class="logo">
+    <div class="logo-title">대한민국 AI 생태계</div>
+    <div class="logo-sub">Ecosystem Overview · 2025</div>
+  </div>
+  <div class="search-box">
+    <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="search-input" type="text" placeholder="기업명 검색…" autocomplete="off"/>
+  </div>
+  <div class="filter-row" id="filter-row"></div>
+</div>
+
+<!-- Zoom controls -->
+<div class="ctrl-panel">
+  <button class="ctrl-btn" id="btn-zi" title="확대">+</button>
+  <button class="ctrl-btn" id="btn-zo" title="축소">−</button>
+  <button class="ctrl-btn" id="btn-fit" title="전체보기" style="font-size:12px">⊞</button>
+</div>
+
+<!-- Legend -->
+<div class="legend" id="legend"></div>
+
+<!-- Stats -->
+<div class="stats-bar" id="stats-bar"></div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <button class="close-btn" id="close-detail">✕</button>
+  <div class="detail-layer" id="d-layer"></div>
+  <div class="detail-name" id="d-name"></div>
+  <div class="detail-focus" id="d-focus"></div>
+  <div class="detail-summary" id="d-summary"></div>
+  <div class="detail-tags" id="d-tags"></div>
+  <div class="detail-related-title">유사 플레이어</div>
+  <div class="related-list" id="d-related"></div>
+</div>
+
+<!-- Tooltip -->
+<div class="node-tooltip" id="node-tooltip">
+  <div class="node-tooltip-name" id="tt-name"></div>
+  <div class="node-tooltip-sub"  id="tt-sub"></div>
+</div>
+
+<script>
+'use strict';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  DATA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LAYER_DEFS = [
+  { id:"service", name:"AI 서비스",      accent:"#f59e0b", cx_pct:0.13, cy_pct:0.42 },
+  { id:"model",   name:"AI 모델",        accent:"#8b5cf6", cx_pct:0.38, cy_pct:0.22 },
+  { id:"data",    name:"데이터",          accent:"#06b6d4", cx_pct:0.70, cy_pct:0.30 },
+  { id:"cloud",   name:"클라우드·인프라", accent:"#10b981", cx_pct:0.38, cy_pct:0.72 },
+  { id:"chip",    name:"AI 반도체",       accent:"#ef4444", cx_pct:0.82, cy_pct:0.68 },
+];
+
+const RAW = [
+  // ── AI 서비스 ──────────────────────────────────────────
+  { id:"라이너",           layer:"service", type:"startup",    focus:"AI Search",     summary:"AI 검색·리서치 에이전트 인터페이스",      tags:["검색/생산성","에이전트","LLM/모델"] },
+  { id:"뤼튼테크놀로지스", layer:"service", type:"startup",    focus:"AI Agent",      summary:"대중형 AI 에이전트·LLM 멀티플렉서 앱",   tags:["에이전트","검색/생산성","LLM/모델"] },
+  { id:"스캐터랩",         layer:"service", type:"startup",    focus:"Conversational",summary:"대화형 AI 서비스·이루다",                 tags:["검색/생산성","에이전트","소비자"] },
+  { id:"올거나이즈",       layer:"service", type:"startup",    focus:"Alli",          summary:"엔터프라이즈 AI 에이전트·문서 자동화",    tags:["에이전트","엔터프라이즈","LLM/모델"] },
+  { id:"뤼이드",           layer:"service", type:"startup",    focus:"Edu AI",        summary:"AI 튜터·개인화 학습 에듀테크",            tags:["검색/생산성","교육","서비스"] },
+  { id:"매스프레소",       layer:"service", type:"startup",    focus:"QANDA",         summary:"QANDA 기반 학습 AI 플랫폼",              tags:["검색/생산성","교육","모바일"] },
+  { id:"클래스팅",         layer:"service", type:"startup",    focus:"EdTech",        summary:"학교·학습용 AI 에듀 플랫폼",             tags:["검색/생산성","교육","공공AI"] },
+  { id:"포티투마루",       layer:"service", type:"startup",    focus:"42Maru",        summary:"QA·도메인 특화 LLM 서비스",             tags:["에이전트","엔터프라이즈","LLM/모델"] },
+  { id:"코난테크놀로지",   layer:"service", type:"startup",    focus:"NLP Solution",  summary:"NLP·검색 기반 기업 AI 솔루션",          tags:["검색/생산성","엔터프라이즈","LLM/모델"] },
+  { id:"솔트룩스",         layer:"service", type:"startup",    focus:"Agentic AI",    summary:"LLM·에이전트·지식 서비스 플랫폼",       tags:["에이전트","LLM/모델","엔터프라이즈"] },
+  { id:"루닛",             layer:"service", type:"startup",    focus:"Imaging AI",    summary:"암 진단·영상 분석 AI, 글로벌",           tags:["의료AI","비전","상장"] },
+  { id:"뷰노",             layer:"service", type:"startup",    focus:"Clinical AI",   summary:"생체신호·영상 의료 AI",                  tags:["의료AI","비전","상장"] },
+  { id:"딥노이드",         layer:"service", type:"startup",    focus:"Deep:NEURO",    summary:"의료 영상·판독 AI",                      tags:["의료AI","비전","상장"] },
+  { id:"JLK",              layer:"service", type:"startup",    focus:"Stroke AI",     summary:"뇌졸중 중심 의료 영상 AI",               tags:["의료AI","비전","상장"] },
+  { id:"딥바이오",         layer:"service", type:"startup",    focus:"Pathology",     summary:"AI 기반 병리 이미지 진단",               tags:["의료AI","비전","데이터/MLOps"] },
+  { id:"메디웨일",         layer:"service", type:"startup",    focus:"Retinal AI",    summary:"안저 기반 전신 질환 예측 AI",            tags:["의료AI","예측","헬스케어"] },
+  { id:"코어라인소프트",   layer:"service", type:"startup",    focus:"Thoracic AI",   summary:"흉부 영상·폐질환 AI 분석",               tags:["의료AI","비전","상장"] },
+  { id:"에이아이트릭스",   layer:"service", type:"startup",    focus:"Vitals AI",     summary:"중환자·임상 예측 AI",                    tags:["의료AI","예측","병원"] },
+  { id:"트웰브랩스",       layer:"service", type:"startup",    focus:"Video AI",      summary:"비디오 이해·멀티모달 AI, 글로벌",        tags:["멀티모달/콘텐츠","비전","글로벌"] },
+  { id:"딥브레인AI",       layer:"service", type:"startup",    focus:"AI Human",      summary:"AI 휴먼·영상 생성 서비스",               tags:["멀티모달/콘텐츠","영상","아바타"] },
+  { id:"클레온",           layer:"service", type:"startup",    focus:"Avatar",        summary:"디지털 휴먼·더빙 플랫폼",               tags:["멀티모달/콘텐츠","아바타","음성"] },
+  { id:"네오사피엔스",     layer:"service", type:"startup",    focus:"Typecast",      summary:"AI 음성·TTS·보이스 클로닝",             tags:["멀티모달/콘텐츠","음성","글로벌"] },
+  { id:"펄스나인",         layer:"service", type:"startup",    focus:"Virtual Human", summary:"버추얼 휴먼·K팝 IP 콘텐츠",             tags:["멀티모달/콘텐츠","아바타","엔터테인먼트"] },
+  { id:"마인드로직",       layer:"service", type:"startup",    focus:"Character AI",  summary:"AI 캐릭터·인터랙션 플랫폼",             tags:["멀티모달/콘텐츠","에이전트","소비자"] },
+  { id:"포티투닷",         layer:"service", type:"enterprise", focus:"42dot",         summary:"현대차 계열 SDV·모빌리티 AI",           tags:["자율주행/로보틱스","플랫폼","모빌리티"] },
+  { id:"서울로보틱스",     layer:"service", type:"startup",    focus:"3D Percep.",    summary:"3D 인식 AI·산업 자율화",                tags:["자율주행/로보틱스","비전","모빌리티"] },
+  { id:"모빌테크",         layer:"service", type:"startup",    focus:"HD Map",        summary:"HD맵·자율주행 공간 데이터",             tags:["자율주행/로보틱스","데이터/MLOps","모빌리티"] },
+  { id:"라이드플럭스",     layer:"service", type:"startup",    focus:"Autonomy",      summary:"자율주행 플랫폼 소프트웨어",            tags:["자율주행/로보틱스","모빌리티","서비스"] },
+  { id:"스트라드비젼",     layer:"service", type:"startup",    focus:"Perception",    summary:"ADAS 비전 인식 소프트웨어",             tags:["자율주행/로보틱스","비전","온디바이스"] },
+  { id:"베어로보틱스",     layer:"service", type:"startup",    focus:"Servi",         summary:"서비스 로봇·식당 배달 자율주행",        tags:["자율주행/로보틱스","로봇","서비스"] },
+  { id:"S2W",              layer:"service", type:"startup",    focus:"Data Intel.",   summary:"AI 사이버 위협 인텔리전스",             tags:["엔터프라이즈","지식그래프","데이터/MLOps"] },
+  { id:"마키나락스",       layer:"service", type:"startup",    focus:"Industrial",    summary:"산업 특화 AI·공장 운영 최적화",         tags:["엔터프라이즈","산업AI","데이터/MLOps"] },
+
+  // ── AI 모델 ───────────────────────────────────────────
+  { id:"네이버",            layer:"model", type:"enterprise", focus:"HyperCLOVA X",  summary:"HyperCLOVA X 계열 파운데이션 모델",     tags:["LLM/모델","검색/생산성","플랫폼"] },
+  { id:"LG AI Research",   layer:"model", type:"enterprise", focus:"EXAONE",        summary:"EXAONE 오픈소스 LLM·멀티모달 연구",    tags:["LLM/모델","연구","플랫폼"] },
+  { id:"카카오",            layer:"model", type:"enterprise", focus:"GenAI",         summary:"생성형 AI 연구·Kakao Brain",            tags:["LLM/모델","플랫폼","검색/생산성"] },
+  { id:"SK텔레콤",          layer:"model", type:"enterprise", focus:"A.X",           summary:"A.X 기반 AI 서비스·통신 AI",            tags:["LLM/모델","통신","플랫폼"] },
+  { id:"KT",                layer:"model", type:"enterprise", focus:"Mi:dm",         summary:"Mi:dm LLM·공공·금융 B2B",              tags:["LLM/모델","통신","엔터프라이즈"] },
+  { id:"삼성SDS",           layer:"model", type:"enterprise", focus:"Brity LLM",     summary:"Brity LLM·엔터프라이즈 AI 플랫폼",     tags:["LLM/모델","엔터프라이즈","클라우드"] },
+  { id:"업스테이지",        layer:"model", type:"startup",    focus:"Solar",         summary:"Solar LLM·문서 AI·Document AI API",    tags:["LLM/모델","엔터프라이즈","문서AI"] },
+  { id:"모레",              layer:"model", type:"startup",    focus:"Compute SW",    summary:"AI 컴퓨팅 최적화·LLM 추론 가속 SW",   tags:["LLM/모델","데이터/MLOps","인프라"] },
+  { id:"Motif Technologies",layer:"model", type:"startup",    focus:"Motif",         summary:"소버린 AI·멀티에이전트 플랫폼",        tags:["LLM/모델","에이전트","플랫폼"] },
+  { id:"FriendliAI",        layer:"model", type:"startup",    focus:"Inference",     summary:"LLM 추론·서빙 인프라 플랫폼",          tags:["LLM/모델","데이터/MLOps","인프라"] },
+  { id:"튜닙",              layer:"model", type:"startup",    focus:"TuNIB",         summary:"감성 대화·소형 특화 언어 모델",        tags:["LLM/모델","소비자","연구"] },
+  { id:"알체라",            layer:"model", type:"startup",    focus:"Face/Vision",   summary:"얼굴·생체인식 비전 AI 모델",           tags:["LLM/모델","비전","엔터프라이즈"] },
+  { id:"NC AI",             layer:"model", type:"startup",    focus:"VARCO",         summary:"게임·멀티모달 콘텐츠 생성 AI",         tags:["LLM/모델","멀티모달/콘텐츠","게임"] },
+
+  // ── 데이터 ────────────────────────────────────────────
+  { id:"크라우드웍스",   layer:"data", type:"startup", focus:"DataOps",      summary:"데이터 라벨링·AI 데이터 운영 플랫폼",   tags:["데이터/MLOps","라벨링","데이터"] },
+  { id:"슈퍼브에이아이", layer:"data", type:"startup", focus:"Vision AI",    summary:"비전 데이터 파이프라인·MLOps",          tags:["데이터/MLOps","비전","MLOps"] },
+  { id:"마인즈앤컴퍼니", layer:"data", type:"startup", focus:"Consulting",   summary:"기업 AI 도입·MLOps 컨설팅",             tags:["데이터/MLOps","엔터프라이즈","MLOps"] },
+  { id:"스케일업랩스",   layer:"data", type:"startup", focus:"Scale-up",     summary:"AI 데이터 구축·스케일 운영",            tags:["데이터/MLOps","데이터","라벨링"] },
+  { id:"셀렉트스타",     layer:"data", type:"startup", focus:"Evaluation",   summary:"데이터 검증·평가·RLHF 파이프라인",     tags:["데이터/MLOps","평가","정렬"] },
+  { id:"에이모",         layer:"data", type:"startup", focus:"AIMMO",        summary:"자율주행·산업용 데이터 플랫폼",         tags:["데이터/MLOps","자율주행/로보틱스","데이터"] },
+  { id:"테스트웍스",     layer:"data", type:"startup", focus:"Data QA",      summary:"AI 데이터 구축·검증 서비스",            tags:["데이터/MLOps","데이터","검증"] },
+  { id:"아크릴",         layer:"data", type:"startup", focus:"Graph AI",     summary:"지식그래프·분석형 AI 플랫폼",           tags:["데이터/MLOps","지식그래프","엔터프라이즈"] },
+  { id:"VESSL AI",       layer:"data", type:"startup", focus:"GPU Ops",      summary:"GPU 클라우드·MLOps 운영 플랫폼",       tags:["데이터/MLOps","클라우드","인프라"] },
+  { id:"노타AI",         layer:"data", type:"startup", focus:"Optimization", summary:"온디바이스 AI 경량화·최적화",           tags:["데이터/MLOps","온디바이스","비전"] },
+  { id:"씨이랩",         layer:"data", type:"startup", focus:"Video AI",     summary:"비디오 분석·AI 인프라 솔루션",          tags:["데이터/MLOps","비전","엔터프라이즈"] },
+
+  // ── 클라우드·인프라 ────────────────────────────────────
+  { id:"네이버클라우드", layer:"cloud", type:"enterprise", focus:"Ncloud",      summary:"국산 AI 클라우드·HyperCLOVA API",      tags:["클라우드","플랫폼","공공AI"] },
+  { id:"KT클라우드",    layer:"cloud", type:"enterprise", focus:"KT Cloud",    summary:"AI·공공·금융 버티컬 클라우드",         tags:["클라우드","플랫폼","통신"] },
+  { id:"NHN클라우드",   layer:"cloud", type:"enterprise", focus:"NHN Cloud",   summary:"클라우드·AI 서비스 인프라",            tags:["클라우드","플랫폼","엔터프라이즈"] },
+  { id:"카카오클라우드",layer:"cloud", type:"enterprise", focus:"Kakao Cloud", summary:"카카오 계열 퍼블릭 클라우드",          tags:["클라우드","플랫폼","엔터프라이즈"] },
+  { id:"LG CNS",        layer:"cloud", type:"enterprise", focus:"AX",          summary:"AX 전환·기업 클라우드·SI 서비스",      tags:["클라우드","엔터프라이즈","SI"] },
+  { id:"SK C&C",        layer:"cloud", type:"enterprise", focus:"AIX",         summary:"AIX·클라우드·IT서비스 전환",           tags:["클라우드","엔터프라이즈","SI"] },
+  { id:"메가존클라우드",layer:"cloud", type:"startup",    focus:"MSP",         summary:"AWS·Azure 기반 클라우드 MSP·AI 구축", tags:["클라우드","엔터프라이즈","MSP"] },
+  { id:"베스핀글로벌",  layer:"cloud", type:"startup",    focus:"Bespin",      summary:"멀티클라우드·AI 운영·FinOps",         tags:["클라우드","엔터프라이즈","MSP"] },
+  { id:"케이아이엔엑스", layer:"cloud", type:"startup",   focus:"KINX",        summary:"데이터센터·인터넷 교환 인프라",        tags:["클라우드","인프라","데이터/MLOps"] },
+  { id:"그리드원",       layer:"cloud", type:"startup",   focus:"Edge Infra",  summary:"엣지 컴퓨팅·분산 AI 인프라",          tags:["클라우드","인프라","온디바이스"] },
+
+  // ── AI 반도체 ─────────────────────────────────────────
+  { id:"삼성전자",            layer:"chip", type:"enterprise", focus:"Samsung",      summary:"HBM·파운드리·시스템 반도체 종합",    tags:["반도체","HBM","대기업"] },
+  { id:"SK하이닉스",          layer:"chip", type:"enterprise", focus:"SK hynix",     summary:"HBM3E·메모리 중심 AI 반도체",       tags:["반도체","HBM","대기업"] },
+  { id:"리벨리온",            layer:"chip", type:"startup",    focus:"Rebellions",   summary:"데이터센터용 ATOM·REBEL AI 칩",     tags:["반도체","NPU","데이터센터"] },
+  { id:"퓨리오사AI",          layer:"chip", type:"startup",    focus:"FuriosaAI",    summary:"AI 추론 가속기 WARBOY·RNGD",        tags:["반도체","NPU","데이터센터"] },
+  { id:"딥엑스",              layer:"chip", type:"startup",    focus:"DEEPX",        summary:"온디바이스·엣지 AI NPU",            tags:["반도체","온디바이스","엣지"] },
+  { id:"HyperAccel",          layer:"chip", type:"startup",    focus:"LPU",          summary:"LLM 추론 특화 가속 칩 LPU",         tags:["반도체","LLM/모델","추론"] },
+  { id:"사피온",              layer:"chip", type:"startup",    focus:"SAPEON",       summary:"SK텔레콤 계열 AI 가속칩 X220",      tags:["반도체","NPU","데이터센터"] },
+  { id:"오픈엣지테크놀로지",  layer:"chip", type:"startup",    focus:"OPENEDGES",    summary:"NPU·메모리 시스템 반도체 IP",       tags:["반도체","온디바이스","IP"] },
+  { id:"Mobilint",            layer:"chip", type:"startup",    focus:"Mobilint",     summary:"온프레미스·온디바이스 추론 NPU",    tags:["반도체","온디바이스","NPU"] },
+  { id:"네패스",              layer:"chip", type:"enterprise", focus:"Packaging",    summary:"AI 반도체 패키징·후공정 전문",      tags:["반도체","패키징","대기업"] },
+];
+
+// Cross-layer relations
+const RELATIONS = [
+  ["네이버","네이버클라우드","group"],
+  ["SK텔레콤","SK하이닉스","group"],
+  ["SK텔레콤","사피온","group"],
+  ["SK텔레콤","SK C&C","group"],
+  ["KT","KT클라우드","group"],
+  ["카카오","카카오클라우드","group"],
+  ["LG AI Research","LG CNS","group"],
+  ["삼성전자","삼성SDS","group"],
+  ["포티투닷","포티투마루","group"],
+  ["업스테이지","크라우드웍스","tech"],
+  ["업스테이지","슈퍼브에이아이","tech"],
+  ["업스테이지","셀렉트스타","tech"],
+  ["뤼튼테크놀로지스","업스테이지","tech"],
+  ["뤼튼테크놀로지스","네이버","tech"],
+  ["루닛","네이버클라우드","tech"],
+  ["뷰노","KT클라우드","tech"],
+  ["트웰브랩스","네이버클라우드","tech"],
+  ["모레","LG AI Research","tech"],
+  ["모레","업스테이지","tech"],
+  ["라이너","업스테이지","tech"],
+  ["딥브레인AI","SK C&C","tech"],
+  ["네오사피엔스","네이버클라우드","tech"],
+  ["에이모","포티투닷","tech"],
+  ["하이퍼엑셀AI","LG AI Research","tech"],
+  ["오픈엣지테크놀로지","삼성전자","tech"],
+  ["삼성전자","네이버","supply"],
+  ["삼성전자","LG AI Research","supply"],
+  ["SK하이닉스","네이버","supply"],
+  ["SK하이닉스","LG AI Research","supply"],
+  ["SK하이닉스","카카오","supply"],
+  ["리벨리온","KT","supply"],
+  ["리벨리온","KT클라우드","supply"],
+  ["퓨리오사AI","네이버클라우드","supply"],
+  ["딥엑스","NHN클라우드","supply"],
+  ["사피온","SK C&C","supply"],
+  ["네이버","트웰브랩스","invest"],
+  ["카카오","뤼튼테크놀로지스","invest"],
+  ["SK텔레콤","리벨리온","invest"],
+  ["삼성전자","퓨리오사AI","invest"],
+  ["KT","솔트룩스","invest"],
+  ["네이버클라우드","서울로보틱스","invest"],
+];
+
+const REL_COL = { group:"#f59e0b", tech:"#10b981", supply:"#a855f7", invest:"#ec4899" };
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ST = {
+  selected: null,
+  layerFilter: null,
+  query: "",
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  BACKGROUND GRID CANVAS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function drawBgGrid() {
+  const cvs = document.getElementById('bg-canvas');
+  cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  ctx.strokeStyle = 'rgba(255,255,255,0.028)';
+  ctx.lineWidth = 1;
+  const gs = 48;
+  for (let x = 0; x < cvs.width; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cvs.height); ctx.stroke(); }
+  for (let y = 0; y < cvs.height; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cvs.width,y); ctx.stroke(); }
+}
+drawBgGrid();
+window.addEventListener('resize', drawBgGrid);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  BUILD GRAPH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const W = window.innerWidth, H = window.innerHeight;
+
+// Layer map
+const layerMap = {};
+LAYER_DEFS.forEach(l => { layerMap[l.id] = l; });
+
+// Node data
+const nodes = RAW.map(d => ({
+  ...d,
+  accent: layerMap[d.layer].accent,
+  layerName: layerMap[d.layer].name,
+  r: d.type === 'enterprise' ? 10 : 7,
+  tx: layerMap[d.layer].cx_pct * W,
+  ty: layerMap[d.layer].cy_pct * H,
+  // Scatter initial positions around layer center so sim starts spread out
+  x: layerMap[d.layer].cx_pct * W + (Math.random() - 0.5) * 220,
+  y: layerMap[d.layer].cy_pct * H + (Math.random() - 0.5) * 220,
+}));
+
+const nodeIndex = {};
+nodes.forEach((n, i) => { nodeIndex[n.id] = i; });
+
+// Edges
+const links = RELATIONS
+  .filter(([a,b]) => nodeIndex[a] !== undefined && nodeIndex[b] !== undefined)
+  .map(([a,b,type]) => ({ source: a, target: b, type }));
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  SVG SETUP
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const svg = d3.select('#graph-svg')
+  .attr('width', W).attr('height', H);
+
+const defs = svg.append('defs');
+
+// Glow filters
+LAYER_DEFS.forEach(l => {
+  const f = defs.append('filter').attr('id', `glow-${l.id}`).attr('x','-60%').attr('y','-60%').attr('width','220%').attr('height','220%');
+  f.append('feGaussianBlur').attr('in','SourceGraphic').attr('stdDeviation','5').attr('result','blur');
+  const m = f.append('feMerge');
+  m.append('feMergeNode').attr('in','blur');
+  m.append('feMergeNode').attr('in','SourceGraphic');
+});
+
+// Zoom
+const zoomG = svg.append('g').attr('id','zoom-g');
+const zoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', ev => zoomG.attr('transform', ev.transform));
+svg.call(zoom);
+
+// ── Layer zone blobs ──────────────────────────────────────
+const zoneG = zoomG.append('g').attr('id','zones');
+const zoneRadius = Math.min(W, H) * 0.20;
+
+LAYER_DEFS.forEach(l => {
+  const cx = l.cx_pct * W, cy = l.cy_pct * H;
+  // Outer glow ring
+  zoneG.append('circle').attr('cx',cx).attr('cy',cy)
+    .attr('r', zoneRadius * 1.4)
+    .attr('fill', 'none')
+    .attr('stroke', l.accent)
+    .attr('stroke-width', 1)
+    .attr('stroke-opacity', 0.08)
+    .attr('stroke-dasharray', '4 6');
+  // Zone fill
+  zoneG.append('circle').attr('cx',cx).attr('cy',cy)
+    .attr('r', zoneRadius)
+    .attr('fill', l.accent)
+    .attr('fill-opacity', 0.04)
+    .attr('stroke', l.accent)
+    .attr('stroke-width', 1)
+    .attr('stroke-opacity', 0.18)
+    .attr('class', `zone zone-${l.id}`);
+  // Zone label
+  zoneG.append('text')
+    .attr('x', cx).attr('y', cy - zoneRadius - 14)
+    .attr('text-anchor','middle')
+    .attr('fill', l.accent).attr('font-size','13px').attr('font-weight','700')
+    .attr('font-family','Noto Sans KR,sans-serif').attr('opacity',0.85)
+    .attr('class',`zone-label zone-label-${l.id}`)
+    .text(l.name);
+  // Company count badge
+  const cnt = nodes.filter(n => n.layer === l.id).length;
+  zoneG.append('text')
+    .attr('x', cx).attr('y', cy - zoneRadius + 2)
+    .attr('text-anchor','middle')
+    .attr('fill', l.accent).attr('font-size','10px').attr('opacity',0.5)
+    .attr('font-family','DM Mono,monospace')
+    .text(`${cnt}개`);
+});
+
+// ── Links ─────────────────────────────────────────────────
+const linkG = zoomG.append('g').attr('id','links');
+const linkSel = linkG.selectAll('line').data(links).join('line')
+  .attr('stroke', d => REL_COL[d.type] || '#fff')
+  .attr('stroke-width', 1)
+  .attr('stroke-opacity', 0.18)
+  .attr('stroke-dasharray', d => d.type === 'invest' ? '4,3' : null);
+
+// ── Nodes ─────────────────────────────────────────────────
+const nodeG = zoomG.append('g').attr('id','node-g');
+const nodeGSel = nodeG.selectAll('g.node-wrap').data(nodes, d => d.id)
+  .join('g').attr('class','node-wrap')
+  .style('cursor','pointer')
+  .call(
+    d3.drag()
+      .on('start', (ev, d) => { if (!ev.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
+      .on('end',   (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+  );
+
+// Outer glow ring (only visible on hover/select)
+nodeGSel.append('circle')
+  .attr('class','node-ring')
+  .attr('r', d => d.r + 5)
+  .attr('fill', 'none')
+  .attr('stroke', d => d.accent)
+  .attr('stroke-width', 1.5)
+  .attr('stroke-opacity', 0)
+  .attr('filter', d => `url(#glow-${d.layer})`);
+
+// Main circle
+nodeGSel.append('circle')
+  .attr('class','node-circle')
+  .attr('r', d => d.r)
+  .attr('fill', d => d.accent)
+  .attr('fill-opacity', d => d.type === 'enterprise' ? 0.9 : 0.65)
+  .attr('stroke', d => d.accent)
+  .attr('stroke-width', d => d.type === 'enterprise' ? 2 : 1)
+  .attr('stroke-opacity', 0.9);
+
+// Labels (only for enterprise or large nodes)
+nodeGSel.append('text')
+  .attr('class','node-label')
+  .attr('text-anchor','middle')
+  .attr('dy', d => d.r + 11)
+  .attr('fill','rgba(255,255,255,0.7)')
+  .attr('font-size', d => d.type === 'enterprise' ? '10px' : '8.5px')
+  .attr('font-family','Noto Sans KR,sans-serif')
+  .attr('font-weight', d => d.type === 'enterprise' ? '700' : '400')
+  .attr('pointer-events','none')
+  .text(d => d.id.length > 8 ? d.id.slice(0,7)+'…' : d.id);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  SIMULATION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const sim = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d => d.id).distance(140).strength(0.06))
+  .force('charge', d3.forceManyBody().strength(-420))
+  .force('collision', d3.forceCollide().radius(d => d.r + 18).strength(0.95))
+  .force('cluster', () => {
+    nodes.forEach(n => {
+      const l = layerMap[n.layer];
+      const tx = l.cx_pct * W, ty = l.cy_pct * H;
+      const alpha = 0.032;
+      n.vx += (tx - n.x) * alpha;
+      n.vy += (ty - n.y) * alpha;
+    });
+  })
+  .alphaDecay(0.010)
+  .velocityDecay(0.42);
+
+sim.on('tick', () => {
+  linkSel
+    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  nodeGSel.attr('transform', d => `translate(${d.x},${d.y})`);
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  INTERACTIONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const tooltip = document.getElementById('node-tooltip');
+const ttName  = document.getElementById('tt-name');
+const ttSub   = document.getElementById('tt-sub');
+
+function relatedIds(name) {
+  const base = nodes.find(n => n.id === name); if (!base) return new Set();
+  const baseSet = new Set(base.tags);
+  return new Set(
+    nodes.filter(n => n.id !== name && n.tags.some(t => baseSet.has(t))).map(n => n.id)
+  );
+}
+
+function applyVisual() {
+  const q = ST.query.toLowerCase();
+  const rel = ST.selected ? relatedIds(ST.selected) : null;
+
+  nodeGSel.each(function(d) {
+    const el = d3.select(this);
+    const isSelected = ST.selected === d.id;
+    const isRelated  = rel && rel.has(d.id);
+    const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
+    const queryMatch = !q || d.id.toLowerCase().includes(q) || (d.focus||'').toLowerCase().includes(q) || d.tags.some(t => t.toLowerCase().includes(q));
+    const active = layerMatch && queryMatch;
+    let opacity = 1;
+    if (ST.selected) { opacity = isSelected ? 1 : isRelated ? 0.85 : 0.15; }
+    else if (!active) { opacity = 0.12; }
+    el.attr('opacity', opacity);
+    el.select('.node-ring').attr('stroke-opacity', isSelected ? 0.9 : isRelated ? 0.5 : 0);
+    el.select('.node-circle')
+      .attr('fill-opacity', isSelected ? 1 : d.type === 'enterprise' ? 0.9 : 0.65)
+      .attr('stroke-width', isSelected ? 3 : d.type === 'enterprise' ? 2 : 1);
+  });
+
+  linkSel.attr('stroke-opacity', d => {
+    if (!ST.selected) return 0.18;
+    const connected = d.source.id === ST.selected || d.target.id === ST.selected;
+    return connected ? 0.75 : 0.04;
+  }).attr('stroke-width', d => {
+    if (!ST.selected) return 1;
+    return (d.source.id === ST.selected || d.target.id === ST.selected) ? 2 : 1;
+  });
+
+  // Zone highlights
+  LAYER_DEFS.forEach(l => {
+    const active = !ST.layerFilter || ST.layerFilter === l.id;
+    d3.select(`.zone-${l.id}`).attr('fill-opacity', active ? 0.06 : 0.02).attr('stroke-opacity', active ? 0.22 : 0.07);
+    d3.select(`.zone-label-${l.id}`).attr('opacity', active ? 0.85 : 0.25);
+  });
+}
+
+// Node click
+nodeGSel.on('click', (ev, d) => {
+  ev.stopPropagation();
+  ST.selected = ST.selected === d.id ? null : d.id;
+  applyVisual();
+  updateDetail();
+});
+
+// Hover tooltip
+nodeGSel
+  .on('mouseover', (ev, d) => {
+    ttName.textContent = d.id;
+    ttSub.textContent  = `${d.layerName} · ${d.focus}`;
+    tooltip.classList.add('visible');
+  })
+  .on('mousemove', ev => {
+    tooltip.style.left = (ev.clientX + 16) + 'px';
+    tooltip.style.top  = (ev.clientY - 10) + 'px';
+  })
+  .on('mouseleave', () => tooltip.classList.remove('visible'));
+
+// SVG bg click = deselect
+svg.on('click', () => {
+  ST.selected = null;
+  applyVisual();
+  updateDetail();
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  DETAIL PANEL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function updateDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!ST.selected) { panel.classList.remove('visible'); return; }
+  const d = nodes.find(n => n.id === ST.selected); if (!d) return;
+
+  // Related by tag similarity
+  const baseSet = new Set(d.tags);
+  const related = nodes
+    .filter(n => n.id !== d.id && n.tags.some(t => baseSet.has(t)))
+    .map(n => {
+      const shared = n.tags.filter(t => baseSet.has(t));
+      return { ...n, shared, score: shared.length * 10 + (n.layer === d.layer ? 3 : 0) };
+    })
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 8);
+
+  document.getElementById('d-layer').textContent = d.layerName;
+  document.getElementById('d-layer').style.color = d.accent;
+  document.getElementById('d-name').textContent   = d.id;
+  document.getElementById('d-focus').textContent  = d.focus || '';
+  document.getElementById('d-summary').textContent = d.summary || '';
+  document.getElementById('d-tags').innerHTML = (d.tags||[]).map(t =>
+    `<span class="detail-tag">${t}</span>`).join('');
+  document.getElementById('d-related').innerHTML = related.map(r =>
+    `<div class="related-item">
+      <div class="related-dot" style="background:${r.accent}"></div>
+      <div class="related-name">${r.id}</div>
+      <div class="related-layer" style="color:${r.accent}">${r.layerName}</div>
+    </div>`).join('') || '<div style="font-size:11px;color:rgba(255,255,255,.2)">관련 플레이어 없음</div>';
+
+  panel.classList.add('visible');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  UI COMPONENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Filter pills
+const filterRow = document.getElementById('filter-row');
+filterRow.innerHTML = `<button class="f-pill active" data-layer="">전체</button>` +
+  LAYER_DEFS.map(l => `<button class="f-pill" data-layer="${l.id}">${l.name}</button>`).join('');
+filterRow.querySelectorAll('.f-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterRow.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ST.layerFilter = btn.dataset.layer || null;
+    applyVisual();
+  });
+});
+
+// Search
+document.getElementById('search-input').addEventListener('input', e => {
+  ST.query = e.target.value;
+  applyVisual();
+});
+
+// Close detail
+document.getElementById('close-detail').addEventListener('click', ev => {
+  ev.stopPropagation();
+  ST.selected = null;
+  applyVisual();
+  updateDetail();
+});
+
+// Zoom buttons
+const fitZoom = () => {
+  svg.transition().duration(700).call(
+    zoom.transform,
+    d3.zoomIdentity.translate(W/2, H/2).scale(0.88).translate(-W/2, -H/2)
+  );
+};
+document.getElementById('btn-zi').addEventListener('click',  () => svg.transition().duration(300).call(zoom.scaleBy, 1.3));
+document.getElementById('btn-zo').addEventListener('click',  () => svg.transition().duration(300).call(zoom.scaleBy, 0.77));
+document.getElementById('btn-fit').addEventListener('click', fitZoom);
+
+// ━━━ Legend ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+document.getElementById('legend').innerHTML = `
+  <div class="legend-item"><div class="legend-swatch" style="background:#fff;opacity:.9;width:14px;height:14px;border-radius:3px"></div>대기업·통신</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#fff;opacity:.5"></div>스타트업</div>
+  <div class="legend-div"></div>
+  ${Object.entries(REL_COL).map(([t,c]) => `<div class="legend-item"><div style="width:20px;height:2px;background:${c};border-radius:1px;${t==='invest'?'border-top:2px dashed '+c+';background:none':''}"></div>${{group:'그룹 계열사',tech:'기술협력',supply:'공급망',invest:'투자/파트너십'}[t]}</div>`).join('')}
+`;
+
+// ━━━ Stats bar ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const layerCounts = {};
+LAYER_DEFS.forEach(l => { layerCounts[l.id] = nodes.filter(n => n.layer === l.id).length; });
+document.getElementById('stats-bar').innerHTML = [
+  { val: nodes.length, lbl:'총 기업' },
+  ...LAYER_DEFS.map(l => ({ val: layerCounts[l.id], lbl: l.name, col: l.accent })),
+].map(s => `<div class="stat-item"><div class="stat-val" ${s.col?`style="color:${s.col}"`:''}>${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+
+// Initial zoom identity
+setTimeout(() => {
+  svg.call(zoom.transform, d3.zoomIdentity.translate(W * 0.01, H * 0.06).scale(0.78));
+}, 100);
+
+// Resize handler
+window.addEventListener('resize', () => {
+  const nW = window.innerWidth, nH = window.innerHeight;
+  svg.attr('width', nW).attr('height', nH);
+  drawBgGrid();
+});
+</script>
+</body>
+</html>
