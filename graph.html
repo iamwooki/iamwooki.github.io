@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -399,17 +400,54 @@ const W = window.innerWidth, H = window.innerHeight;
 const layerMap = {};
 LAYER_DEFS.forEach(l => { layerMap[l.id] = l; });
 
+// Domain → Clearbit logo URL
+const DOMAIN = {
+  '네이버':'naver.com','LG AI Research':'lge.com','카카오':'kakao.com',
+  'SK텔레콤':'sktelecom.com','KT':'kt.com','삼성SDS':'samsungsds.com',
+  '업스테이지':'upstage.ai','모레':'moreh.io','FriendliAI':'friendli.ai',
+  '튜닙':'tunib.ai','알체라':'alchera.ai','NC AI':'ncsoft.com',
+  'Motif Technologies':'motif.inc',
+  '라이너':'getliner.com','뤼튼테크놀로지스':'wrtn.ai','스캐터랩':'scatterlab.co.kr',
+  '올거나이즈':'allganize.ai','뤼이드':'riiid.co','매스프레소':'mathpresso.com',
+  '클래스팅':'classting.com','포티투마루':'42maru.com','코난테크놀로지':'conantech.co.kr',
+  '솔트룩스':'saltlux.com','루닛':'lunit.io','뷰노':'vuno.co',
+  '딥노이드':'deepnoid.com','JLK':'jlkgroup.com','딥바이오':'deepbio.co.kr',
+  '메디웨일':'mediwhale.com','코어라인소프트':'corelinesoft.com',
+  '에이아이트릭스':'aitrics.com','트웰브랩스':'twelvelabs.io',
+  '딥브레인AI':'deepbrain.io','클레온':'cleon.ai','네오사피엔스':'neosapience.com',
+  '펄스나인':'pulsenine.com','마인드로직':'mindlogic.ai',
+  '포티투닷':'42dot.ai','서울로보틱스':'seoulrobotics.org','모빌테크':'mobiltech.co.kr',
+  '라이드플럭스':'rideflux.com','스트라드비젼':'stradvision.com','베어로보틱스':'bearrobotics.ai',
+  'S2W':'s2w.inc','마키나락스':'makinarocks.ai',
+  '크라우드웍스':'crowdworks.kr','슈퍼브에이아이':'superb-ai.com',
+  '마인즈앤컴퍼니':'mindsandcompany.com','스케일업랩스':'scaleuplabs.ai',
+  '셀렉트스타':'selectstar.ai','에이모':'aimmo.io','테스트웍스':'testworks.co.kr',
+  '아크릴':'acryl.ai','VESSL AI':'vessl.ai','노타AI':'nota.ai','씨이랩':'celab.ai',
+  '네이버클라우드':'ncloud.com','KT클라우드':'ktcloud.com','NHN클라우드':'nhncloud.com',
+  '카카오클라우드':'kakaocloud.com','LG CNS':'lgcns.com','SK C&C':'skcc.com',
+  '메가존클라우드':'megazone.com','베스핀글로벌':'bespinglobal.com',
+  '케이아이엔엑스':'kinx.net','그리드원':'gridone.ai',
+  '삼성전자':'samsung.com','SK하이닉스':'skhynix.com','리벨리온':'rebellions.ai',
+  '퓨리오사AI':'furiosa.ai','딥엑스':'deepx.ai','HyperAccel':'hyperaccel.ai',
+  '사피온':'sapeon.com','오픈엣지테크놀로지':'openedges.com',
+  'Mobilint':'mobilint.com','네패스':'nepes.com',
+};
+const logoUrl = name => {
+  const d = DOMAIN[name];
+  return d ? `https://logo.clearbit.com/${d}` : null;
+};
+
 // Node data
 const nodes = RAW.map(d => ({
   ...d,
   accent: layerMap[d.layer].accent,
   layerName: layerMap[d.layer].name,
-  r: d.type === 'enterprise' ? 10 : 7,
+  r: d.type === 'enterprise' ? 22 : 16,
+  logo: logoUrl(d.id),
   tx: layerMap[d.layer].cx_pct * W,
   ty: layerMap[d.layer].cy_pct * H,
-  // Scatter initial positions around layer center so sim starts spread out
-  x: layerMap[d.layer].cx_pct * W + (Math.random() - 0.5) * 220,
-  y: layerMap[d.layer].cy_pct * H + (Math.random() - 0.5) * 220,
+  x: layerMap[d.layer].cx_pct * W + (Math.random() - 0.5) * 270,
+  y: layerMap[d.layer].cy_pct * H + (Math.random() - 0.5) * 270,
 }));
 
 const nodeIndex = {};
@@ -442,9 +480,13 @@ const zoomG = svg.append('g').attr('id','zoom-g');
 const zoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', ev => zoomG.attr('transform', ev.transform));
 svg.call(zoom);
 
-// ── Layer zone blobs ──────────────────────────────────────
+// Per-node clipPath for circular logo masking
+nodes.forEach(n => {
+  defs.append('clipPath').attr('id', `clip-${n.id.replace(/[^a-zA-Z0-9]/g,'_')}`)
+    .append('circle').attr('r', n.r - 2).attr('cx', 0).attr('cy', 0);
+});
 const zoneG = zoomG.append('g').attr('id','zones');
-const zoneRadius = Math.min(W, H) * 0.20;
+const zoneRadius = Math.min(W, H) * 0.24;
 
 LAYER_DEFS.forEach(l => {
   const cx = l.cx_pct * W, cy = l.cy_pct * H;
@@ -503,56 +545,97 @@ const nodeGSel = nodeG.selectAll('g.node-wrap').data(nodes, d => d.id)
       .on('end',   (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
   );
 
-// Outer glow ring (only visible on hover/select)
+// Outer glow ring
 nodeGSel.append('circle')
   .attr('class','node-ring')
-  .attr('r', d => d.r + 5)
+  .attr('r', d => d.r + 7)
   .attr('fill', 'none')
   .attr('stroke', d => d.accent)
-  .attr('stroke-width', 1.5)
+  .attr('stroke-width', 2)
   .attr('stroke-opacity', 0)
   .attr('filter', d => `url(#glow-${d.layer})`);
 
-// Main circle
+// Background fill circle (always visible, accent color)
 nodeGSel.append('circle')
   .attr('class','node-circle')
   .attr('r', d => d.r)
   .attr('fill', d => d.accent)
-  .attr('fill-opacity', d => d.type === 'enterprise' ? 0.9 : 0.65)
+  .attr('fill-opacity', d => d.type === 'enterprise' ? 0.25 : 0.18)
   .attr('stroke', d => d.accent)
-  .attr('stroke-width', d => d.type === 'enterprise' ? 2 : 1)
-  .attr('stroke-opacity', 0.9);
+  .attr('stroke-width', d => d.type === 'enterprise' ? 2.5 : 1.5)
+  .attr('stroke-opacity', 0.85);
 
-// Labels (only for enterprise or large nodes)
+// White bg circle behind logo (makes logos readable on dark bg)
+nodeGSel.append('circle')
+  .attr('r', d => d.r - 2)
+  .attr('fill', '#ffffff')
+  .attr('fill-opacity', 0.92);
+
+// Logo image (Clearbit) – clipped to circle
+nodeGSel.each(function(d) {
+  const el = d3.select(this);
+  const clipId = `clip-${d.id.replace(/[^a-zA-Z0-9]/g,'_')}`;
+
+  if (d.logo) {
+    const img = el.append('image')
+      .attr('class','node-logo')
+      .attr('href', d.logo)
+      .attr('x', -(d.r - 2)).attr('y', -(d.r - 2))
+      .attr('width', (d.r - 2) * 2).attr('height', (d.r - 2) * 2)
+      .attr('clip-path', `url(#${clipId})`)
+      .attr('preserveAspectRatio','xMidYMid meet')
+      .attr('opacity', 0);
+
+    // Fade in on load, show fallback on error
+    const imgEl = img.node();
+    imgEl.addEventListener('load',  () => { d3.select(imgEl).attr('opacity', 1); el.select('.node-fallback').attr('opacity', 0); });
+    imgEl.addEventListener('error', () => { d3.select(imgEl).remove(); el.select('.node-fallback').attr('opacity', 1); });
+  }
+
+  // Fallback: first char of company name, colored
+  el.append('text')
+    .attr('class','node-fallback')
+    .attr('text-anchor','middle')
+    .attr('dominant-baseline','central')
+    .attr('fill', d.accent)
+    .attr('font-size', d.r * 0.72)
+    .attr('font-weight','900')
+    .attr('font-family','Noto Sans KR,sans-serif')
+    .attr('pointer-events','none')
+    .attr('opacity', d.logo ? 0 : 1)
+    .text(d.id.slice(0,1));
+});
+
+// Labels below each node
 nodeGSel.append('text')
   .attr('class','node-label')
   .attr('text-anchor','middle')
-  .attr('dy', d => d.r + 11)
-  .attr('fill','rgba(255,255,255,0.7)')
-  .attr('font-size', d => d.type === 'enterprise' ? '10px' : '8.5px')
+  .attr('dy', d => d.r + 13)
+  .attr('fill','rgba(255,255,255,0.82)')
+  .attr('font-size', d => d.type === 'enterprise' ? '11.5px' : '10px')
   .attr('font-family','Noto Sans KR,sans-serif')
-  .attr('font-weight', d => d.type === 'enterprise' ? '700' : '400')
+  .attr('font-weight', d => d.type === 'enterprise' ? '700' : '500')
   .attr('pointer-events','none')
-  .text(d => d.id.length > 8 ? d.id.slice(0,7)+'…' : d.id);
+  .text(d => d.id.length > 9 ? d.id.slice(0,8)+'…' : d.id);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  SIMULATION
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const sim = d3.forceSimulation(nodes)
-  .force('link', d3.forceLink(links).id(d => d.id).distance(140).strength(0.06))
-  .force('charge', d3.forceManyBody().strength(-420))
-  .force('collision', d3.forceCollide().radius(d => d.r + 18).strength(0.95))
+  .force('link', d3.forceLink(links).id(d => d.id).distance(160).strength(0.05))
+  .force('charge', d3.forceManyBody().strength(-600))
+  .force('collision', d3.forceCollide().radius(d => d.r + 22).strength(0.98))
   .force('cluster', () => {
     nodes.forEach(n => {
       const l = layerMap[n.layer];
       const tx = l.cx_pct * W, ty = l.cy_pct * H;
-      const alpha = 0.032;
+      const alpha = 0.028;
       n.vx += (tx - n.x) * alpha;
       n.vy += (ty - n.y) * alpha;
     });
   })
   .alphaDecay(0.010)
-  .velocityDecay(0.42);
+  .velocityDecay(0.45);
 
 sim.on('tick', () => {
   linkSel
@@ -591,10 +674,10 @@ function applyVisual() {
     if (ST.selected) { opacity = isSelected ? 1 : isRelated ? 0.85 : 0.15; }
     else if (!active) { opacity = 0.12; }
     el.attr('opacity', opacity);
-    el.select('.node-ring').attr('stroke-opacity', isSelected ? 0.9 : isRelated ? 0.5 : 0);
+    el.select('.node-ring').attr('stroke-opacity', isSelected ? 0.95 : isRelated ? 0.55 : 0);
     el.select('.node-circle')
-      .attr('fill-opacity', isSelected ? 1 : d.type === 'enterprise' ? 0.9 : 0.65)
-      .attr('stroke-width', isSelected ? 3 : d.type === 'enterprise' ? 2 : 1);
+      .attr('fill-opacity', isSelected ? 0.35 : d.type === 'enterprise' ? 0.25 : 0.18)
+      .attr('stroke-width', isSelected ? 3.5 : d.type === 'enterprise' ? 2.5 : 1.5);
   });
 
   linkSel.attr('stroke-opacity', d => {
@@ -737,7 +820,7 @@ document.getElementById('stats-bar').innerHTML = [
 
 // Initial zoom identity
 setTimeout(() => {
-  svg.call(zoom.transform, d3.zoomIdentity.translate(W * 0.01, H * 0.06).scale(0.78));
+  svg.call(zoom.transform, d3.zoomIdentity.translate(W * 0.01, H * 0.05).scale(1.1));
 }, 100);
 
 // Resize handler
