@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -160,6 +161,11 @@ body { font-family:'Noto Sans KR',sans-serif; color:#e2e8f0; }
 .related-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .related-name { flex:1; font-weight:600; color:rgba(255,255,255,.78); }
 .related-layer { font-size:9px; font-family:var(--mono); }
+.related-group-label {
+  font-family:var(--mono); font-size:9px; letter-spacing:1.3px; text-transform:uppercase;
+  color:rgba(255,255,255,.28); margin-top:8px; margin-bottom:4px;
+}
+.related-item.related-direct { background:rgba(255,255,255,.03); border-radius:8px; padding:6px 8px; }
 .close-btn {
   position:absolute; top:14px; right:14px; width:24px; height:24px; border-radius:6px;
   background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
@@ -192,11 +198,13 @@ body { font-family:'Noto Sans KR',sans-serif; color:#e2e8f0; }
 .node-tooltip-name { font-weight:700; color:#f1f5f9; margin-bottom:2px; }
 .node-tooltip-sub  { color:rgba(255,255,255,.45); font-size:10px; font-family:var(--mono); line-height:1.5; }
 
+.subpill { pointer-events:none; }
 .subpill text {
-  font-size:10px; font-family:var(--mono); fill:rgba(255,255,255,.62); pointer-events:none;
+  font-size:10px; font-family:var(--mono); font-weight:700; fill:rgba(255,255,255,.7);
+  pointer-events:none; paint-order:stroke; stroke:var(--shadow-stroke); stroke-width:3px; stroke-linejoin:round;
 }
 .subpill rect {
-  fill-opacity:.08; stroke-width:1; rx:9; ry:9;
+  fill-opacity:.14; stroke-width:1.15; rx:10; ry:10;
 }
 .zone-label {
   font-family:'Noto Sans KR',sans-serif; font-weight:800; letter-spacing:-.2px;
@@ -271,8 +279,16 @@ html[data-theme="light"] .stat-item {
   border-color: rgba(15,23,42,.08) !important;
   background-image: none !important;
 }
-html[data-theme="light"] .subpill text { fill: rgba(15,23,42,.72); }
-html[data-theme="light"] .subpill rect { fill-opacity: .075; stroke-opacity: .25; }
+html[data-theme="light"] .subpill text { fill: rgba(15,23,42,.78); }
+html[data-theme="light"] .subpill rect { fill-opacity: .085; stroke-opacity: .32; }
+html[data-theme="light"] .related-group-label { color: rgba(15,23,42,.42); }
+
+/* --- render optimization --- */
+#links { shape-rendering: optimizeSpeed; }
+#node-g.motion-lite .node-logo { opacity: 0 !important; }
+#node-g.motion-lite .node-fallback { opacity: 1 !important; }
+#node-g.motion-lite .node-label { opacity: 0 !important; }
+#node-g.motion-lite .node-ring { filter: none !important; }
 
 </style>
 </head>
@@ -325,7 +341,7 @@ html[data-theme="light"] .subpill rect { fill-opacity: .075; stroke-opacity: .25
   </div>
   <div class="detail-summary" id="d-summary"></div>
   <div class="detail-tags" id="d-tags"></div>
-  <div class="detail-related-title">유사 플레이어</div>
+  <div class="detail-related-title">연결·유사 플레이어</div>
   <div class="related-list" id="d-related"></div>
 </div>
 
@@ -340,10 +356,11 @@ html[data-theme="light"] .subpill rect { fill-opacity: .075; stroke-opacity: .25
 const LAYER_DEFS = [{"id": "service", "name": "AI 서비스", "accent": "#f59e0b", "cx_pct": 0.12, "cy_pct": 0.42}, {"id": "model", "name": "AI 모델", "accent": "#8b5cf6", "cx_pct": 0.37, "cy_pct": 0.2}, {"id": "data", "name": "데이터", "accent": "#06b6d4", "cx_pct": 0.69, "cy_pct": 0.28}, {"id": "cloud", "name": "클라우드·인프라", "accent": "#10b981", "cx_pct": 0.37, "cy_pct": 0.74}, {"id": "chip", "name": "AI 반도체", "accent": "#ef4444", "cx_pct": 0.82, "cy_pct": 0.68}];
 const SUBCAT_DEFS = {"service": [{"id": "agent", "name": "검색·에이전트", "dx": -0.46, "dy": -0.24}, {"id": "edu_fin", "name": "교육·금융·리걸", "dx": -0.42, "dy": 0.34}, {"id": "health", "name": "헬스케어·바이오", "dx": 0.04, "dy": -0.38}, {"id": "multimodal", "name": "멀티모달·음성", "dx": 0.42, "dy": -0.04}, {"id": "mobility", "name": "비전·로보틱스·산업", "dx": 0.16, "dy": 0.36}], "model": [{"id": "foundation", "name": "파운데이션 LLM", "dx": -0.38, "dy": -0.24}, {"id": "domain", "name": "도메인 언어모델", "dx": 0.36, "dy": -0.18}, {"id": "vision", "name": "비전·멀티모달 모델", "dx": -0.2, "dy": 0.32}, {"id": "inference", "name": "추론·플랫폼 SW", "dx": 0.34, "dy": 0.34}], "data": [{"id": "labeling", "name": "라벨링·수집", "dx": -0.42, "dy": -0.18}, {"id": "mlops", "name": "MLOps·평가", "dx": 0.38, "dy": -0.24}, {"id": "analytics", "name": "분석·컨설팅", "dx": -0.18, "dy": 0.34}, {"id": "platform", "name": "데이터 플랫폼", "dx": 0.36, "dy": 0.3}], "cloud": [{"id": "cloud", "name": "국산·퍼블릭 클라우드", "dx": -0.36, "dy": -0.22}, {"id": "msp", "name": "MSP·SI", "dx": 0.36, "dy": -0.14}, {"id": "compute", "name": "AI 컴퓨트·GPU Ops", "dx": -0.18, "dy": 0.34}, {"id": "edge", "name": "데이터센터·엣지", "dx": 0.34, "dy": 0.34}], "chip": [{"id": "memory", "name": "HBM·메모리", "dx": -0.36, "dy": -0.22}, {"id": "accelerator", "name": "NPU·가속기", "dx": 0.36, "dy": -0.18}, {"id": "ondevice", "name": "온디바이스·IP", "dx": -0.2, "dy": 0.34}, {"id": "supplychain", "name": "제조·장비·패키징", "dx": 0.34, "dy": 0.34}]};
 const SIZE_DEFS = {"large": {"name": "대기업", "color": "#fb7185", "r": 21}, "mid": {"name": "중견·스케일업", "color": "#22c55e", "r": 17}, "startup": {"name": "스타트업", "color": "#38bdf8", "r": 13}};
-const RAW = [{"id": "라이너", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Search", "summary": "AI 검색·리서치 에이전트 인터페이스", "tags": ["검색/생산성", "에이전트", "LLM/모델"]}, {"id": "뤼튼테크놀로지스", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Agent", "summary": "대중형 AI 에이전트·LLM 멀티플렉서 앱", "tags": ["에이전트", "검색/생산성", "LLM/모델"]}, {"id": "스캐터랩", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Conversational", "summary": "대화형 AI 서비스·이루다", "tags": ["대화형AI", "소비자", "LLM/모델"]}, {"id": "올거나이즈", "layer": "service", "sub": "agent", "size": "mid", "focus": "Alli", "summary": "엔터프라이즈 AI 에이전트·문서 자동화", "tags": ["에이전트", "엔터프라이즈", "문서AI"]}, {"id": "뤼이드", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Edu AI", "summary": "AI 튜터·개인화 학습 에듀테크", "tags": ["교육", "적응형학습", "서비스"]}, {"id": "매스프레소", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "QANDA", "summary": "QANDA 기반 학습 AI 플랫폼", "tags": ["교육", "모바일", "서비스"]}, {"id": "클래스팅", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Classing AI", "summary": "AI 기반 학습관리·맞춤학습", "tags": ["교육", "플랫폼", "공공AI"]}, {"id": "포티투마루", "layer": "service", "sub": "agent", "size": "mid", "focus": "42Maru", "summary": "QA·도메인 특화 언어 AI 서비스", "tags": ["질의응답", "엔터프라이즈", "자연어처리"]}, {"id": "코난테크놀로지", "layer": "service", "sub": "agent", "size": "mid", "focus": "NLP Solution", "summary": "NLP·검색 기반 기업 AI 솔루션", "tags": ["자연어처리", "검색", "엔터프라이즈"]}, {"id": "솔트룩스", "layer": "service", "sub": "agent", "size": "mid", "focus": "Agentic AI", "summary": "LLM·에이전트·지식 서비스 플랫폼", "tags": ["에이전트", "지식서비스", "엔터프라이즈"]}, {"id": "루닛", "layer": "service", "sub": "health", "size": "mid", "focus": "Imaging AI", "summary": "암 진단·영상 분석 AI", "tags": ["의료AI", "비전", "상장"]}, {"id": "뷰노", "layer": "service", "sub": "health", "size": "mid", "focus": "Clinical AI", "summary": "생체신호·영상 의료 AI", "tags": ["의료AI", "예측", "상장"]}, {"id": "딥노이드", "layer": "service", "sub": "health", "size": "mid", "focus": "Deep:NEURO", "summary": "의료 영상·판독 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "JLK", "layer": "service", "sub": "health", "size": "mid", "focus": "Stroke AI", "summary": "뇌졸중 중심 의료 영상 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "딥바이오", "layer": "service", "sub": "health", "size": "startup", "focus": "Pathology", "summary": "AI 기반 병리 이미지 진단", "tags": ["의료AI", "병리", "글로벌"]}, {"id": "메디웨일", "layer": "service", "sub": "health", "size": "startup", "focus": "Retinal AI", "summary": "안저 기반 질환 예측 AI", "tags": ["의료AI", "예측", "헬스케어"]}, {"id": "코어라인소프트", "layer": "service", "sub": "health", "size": "mid", "focus": "Thoracic AI", "summary": "흉부 영상·폐질환 AI 분석", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "에이아이트릭스", "layer": "service", "sub": "health", "size": "startup", "focus": "Vitals AI", "summary": "중환자·임상 예측 AI", "tags": ["의료AI", "예측", "병원"]}, {"id": "트웰브랩스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Video AI", "summary": "비디오 이해·멀티모달 AI", "tags": ["멀티모달", "비전", "글로벌"]}, {"id": "딥브레인AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "AI Human", "summary": "AI 휴먼·영상 생성 서비스", "tags": ["멀티모달", "영상", "아바타"]}, {"id": "클레온", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Avatar", "summary": "디지털 휴먼·더빙 플랫폼", "tags": ["멀티모달", "아바타", "음성"]}, {"id": "네오사피엔스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Typecast", "summary": "AI 음성·TTS·보이스 클로닝", "tags": ["음성", "TTS", "글로벌"]}, {"id": "펄스나인", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Virtual Human", "summary": "버추얼 휴먼·K팝 IP 콘텐츠", "tags": ["아바타", "엔터테인먼트", "콘텐츠"]}, {"id": "마인드로직", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Character AI", "summary": "AI 캐릭터·인터랙션 플랫폼", "tags": ["캐릭터AI", "소비자", "대화형AI"]}, {"id": "포티투닷", "layer": "service", "sub": "mobility", "size": "large", "focus": "42dot", "summary": "현대차 계열 SDV·모빌리티 AI", "tags": ["모빌리티", "플랫폼", "자율주행"]}, {"id": "서울로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "3D Percep.", "summary": "3D 인식 AI·산업 자율화", "tags": ["로보틱스", "비전", "모빌리티"]}, {"id": "모빌테크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "HD Map", "summary": "HD맵·자율주행 공간 데이터", "tags": ["모빌리티", "공간정보", "자율주행"]}, {"id": "라이드플럭스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Autonomy", "summary": "자율주행 플랫폼 소프트웨어", "tags": ["모빌리티", "자율주행", "서비스"]}, {"id": "스트라드비젼", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Perception", "summary": "ADAS 비전 인식 소프트웨어", "tags": ["모빌리티", "비전", "온디바이스"]}, {"id": "베어로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Servi", "summary": "서비스 로봇·식당 배달 자율주행", "tags": ["로봇", "서비스", "자율주행"]}, {"id": "S2W", "layer": "service", "sub": "agent", "size": "mid", "focus": "Data Intel.", "summary": "AI 사이버 위협 인텔리전스", "tags": ["보안", "지식그래프", "엔터프라이즈"]}, {"id": "마키나락스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Industrial", "summary": "산업 특화 AI·공장 운영 최적화", "tags": ["산업AI", "최적화", "엔터프라이즈"]}, {"id": "네이버", "layer": "model", "sub": "foundation", "size": "large", "focus": "HyperCLOVA X", "summary": "HyperCLOVA X 계열 파운데이션 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "LG AI Research", "layer": "model", "sub": "foundation", "size": "large", "focus": "EXAONE", "summary": "EXAONE 오픈소스 LLM·멀티모달 연구", "tags": ["LLM/모델", "연구", "플랫폼"]}, {"id": "카카오", "layer": "model", "sub": "foundation", "size": "large", "focus": "GenAI", "summary": "생성형 AI 연구·Kakao 계열 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "SK텔레콤", "layer": "model", "sub": "foundation", "size": "large", "focus": "A.X", "summary": "A.X 기반 AI 서비스·통신 AI", "tags": ["LLM/모델", "통신", "플랫폼"]}, {"id": "KT", "layer": "model", "sub": "foundation", "size": "large", "focus": "Mi:dm", "summary": "Mi:dm LLM·공공·금융 B2B", "tags": ["LLM/모델", "통신", "엔터프라이즈"]}, {"id": "삼성SDS", "layer": "model", "sub": "inference", "size": "large", "focus": "Brity LLM", "summary": "Brity LLM·엔터프라이즈 AI 플랫폼", "tags": ["LLM/모델", "엔터프라이즈", "클라우드"]}, {"id": "업스테이지", "layer": "model", "sub": "foundation", "size": "mid", "focus": "Solar", "summary": "Solar LLM·문서 AI·Document AI API", "tags": ["LLM/모델", "문서AI", "엔터프라이즈"]}, {"id": "모레", "layer": "model", "sub": "inference", "size": "startup", "focus": "MoAI", "summary": "AI 컴퓨팅 최적화·AI 인프라 SW", "tags": ["AI인프라", "컴퓨트", "모델학습"]}, {"id": "Motif Technologies", "layer": "model", "sub": "inference", "size": "startup", "focus": "Motif", "summary": "소버린 AI·멀티에이전트 플랫폼", "tags": ["에이전트", "플랫폼", "LLM/모델"]}, {"id": "FriendliAI", "layer": "model", "sub": "inference", "size": "startup", "focus": "Inference", "summary": "LLM 추론·서빙 인프라 플랫폼", "tags": ["서빙", "추론", "인프라"]}, {"id": "튜닙", "layer": "model", "sub": "domain", "size": "startup", "focus": "TuNIB", "summary": "감성 대화·소형 특화 언어 모델", "tags": ["LLM/모델", "대화형AI", "연구"]}, {"id": "알체라", "layer": "model", "sub": "vision", "size": "mid", "focus": "Face/Vision", "summary": "얼굴·생체인식 비전 AI 모델", "tags": ["비전모델", "생체인식", "엔터프라이즈"]}, {"id": "NC AI", "layer": "model", "sub": "vision", "size": "mid", "focus": "VARCO", "summary": "게임·멀티모달 콘텐츠 생성 AI", "tags": ["멀티모달", "게임", "생성형AI"]}, {"id": "크라우드웍스", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataOps", "summary": "데이터 라벨링·AI 데이터 운영 플랫폼", "tags": ["데이터가공", "라벨링", "플랫폼"]}, {"id": "슈퍼브에이아이", "layer": "data", "sub": "mlops", "size": "mid", "focus": "Vision AI", "summary": "비전 데이터 파이프라인·MLOps", "tags": ["비전", "MLOps", "데이터"]}, {"id": "마인즈앤컴퍼니", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Consulting", "summary": "기업 AI 도입·MLOps 컨설팅", "tags": ["컨설팅", "MLOps", "엔터프라이즈"]}, {"id": "스케일업랩스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Scale-up", "summary": "AI 데이터 구축·스케일 운영", "tags": ["데이터가공", "라벨링", "운영"]}, {"id": "셀렉트스타", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Evaluation", "summary": "데이터 검증·평가·RLHF 파이프라인", "tags": ["평가", "정렬", "데이터"]}, {"id": "에이모", "layer": "data", "sub": "labeling", "size": "startup", "focus": "AIMMO", "summary": "자율주행·산업용 데이터 플랫폼", "tags": ["자율주행", "데이터", "플랫폼"]}, {"id": "테스트웍스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data QA", "summary": "AI 데이터 구축·검증 서비스", "tags": ["데이터가공", "검증", "플랫폼"]}, {"id": "아크릴", "layer": "data", "sub": "platform", "size": "startup", "focus": "Graph AI", "summary": "지식그래프·분석형 AI 플랫폼", "tags": ["지식그래프", "데이터", "엔터프라이즈"]}, {"id": "VESSL AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "GPU Ops", "summary": "GPU 클라우드·MLOps 운영 플랫폼", "tags": ["GPU", "MLOps", "클라우드"]}, {"id": "노타AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Optimization", "summary": "온디바이스 AI 경량화·최적화", "tags": ["온디바이스", "최적화", "비전"]}, {"id": "씨이랩", "layer": "data", "sub": "platform", "size": "startup", "focus": "Video AI", "summary": "비디오 분석·AI 인프라 솔루션", "tags": ["비디오", "인프라", "엔터프라이즈"]}, {"id": "네이버클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Ncloud", "summary": "국산 AI 클라우드·HyperCLOVA API", "tags": ["클라우드", "플랫폼", "공공AI"]}, {"id": "KT클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "KT Cloud", "summary": "AI·공공·금융 버티컬 클라우드", "tags": ["클라우드", "플랫폼", "통신"]}, {"id": "NHN클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "NHN Cloud", "summary": "클라우드·AI 서비스 인프라", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "카카오클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Kakao Cloud", "summary": "카카오 계열 퍼블릭 클라우드", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "LG CNS", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AX", "summary": "AX 전환·기업 클라우드·SI 서비스", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "SK C&C", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AIX", "summary": "AIX·클라우드·IT서비스 전환", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "메가존클라우드", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "MSP", "summary": "AWS·Azure 기반 클라우드 MSP·AI 구축", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "베스핀글로벌", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Bespin", "summary": "멀티클라우드·AI 운영·FinOps", "tags": ["클라우드", "MSP", "FinOps"]}, {"id": "케이아이엔엑스", "layer": "cloud", "sub": "edge", "size": "mid", "focus": "KINX", "summary": "데이터센터·인터넷 교환 인프라", "tags": ["데이터센터", "인프라", "네트워크"]}, {"id": "그리드원", "layer": "cloud", "sub": "edge", "size": "startup", "focus": "Edge Infra", "summary": "엣지 컴퓨팅·분산 AI 인프라", "tags": ["엣지", "인프라", "온디바이스"]}, {"id": "삼성전자", "layer": "chip", "sub": "memory", "size": "large", "focus": "Samsung", "summary": "HBM·파운드리·시스템 반도체 종합", "tags": ["반도체", "HBM", "대기업"]}, {"id": "SK하이닉스", "layer": "chip", "sub": "memory", "size": "large", "focus": "SK hynix", "summary": "HBM3E·메모리 중심 AI 반도체", "tags": ["반도체", "HBM", "대기업"]}, {"id": "리벨리온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "Rebellions", "summary": "데이터센터용 ATOM·REBEL AI 칩", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "퓨리오사AI", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "FuriosaAI", "summary": "AI 추론 가속기 WARBOY·RNGD", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "딥엑스", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "DEEPX", "summary": "온디바이스·엣지 AI NPU", "tags": ["반도체", "온디바이스", "엣지"]}, {"id": "HyperAccel", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "LPU", "summary": "LLM 추론 특화 가속 칩 LPU", "tags": ["반도체", "추론", "LLM/모델"]}, {"id": "사피온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "SAPEON", "summary": "AI 가속칩 X220", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "오픈엣지테크놀로지", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "OPENEDGES", "summary": "NPU·메모리 시스템 반도체 IP", "tags": ["반도체", "IP", "온디바이스"]}, {"id": "Mobilint", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "Mobilint", "summary": "온프레미스·온디바이스 추론 NPU", "tags": ["반도체", "NPU", "온디바이스"]}, {"id": "네패스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Packaging", "summary": "AI 반도체 패키징·후공정 전문", "tags": ["반도체", "패키징", "중견"]}, {"id": "심심이", "layer": "service", "sub": "agent", "size": "mid", "focus": "Chatbot", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["대화형AI", "글로벌", "자연어처리"]}, {"id": "에버트란", "layer": "service", "sub": "agent", "size": "mid", "focus": "MTPE", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["번역", "언어AI", "서비스"]}, {"id": "로민", "layer": "service", "sub": "agent", "size": "startup", "focus": "OCR", "summary": "기업편람 수록 AI OCR·문서인식 서비스 기업", "tags": ["OCR", "문서AI", "비전"]}, {"id": "에듀템", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "EdTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "외국어학습", "서비스"]}, {"id": "위고", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "CRM/VOC AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "VOC", "서비스"]}, {"id": "잡쇼퍼", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "학쫑", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "추천", "서비스"]}, {"id": "히어로웍스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Revenue AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["관광", "수요예측", "버티컬AI"]}, {"id": "로앤컴퍼니", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "리걸테크", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["리걸테크", "판례검색", "서비스"]}, {"id": "아이지넷", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "보닥", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["보험AI", "추천", "핀테크"]}, {"id": "컴트루테크놀로지", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "eKYC/aiSee", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["eKYC", "비전", "핀테크"]}, {"id": "탱커", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "PropTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["프롭테크", "부동산AI", "서비스"]}, {"id": "텐스페이스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "ASTER", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["핀테크", "신용평가", "서비스"]}, {"id": "블루바이저시스템즈", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "HighBuff", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["면접AI", "재테크AI", "서비스"]}, {"id": "빅트리", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "BIGBOT", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["로보어드바이저", "금융AI", "서비스"]}, {"id": "콰라소프트", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "KOSHO", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "투자가이드", "서비스"]}, {"id": "크래프트테크놀로지스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Electronic Trading", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "트레이딩", "서비스"]}, {"id": "닥터송", "layer": "service", "sub": "health", "size": "startup", "focus": "의료상담/DTx", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "챗봇", "디지털치료제"]}, {"id": "메디아이플러스", "layer": "service", "sub": "health", "size": "startup", "focus": "MediC", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["임상시험", "데이터", "헬스케어"]}, {"id": "에이아이플랫폼", "layer": "service", "sub": "health", "size": "startup", "focus": "의료 마이데이터", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "마이데이터", "헬스케어"]}, {"id": "카이팜", "layer": "service", "sub": "health", "size": "startup", "focus": "Drug Discovery", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["신약개발", "오믹스", "헬스케어"]}, {"id": "피디젠", "layer": "service", "sub": "health", "size": "startup", "focus": "Digital Medicine", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["진단예측", "바이오", "헬스케어"]}, {"id": "뉴로핏", "layer": "service", "sub": "health", "size": "mid", "focus": "Neuro AI", "summary": "기업편람 수록 뇌·신경계 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "메디컬아이피", "layer": "service", "sub": "health", "size": "mid", "focus": "Medical 3D", "summary": "기업편람 수록 의료영상·디지털트윈 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "노을", "layer": "service", "sub": "health", "size": "mid", "focus": "Digital Pathology", "summary": "기업편람 수록 디지털 병리·진단 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "아이도트", "layer": "service", "sub": "health", "size": "mid", "focus": "Women Health", "summary": "기업편람 수록 여성·검진 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "빈드컴퍼니", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Music Gen", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["생성형AI", "음악", "콘텐츠"]}, {"id": "오투오", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "MetaData/Recomm.", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["추천", "리뷰필터링", "서비스"]}, {"id": "세미콘네트웍스", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "문서분류/감정인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성", "감정인식", "서비스"]}, {"id": "솔루게이트", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "음성인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성인식", "컨택센터", "서비스"]}, {"id": "데브언리밋", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Sparky", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["피트니스AI", "비전", "서비스"]}, {"id": "록스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Region TTS", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성합성", "TTS", "서비스"]}, {"id": "딥픽셀", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "StyleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "블루프린트랩", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "SpectacleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "마음AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Embodied AI", "summary": "NIPA 사례집 수록 Embodied AI·인공인간 서비스 기업", "tags": ["Embodied AI", "AI Human", "서비스"]}, {"id": "비트플로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Rail/Smart City", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["스마트시티", "비전", "공공AI"]}, {"id": "코액터스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "고요한M", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "유니버설디자인", "서비스"]}, {"id": "인트플로우", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Edge Farm", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["에너지/환경", "스마트팜", "비전"]}, {"id": "넥스트랩", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Beyond AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "품질검사", "산업AI"]}, {"id": "델타엑스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "X-Pilot", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "비전", "자율주행"]}, {"id": "드로미", "layer": "service", "sub": "mobility", "size": "startup", "focus": "GeoAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "공간정보", "비전"]}, {"id": "라온피플", "layer": "service", "sub": "mobility", "size": "mid", "focus": "NAVIAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "스마트팩토리", "상장"]}, {"id": "카이어", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Kaier Vision", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "산업AI", "이상탐지"]}, {"id": "핀텔", "layer": "service", "sub": "mobility", "size": "mid", "focus": "교통/보안 AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "비전", "상장"]}, {"id": "하이브비전", "layer": "service", "sub": "mobility", "size": "mid", "focus": "DeepCulus", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "제조AI", "산업AI"]}, {"id": "와이즈레이크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Agri AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["애그테크", "스마트팜", "비전"]}, {"id": "코코넛사일로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "COCOTRUCK", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["물류AI", "공급망", "버티컬AI"]}, {"id": "모라이", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Simulation", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["자율주행", "시뮬레이션", "모빌리티"]}, {"id": "니어스랩", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Drone AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "비전", "산업AI"]}, {"id": "트위니", "layer": "service", "sub": "mobility", "size": "startup", "focus": "자율주행 로봇", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["로봇", "물류", "모빌리티"]}, {"id": "블루시그널", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Traffic AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "예측", "스마트시티"]}, {"id": "마인즈랩", "layer": "model", "sub": "domain", "size": "mid", "focus": "Voice/AI Human", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "AI Human", "플랫폼"]}, {"id": "셀바스AI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Speech AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "의료AI", "상장"]}, {"id": "스켈터랩스", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational LLM", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "엔터프라이즈"]}, {"id": "TmaxAI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Enterprise AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["엔터프라이즈", "LLM/모델", "플랫폼"]}, {"id": "뉴럴웍스랩", "layer": "model", "sub": "domain", "size": "startup", "focus": "Speech/NLP", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "언어모델", "서비스"]}, {"id": "마인드에이아이", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "서비스"]}, {"id": "디에스랩글로벌", "layer": "data", "sub": "labeling", "size": "startup", "focus": "CLICK AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["오토라벨링", "데이터가공", "플랫폼"]}, {"id": "인피닉", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataStudio", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "중견"]}, {"id": "데이터메이커", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Synapse", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "3D LiDAR", "플랫폼"]}, {"id": "어노테이션에이아이", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Annotation AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "데이터가공", "플랫폼"]}, {"id": "젠데이터", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data Ops", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "라벨링"]}, {"id": "바이트브릿지", "layer": "data", "sub": "labeling", "size": "startup", "focus": "자율주행 데이터", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["자율주행", "데이터가공", "라벨링"]}, {"id": "브레인컨테이너", "layer": "data", "sub": "labeling", "size": "startup", "focus": "LiDAR Seg.", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["LiDAR", "데이터가공", "라벨링"]}, {"id": "몬드리안에이아이", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Yennefer", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["AI-PaaS", "MLOps", "플랫폼"]}, {"id": "데이콘", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Hackathon", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["해커톤", "평가", "교육"]}, {"id": "인공지능팩토리", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Competition", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["MLOps", "평가", "플랫폼"]}, {"id": "KSTEC", "layer": "data", "sub": "analytics", "size": "mid", "focus": "SyncPlan/Dataiku", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["최적화", "RPA", "컨설팅"]}, {"id": "TG360 테크놀로지스", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Molecule", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["비식별데이터", "DMP", "플랫폼"]}, {"id": "누리꿈소프트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Smart-Eye", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "예측", "플랫폼"]}, {"id": "더블유에이아이", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Quant Athena", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["금융시계열", "분석", "서비스"]}, {"id": "데이터에듀", "layer": "data", "sub": "analytics", "size": "startup", "focus": "두런", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AI교육", "컨설팅", "분석"]}, {"id": "리서치림", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Insight", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["리서치", "분석", "데이터"]}, {"id": "리스트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Commerce Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "추천", "분석"]}, {"id": "마켓링크", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Marketing Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "메트릭스", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Metrics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "비즈스프링", "layer": "data", "sub": "analytics", "size": "mid", "focus": "BizSpring", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "SaaS"]}, {"id": "애자일소다", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Decision AI", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AutoML", "분석", "엔터프라이즈"]}, {"id": "웨슬리퀘스트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["컨설팅", "분석", "엔터프라이즈"]}, {"id": "유클리드소프트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Data Science", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "컨설팅", "데이터"]}, {"id": "인그래디언트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "최적화", "AI"]}, {"id": "이트너스", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Portal/ESAI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["AICC", "플랫폼", "업무자동화"]}, {"id": "넥타르소프트", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Advisor", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["예측", "음성/NLP", "플랫폼"]}, {"id": "디지털존 마포지점", "layer": "data", "sub": "platform", "size": "mid", "focus": "전자문서", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["전자문서", "증명서", "플랫폼"]}, {"id": "로아인텔리전스", "layer": "data", "sub": "platform", "size": "startup", "focus": "기업가치정보", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["기업정보", "분석", "플랫폼"]}, {"id": "오브젠", "layer": "data", "sub": "platform", "size": "mid", "focus": "CRM AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["CRM", "분석", "플랫폼"]}, {"id": "엔에이치엔데이터", "layer": "data", "sub": "platform", "size": "mid", "focus": "Data Infra", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["데이터", "인프라", "플랫폼"]}, {"id": "아임클라우드", "layer": "data", "sub": "platform", "size": "mid", "focus": "BigData/AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["클라우드", "데이터", "플랫폼"]}, {"id": "클루커스", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Cloud MSP", "summary": "기업편람 수록 클라우드 전환·운영 기업", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "알세미", "layer": "chip", "sub": "supplychain", "size": "startup", "focus": "EDA/Modeling", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "EDA", "설계자동화"]}, {"id": "피에스디이", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Equipment", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "배관/모듈"]}, {"id": "씨피에스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Process", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "제조"]}];
+const RAW = [{"id": "라이너", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Search", "summary": "AI 검색·리서치 에이전트 인터페이스", "tags": ["검색/생산성", "에이전트", "LLM/모델"]}, {"id": "뤼튼테크놀로지스", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Agent", "summary": "대중형 AI 에이전트·LLM 멀티플렉서 앱", "tags": ["에이전트", "검색/생산성", "LLM/모델"]}, {"id": "스캐터랩", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Conversational", "summary": "대화형 AI 서비스·이루다", "tags": ["대화형AI", "소비자", "LLM/모델"]}, {"id": "올거나이즈", "layer": "service", "sub": "agent", "size": "mid", "focus": "Alli", "summary": "엔터프라이즈 AI 에이전트·문서 자동화", "tags": ["에이전트", "엔터프라이즈", "문서AI"]}, {"id": "뤼이드", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Edu AI", "summary": "AI 튜터·개인화 학습 에듀테크", "tags": ["교육", "적응형학습", "서비스"]}, {"id": "매스프레소", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "QANDA", "summary": "QANDA 기반 학습 AI 플랫폼", "tags": ["교육", "모바일", "서비스"]}, {"id": "클래스팅", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Classing AI", "summary": "AI 기반 학습관리·맞춤학습", "tags": ["교육", "플랫폼", "공공AI"]}, {"id": "포티투마루", "layer": "service", "sub": "agent", "size": "mid", "focus": "42Maru", "summary": "QA·도메인 특화 언어 AI 서비스", "tags": ["질의응답", "엔터프라이즈", "자연어처리"]}, {"id": "코난테크놀로지", "layer": "service", "sub": "agent", "size": "mid", "focus": "NLP Solution", "summary": "NLP·검색 기반 기업 AI 솔루션", "tags": ["자연어처리", "검색", "엔터프라이즈"]}, {"id": "솔트룩스", "layer": "service", "sub": "agent", "size": "mid", "focus": "Agentic AI", "summary": "LLM·에이전트·지식 서비스 플랫폼", "tags": ["에이전트", "지식서비스", "엔터프라이즈"]}, {"id": "루닛", "layer": "service", "sub": "health", "size": "mid", "focus": "Imaging AI", "summary": "암 진단·영상 분석 AI", "tags": ["의료AI", "비전", "상장"]}, {"id": "뷰노", "layer": "service", "sub": "health", "size": "mid", "focus": "Clinical AI", "summary": "생체신호·영상 의료 AI", "tags": ["의료AI", "예측", "상장"]}, {"id": "딥노이드", "layer": "service", "sub": "health", "size": "mid", "focus": "Deep:NEURO", "summary": "의료 영상·판독 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "JLK", "layer": "service", "sub": "health", "size": "mid", "focus": "Stroke AI", "summary": "뇌졸중 중심 의료 영상 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "딥바이오", "layer": "service", "sub": "health", "size": "startup", "focus": "Pathology", "summary": "AI 기반 병리 이미지 진단", "tags": ["의료AI", "병리", "글로벌"]}, {"id": "메디웨일", "layer": "service", "sub": "health", "size": "startup", "focus": "Retinal AI", "summary": "안저 기반 질환 예측 AI", "tags": ["의료AI", "예측", "헬스케어"]}, {"id": "코어라인소프트", "layer": "service", "sub": "health", "size": "mid", "focus": "Thoracic AI", "summary": "흉부 영상·폐질환 AI 분석", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "에이아이트릭스", "layer": "service", "sub": "health", "size": "startup", "focus": "Vitals AI", "summary": "중환자·임상 예측 AI", "tags": ["의료AI", "예측", "병원"]}, {"id": "트웰브랩스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Video AI", "summary": "비디오 이해·멀티모달 AI", "tags": ["멀티모달", "비전", "글로벌"]}, {"id": "딥브레인AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "AI Human", "summary": "AI 휴먼·영상 생성 서비스", "tags": ["멀티모달", "영상", "아바타"]}, {"id": "클레온", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Avatar", "summary": "디지털 휴먼·더빙 플랫폼", "tags": ["멀티모달", "아바타", "음성"]}, {"id": "네오사피엔스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Typecast", "summary": "AI 음성·TTS·보이스 클로닝", "tags": ["음성", "TTS", "글로벌"]}, {"id": "펄스나인", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Virtual Human", "summary": "버추얼 휴먼·K팝 IP 콘텐츠", "tags": ["아바타", "엔터테인먼트", "콘텐츠"]}, {"id": "마인드로직", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Character AI", "summary": "AI 캐릭터·인터랙션 플랫폼", "tags": ["캐릭터AI", "소비자", "대화형AI"]}, {"id": "포티투닷", "layer": "service", "sub": "mobility", "size": "large", "focus": "42dot", "summary": "현대차 계열 SDV·모빌리티 AI", "tags": ["모빌리티", "플랫폼", "자율주행"]}, {"id": "서울로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "3D Percep.", "summary": "3D 인식 AI·산업 자율화", "tags": ["로보틱스", "비전", "모빌리티"]}, {"id": "모빌테크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "HD Map", "summary": "HD맵·자율주행 공간 데이터", "tags": ["모빌리티", "공간정보", "자율주행"]}, {"id": "라이드플럭스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Autonomy", "summary": "자율주행 플랫폼 소프트웨어", "tags": ["모빌리티", "자율주행", "서비스"]}, {"id": "스트라드비젼", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Perception", "summary": "ADAS 비전 인식 소프트웨어", "tags": ["모빌리티", "비전", "온디바이스"]}, {"id": "베어로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Servi", "summary": "서비스 로봇·식당 배달 자율주행", "tags": ["로봇", "서비스", "자율주행"]}, {"id": "S2W", "layer": "service", "sub": "agent", "size": "mid", "focus": "Data Intel.", "summary": "AI 사이버 위협 인텔리전스", "tags": ["보안", "지식그래프", "엔터프라이즈"]}, {"id": "마키나락스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Industrial", "summary": "산업 특화 AI·공장 운영 최적화", "tags": ["산업AI", "최적화", "엔터프라이즈"]}, {"id": "네이버", "layer": "model", "sub": "foundation", "size": "large", "focus": "HyperCLOVA X", "summary": "HyperCLOVA X 계열 파운데이션 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "LG AI Research", "layer": "model", "sub": "foundation", "size": "large", "focus": "EXAONE", "summary": "EXAONE 오픈소스 LLM·멀티모달 연구", "tags": ["LLM/모델", "연구", "플랫폼"]}, {"id": "카카오", "layer": "model", "sub": "foundation", "size": "large", "focus": "GenAI", "summary": "생성형 AI 연구·Kakao 계열 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "SK텔레콤", "layer": "model", "sub": "foundation", "size": "large", "focus": "A.X", "summary": "A.X 기반 AI 서비스·통신 AI", "tags": ["LLM/모델", "통신", "플랫폼"]}, {"id": "KT", "layer": "model", "sub": "foundation", "size": "large", "focus": "Mi:dm", "summary": "Mi:dm LLM·공공·금융 B2B", "tags": ["LLM/모델", "통신", "엔터프라이즈"]}, {"id": "삼성SDS", "layer": "model", "sub": "inference", "size": "large", "focus": "Brity LLM", "summary": "Brity LLM·엔터프라이즈 AI 플랫폼", "tags": ["LLM/모델", "엔터프라이즈", "클라우드"]}, {"id": "업스테이지", "layer": "model", "sub": "foundation", "size": "mid", "focus": "Solar", "summary": "Solar LLM·문서 AI·Document AI API", "tags": ["LLM/모델", "문서AI", "엔터프라이즈"]}, {"id": "모레", "layer": "model", "sub": "inference", "size": "startup", "focus": "MoAI", "summary": "AI 컴퓨팅 최적화·AI 인프라 SW", "tags": ["AI인프라", "컴퓨트", "모델학습"]}, {"id": "Motif Technologies", "layer": "model", "sub": "inference", "size": "startup", "focus": "Motif", "summary": "소버린 AI·멀티에이전트 플랫폼", "tags": ["에이전트", "플랫폼", "LLM/모델"]}, {"id": "FriendliAI", "layer": "model", "sub": "inference", "size": "startup", "focus": "Inference", "summary": "LLM 추론·서빙 인프라 플랫폼", "tags": ["서빙", "추론", "인프라"]}, {"id": "튜닙", "layer": "model", "sub": "domain", "size": "startup", "focus": "TuNIB", "summary": "감성 대화·소형 특화 언어 모델", "tags": ["LLM/모델", "대화형AI", "연구"]}, {"id": "알체라", "layer": "model", "sub": "vision", "size": "mid", "focus": "Face/Vision", "summary": "얼굴·생체인식 비전 AI 모델", "tags": ["비전모델", "생체인식", "엔터프라이즈"]}, {"id": "NC AI", "layer": "model", "sub": "vision", "size": "mid", "focus": "VARCO", "summary": "게임·멀티모달 콘텐츠 생성 AI", "tags": ["멀티모달", "게임", "생성형AI"]}, {"id": "크라우드웍스", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataOps", "summary": "데이터 라벨링·AI 데이터 운영 플랫폼", "tags": ["데이터가공", "라벨링", "플랫폼"]}, {"id": "슈퍼브에이아이", "layer": "data", "sub": "mlops", "size": "mid", "focus": "Vision AI", "summary": "비전 데이터 파이프라인·MLOps", "tags": ["비전", "MLOps", "데이터"]}, {"id": "마인즈앤컴퍼니", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Consulting", "summary": "기업 AI 도입·MLOps 컨설팅", "tags": ["컨설팅", "MLOps", "엔터프라이즈"]}, {"id": "스케일업랩스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Scale-up", "summary": "AI 데이터 구축·스케일 운영", "tags": ["데이터가공", "라벨링", "운영"]}, {"id": "셀렉트스타", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Evaluation", "summary": "데이터 검증·평가·RLHF 파이프라인", "tags": ["평가", "정렬", "데이터"]}, {"id": "에이모", "layer": "data", "sub": "labeling", "size": "startup", "focus": "AIMMO", "summary": "자율주행·산업용 데이터 플랫폼", "tags": ["자율주행", "데이터", "플랫폼"]}, {"id": "테스트웍스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data QA", "summary": "AI 데이터 구축·검증 서비스", "tags": ["데이터가공", "검증", "플랫폼"]}, {"id": "아크릴", "layer": "data", "sub": "platform", "size": "startup", "focus": "Graph AI", "summary": "지식그래프·분석형 AI 플랫폼", "tags": ["지식그래프", "데이터", "엔터프라이즈"]}, {"id": "VESSL AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "GPU Ops", "summary": "GPU 클라우드·MLOps 운영 플랫폼", "tags": ["GPU", "MLOps", "클라우드"]}, {"id": "노타AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Optimization", "summary": "온디바이스 AI 경량화·최적화", "tags": ["온디바이스", "최적화", "비전"]}, {"id": "씨이랩", "layer": "data", "sub": "platform", "size": "startup", "focus": "Video AI", "summary": "비디오 분석·AI 인프라 솔루션", "tags": ["비디오", "인프라", "엔터프라이즈"]}, {"id": "네이버클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Ncloud", "summary": "국산 AI 클라우드·HyperCLOVA API", "tags": ["클라우드", "플랫폼", "공공AI"]}, {"id": "KT클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "KT Cloud", "summary": "AI·공공·금융 버티컬 클라우드", "tags": ["클라우드", "플랫폼", "통신"]}, {"id": "NHN클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "NHN Cloud", "summary": "클라우드·AI 서비스 인프라", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "카카오클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Kakao Cloud", "summary": "카카오 계열 퍼블릭 클라우드", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "LG CNS", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AX", "summary": "AX 전환·기업 클라우드·SI 서비스", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "SK C&C", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AIX", "summary": "AIX·클라우드·IT서비스 전환", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "메가존클라우드", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "MSP", "summary": "AWS·Azure 기반 클라우드 MSP·AI 구축", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "베스핀글로벌", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Bespin", "summary": "멀티클라우드·AI 운영·FinOps", "tags": ["클라우드", "MSP", "FinOps"]}, {"id": "케이아이엔엑스", "layer": "cloud", "sub": "edge", "size": "mid", "focus": "KINX", "summary": "데이터센터·인터넷 교환 인프라", "tags": ["데이터센터", "인프라", "네트워크"]}, {"id": "그리드원", "layer": "cloud", "sub": "edge", "size": "startup", "focus": "Edge Infra", "summary": "엣지 컴퓨팅·분산 AI 인프라", "tags": ["엣지", "인프라", "온디바이스"]}, {"id": "삼성전자", "layer": "chip", "sub": "memory", "size": "large", "focus": "Samsung", "summary": "HBM·파운드리·시스템 반도체 종합", "tags": ["반도체", "HBM", "대기업"]}, {"id": "SK하이닉스", "layer": "chip", "sub": "memory", "size": "large", "focus": "SK hynix", "summary": "HBM3E·메모리 중심 AI 반도체", "tags": ["반도체", "HBM", "대기업"]}, {"id": "리벨리온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "Rebellions", "summary": "데이터센터용 ATOM·REBEL AI 칩", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "퓨리오사AI", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "FuriosaAI", "summary": "AI 추론 가속기 WARBOY·RNGD", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "딥엑스", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "DEEPX", "summary": "온디바이스·엣지 AI NPU", "tags": ["반도체", "온디바이스", "엣지"]}, {"id": "HyperAccel", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "LPU", "summary": "LLM 추론 특화 가속 칩 LPU", "tags": ["반도체", "추론", "LLM/모델"]}, {"id": "사피온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "SAPEON", "summary": "AI 가속칩 X220", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "오픈엣지테크놀로지", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "OPENEDGES", "summary": "NPU·메모리 시스템 반도체 IP", "tags": ["반도체", "IP", "온디바이스"]}, {"id": "Mobilint", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "Mobilint", "summary": "온프레미스·온디바이스 추론 NPU", "tags": ["반도체", "NPU", "온디바이스"]}, {"id": "네패스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Packaging", "summary": "AI 반도체 패키징·후공정 전문", "tags": ["반도체", "패키징", "중견"]}, {"id": "심심이", "layer": "service", "sub": "agent", "size": "mid", "focus": "Chatbot", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["대화형AI", "글로벌", "자연어처리"]}, {"id": "에버트란", "layer": "service", "sub": "agent", "size": "mid", "focus": "MTPE", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["번역", "언어AI", "서비스"]}, {"id": "로민", "layer": "service", "sub": "agent", "size": "startup", "focus": "OCR", "summary": "기업편람 수록 AI OCR·문서인식 서비스 기업", "tags": ["OCR", "문서AI", "비전"]}, {"id": "에듀템", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "EdTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "외국어학습", "서비스"]}, {"id": "위고", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "CRM/VOC AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "VOC", "서비스"]}, {"id": "잡쇼퍼", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "학쫑", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "추천", "서비스"]}, {"id": "히어로웍스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Revenue AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["관광", "수요예측", "버티컬AI"]}, {"id": "로앤컴퍼니", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "리걸테크", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["리걸테크", "판례검색", "서비스"]}, {"id": "아이지넷", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "보닥", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["보험AI", "추천", "핀테크"]}, {"id": "컴트루테크놀로지", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "eKYC/aiSee", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["eKYC", "비전", "핀테크"]}, {"id": "탱커", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "PropTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["프롭테크", "부동산AI", "서비스"]}, {"id": "텐스페이스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "ASTER", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["핀테크", "신용평가", "서비스"]}, {"id": "블루바이저시스템즈", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "HighBuff", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["면접AI", "재테크AI", "서비스"]}, {"id": "빅트리", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "BIGBOT", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["로보어드바이저", "금융AI", "서비스"]}, {"id": "콰라소프트", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "KOSHO", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "투자가이드", "서비스"]}, {"id": "크래프트테크놀로지스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Electronic Trading", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "트레이딩", "서비스"]}, {"id": "닥터송", "layer": "service", "sub": "health", "size": "startup", "focus": "의료상담/DTx", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "챗봇", "디지털치료제"]}, {"id": "메디아이플러스", "layer": "service", "sub": "health", "size": "startup", "focus": "MediC", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["임상시험", "데이터", "헬스케어"]}, {"id": "에이아이플랫폼", "layer": "service", "sub": "health", "size": "startup", "focus": "의료 마이데이터", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "마이데이터", "헬스케어"]}, {"id": "카이팜", "layer": "service", "sub": "health", "size": "startup", "focus": "Drug Discovery", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["신약개발", "오믹스", "헬스케어"]}, {"id": "피디젠", "layer": "service", "sub": "health", "size": "startup", "focus": "Digital Medicine", "summary": "기업편람 수록 진단예측", "tags": ["진단예측", "바이오", "헬스케어"]}, {"id": "뉴로핏", "layer": "service", "sub": "health", "size": "mid", "focus": "Neuro AI", "summary": "기업편람 수록 뇌·신경계 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "메디컬아이피", "layer": "service", "sub": "health", "size": "mid", "focus": "Medical 3D", "summary": "기업편람 수록 의료영상·디지털트윈 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "노을", "layer": "service", "sub": "health", "size": "mid", "focus": "Digital Pathology", "summary": "기업편람 수록 디지털 병리·진단 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "아이도트", "layer": "service", "sub": "health", "size": "mid", "focus": "Women Health", "summary": "기업편람 수록 여성·검진 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "빈드컴퍼니", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Music Gen", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["생성형AI", "음악", "콘텐츠"]}, {"id": "오투오", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "MetaData/Recomm.", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["추천", "리뷰필터링", "서비스"]}, {"id": "세미콘네트웍스", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "문서분류/감정인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성", "감정인식", "서비스"]}, {"id": "솔루게이트", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "음성인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성인식", "컨택센터", "서비스"]}, {"id": "데브언리밋", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Sparky", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["피트니스AI", "비전", "서비스"]}, {"id": "록스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Region TTS", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성합성", "TTS", "서비스"]}, {"id": "딥픽셀", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "StyleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "블루프린트랩", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "SpectacleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "마음AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Embodied AI", "summary": "NIPA 사례집 수록 Embodied AI·인공인간 서비스 기업", "tags": ["Embodied AI", "AI Human", "서비스"]}, {"id": "비트플로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Rail/Smart City", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["스마트시티", "비전", "공공AI"]}, {"id": "코액터스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "고요한M", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "유니버설디자인", "서비스"]}, {"id": "인트플로우", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Edge Farm", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["에너지/환경", "스마트팜", "비전"]}, {"id": "넥스트랩", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Beyond AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "품질검사", "산업AI"]}, {"id": "델타엑스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "X-Pilot", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "비전", "자율주행"]}, {"id": "드로미", "layer": "service", "sub": "mobility", "size": "startup", "focus": "GeoAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "공간정보", "비전"]}, {"id": "라온피플", "layer": "service", "sub": "mobility", "size": "mid", "focus": "NAVIAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "스마트팩토리", "상장"]}, {"id": "카이어", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Kaier Vision", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "산업AI", "이상탐지"]}, {"id": "핀텔", "layer": "service", "sub": "mobility", "size": "mid", "focus": "교통/보안 AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "비전", "상장"]}, {"id": "하이브비전", "layer": "service", "sub": "mobility", "size": "mid", "focus": "DeepCulus", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "제조AI", "산업AI"]}, {"id": "와이즈레이크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Agri AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["애그테크", "스마트팜", "비전"]}, {"id": "코코넛사일로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "COCOTRUCK", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["물류AI", "공급망", "버티컬AI"]}, {"id": "모라이", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Simulation", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["자율주행", "시뮬레이션", "모빌리티"]}, {"id": "니어스랩", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Drone AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "비전", "산업AI"]}, {"id": "트위니", "layer": "service", "sub": "mobility", "size": "startup", "focus": "자율주행 로봇", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["로봇", "물류", "모빌리티"]}, {"id": "블루시그널", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Traffic AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "예측", "스마트시티"]}, {"id": "마인즈랩", "layer": "model", "sub": "domain", "size": "mid", "focus": "Voice/AI Human", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "AI Human", "플랫폼"]}, {"id": "셀바스AI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Speech AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "의료AI", "상장"]}, {"id": "스켈터랩스", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational LLM", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "엔터프라이즈"]}, {"id": "TmaxAI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Enterprise AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["엔터프라이즈", "LLM/모델", "플랫폼"]}, {"id": "뉴럴웍스랩", "layer": "model", "sub": "domain", "size": "startup", "focus": "Speech/NLP", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "언어모델", "서비스"]}, {"id": "마인드에이아이", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "서비스"]}, {"id": "디에스랩글로벌", "layer": "data", "sub": "labeling", "size": "startup", "focus": "CLICK AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["오토라벨링", "데이터가공", "플랫폼"]}, {"id": "인피닉", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataStudio", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "중견"]}, {"id": "데이터메이커", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Synapse", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "3D LiDAR", "플랫폼"]}, {"id": "어노테이션에이아이", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Annotation AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "데이터가공", "플랫폼"]}, {"id": "젠데이터", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data Ops", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "라벨링"]}, {"id": "바이트브릿지", "layer": "data", "sub": "labeling", "size": "startup", "focus": "자율주행 데이터", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["자율주행", "데이터가공", "라벨링"]}, {"id": "브레인컨테이너", "layer": "data", "sub": "labeling", "size": "startup", "focus": "LiDAR Seg.", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["LiDAR", "데이터가공", "라벨링"]}, {"id": "몬드리안에이아이", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Yennefer", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["AI-PaaS", "MLOps", "플랫폼"]}, {"id": "데이콘", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Hackathon", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["해커톤", "평가", "교육"]}, {"id": "인공지능팩토리", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Competition", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["MLOps", "평가", "플랫폼"]}, {"id": "KSTEC", "layer": "data", "sub": "analytics", "size": "mid", "focus": "SyncPlan/Dataiku", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["최적화", "RPA", "컨설팅"]}, {"id": "TG360 테크놀로지스", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Molecule", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["비식별데이터", "DMP", "플랫폼"]}, {"id": "누리꿈소프트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Smart-Eye", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "예측", "플랫폼"]}, {"id": "더블유에이아이", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Quant Athena", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["금융시계열", "분석", "서비스"]}, {"id": "데이터에듀", "layer": "data", "sub": "analytics", "size": "startup", "focus": "두런", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AI교육", "컨설팅", "분석"]}, {"id": "리서치림", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Insight", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["리서치", "분석", "데이터"]}, {"id": "리스트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Commerce Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "추천", "분석"]}, {"id": "마켓링크", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Marketing Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "메트릭스", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Metrics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "비즈스프링", "layer": "data", "sub": "analytics", "size": "mid", "focus": "BizSpring", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "SaaS"]}, {"id": "애자일소다", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Decision AI", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AutoML", "분석", "엔터프라이즈"]}, {"id": "웨슬리퀘스트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["컨설팅", "분석", "엔터프라이즈"]}, {"id": "유클리드소프트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Data Science", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "컨설팅", "데이터"]}, {"id": "인그래디언트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "최적화", "AI"]}, {"id": "이트너스", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Portal/ESAI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["AICC", "플랫폼", "업무자동화"]}, {"id": "넥타르소프트", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Advisor", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["예측", "음성/NLP", "플랫폼"]}, {"id": "디지털존 마포지점", "layer": "data", "sub": "platform", "size": "mid", "focus": "전자문서", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["전자문서", "증명서", "플랫폼"]}, {"id": "로아인텔리전스", "layer": "data", "sub": "platform", "size": "startup", "focus": "기업가치정보", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["기업정보", "분석", "플랫폼"]}, {"id": "오브젠", "layer": "data", "sub": "platform", "size": "mid", "focus": "CRM AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["CRM", "분석", "플랫폼"]}, {"id": "엔에이치엔데이터", "layer": "data", "sub": "platform", "size": "mid", "focus": "Data Infra", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["데이터", "인프라", "플랫폼"]}, {"id": "아임클라우드", "layer": "data", "sub": "platform", "size": "mid", "focus": "BigData/AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["클라우드", "데이터", "플랫폼"]}, {"id": "클루커스", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Cloud MSP", "summary": "기업편람 수록 클라우드 전환·운영 기업", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "알세미", "layer": "chip", "sub": "supplychain", "size": "startup", "focus": "EDA/Modeling", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "EDA", "설계자동화"]}, {"id": "피에스디이", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Equipment", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "배관/모듈"]}, {"id": "씨피에스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Process", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "제조"]}];
 const DOMAIN = {"네이버": "naver.com", "LG AI Research": "lge.com", "카카오": "kakao.com", "SK텔레콤": "sktelecom.com", "KT": "kt.com", "삼성SDS": "samsungsds.com", "업스테이지": "upstage.ai", "모레": "moreh.io", "FriendliAI": "friendli.ai", "튜닙": "tunib.ai", "알체라": "alcherainc.com", "NC AI": "ncsoft.com", "Motif Technologies": "motif.inc", "라이너": "getliner.com", "뤼튼테크놀로지스": "wrtn.ai", "스캐터랩": "scatterlab.co.kr", "올거나이즈": "allganize.ai", "뤼이드": "riiid.co", "매스프레소": "mathpresso.com", "클래스팅": "classting.com", "포티투마루": "42maru.ai", "코난테크놀로지": "conantech.co.kr", "솔트룩스": "saltlux.com", "루닛": "lunit.io", "뷰노": "vuno.co", "딥노이드": "deepnoid.com", "JLK": "jlkgroup.com", "딥바이오": "deepbio.co.kr", "메디웨일": "mediwhale.com", "코어라인소프트": "corelinesoft.com", "에이아이트릭스": "aitrics.com", "트웰브랩스": "twelvelabs.io", "딥브레인AI": "deepbrain.io", "클레온": "cleon.ai", "네오사피엔스": "neosapience.com", "펄스나인": "pulsenine.com", "마인드로직": "mindlogic.ai", "포티투닷": "42dot.ai", "서울로보틱스": "seoulrobotics.org", "모빌테크": "mobiltech.io", "라이드플럭스": "rideflux.com", "스트라드비젼": "stradvision.com", "베어로보틱스": "bearrobotics.ai", "S2W": "s2w.inc", "마키나락스": "makinarocks.ai", "크라우드웍스": "crowdworks.kr", "슈퍼브에이아이": "superb-ai.com", "마인즈앤컴퍼니": "mindsandcompany.com", "스케일업랩스": "scaleuplabs.ai", "셀렉트스타": "selectstar.ai", "에이모": "aimmo.ai", "테스트웍스": "testworks.co.kr", "아크릴": "acryl.ai", "VESSL AI": "vessl.ai", "노타AI": "nota.ai", "씨이랩": "celab.ai", "네이버클라우드": "ncloud.com", "KT클라우드": "ktcloud.com", "NHN클라우드": "nhncloud.com", "카카오클라우드": "kakaocloud.com", "LG CNS": "lgcns.com", "SK C&C": "skcc.com", "메가존클라우드": "megazone.com", "베스핀글로벌": "bespinglobal.com", "케이아이엔엑스": "kinx.net", "그리드원": "gridone.ai", "삼성전자": "samsung.com", "SK하이닉스": "skhynix.com", "리벨리온": "rebellions.ai", "퓨리오사AI": "furiosa.ai", "딥엑스": "deepx.ai", "HyperAccel": "hyperaccel.ai", "사피온": "sapeon.com", "오픈엣지테크놀로지": "openedges.com", "Mobilint": "mobilint.com", "네패스": "nepes.com", "심심이": "simsimi.com", "에버트란": "evertran.com", "로민": "lomin.ai", "에듀템": "edutem.net", "위고": "wigo.ai", "잡쇼퍼": "jobshopper.co.kr", "히어로웍스": "heroworks.co.kr", "로앤컴퍼니": "lawcompany.co.kr", "아이지넷": "aijinet.com", "컴트루테크놀로지": "comtrue.com", "탱커": "tanker.ai", "텐스페이스": "tenspace.co.kr", "블루바이저시스템즈": "bluevisor.kr", "빅트리": "ibigtree.kr", "콰라소프트": "owwl.kr", "크래프트테크놀로지스": "qraftec.com", "닥터송": "dsong.co.kr", "메디아이플러스": "mediaiplus.com", "에이아이플랫폼": "aiplatform.co.kr", "카이팜": "kaipharm.com", "피디젠": "pdxen.com", "뉴로핏": "neurophet.com", "메디컬아이피": "medicalip.com", "노을": "nouel.com", "아이도트": "aidot.ai", "빈드컴퍼니": "vvind.in", "오투오": "o2o.kr", "세미콘네트웍스": "sns.co.kr", "솔루게이트": "solugate.com", "데브언리밋": "devunlimit.com", "록스": "locslab.com", "딥픽셀": "deepixel.xyz", "블루프린트랩": "blueprint-lab.com", "마음AI": "maum.ai", "비트플로": "bitflow.ai", "코액터스": "goyohanmobility.com", "인트플로우": "intflow.ai", "넥스트랩": "nextlab.ai", "델타엑스": "deltax.ai", "드로미": "dromii.com", "라온피플": "laonpeople.com", "카이어": "kaier.co.kr", "핀텔": "pintel.co.kr", "하이브비전": "hivevision.co.kr", "와이즈레이크": "wiselake.co.kr", "코코넛사일로": "coconutsilo.com", "모라이": "morai.ai", "니어스랩": "nearthlab.com", "트위니": "twinny.ai", "블루시그널": "bluesignal.ai", "마인즈랩": "mindslab.ai", "셀바스AI": "selvasai.com", "스켈터랩스": "skelterlabs.com", "TmaxAI": "tmax.co.kr", "뉴럴웍스랩": "neuralworkslab.com", "마인드에이아이": "mindslab.ai", "디에스랩글로벌": "dslab.global", "인피닉": "infiniq.co.kr", "데이터메이커": "datamaker.io", "어노테이션에이아이": "annotation-ai.com", "젠데이터": "gendata.kr", "바이트브릿지": "bytebridge.io", "브레인컨테이너": "braincontainer.co.kr", "몬드리안에이아이": "mondrian.ai", "데이콘": "dacon.io", "인공지능팩토리": "aifactory.page", "KSTEC": "kstec.co.kr", "TG360 테크놀로지스": "tg360tech.com", "누리꿈소프트": "nuriggum.com", "더블유에이아이": "waikorea.com", "데이터에듀": "dataedu.kr", "리서치림": "research-lim.com", "리스트": "list.company", "마켓링크": "marketlink.co.kr", "메트릭스": "metrix.co.kr", "비즈스프링": "bizspring.co.kr", "애자일소다": "agilesoda.ai", "웨슬리퀘스트": "wesleyquest.com", "유클리드소프트": "euclidsoft.co.kr", "인그래디언트": "ingredient.co.kr", "이트너스": "etners.com", "넥타르소프트": "nectarsoft.co.kr", "디지털존 마포지점": "digitalzone.co.kr", "로아인텔리전스": "roa.ai", "오브젠": "obzen.com", "엔에이치엔데이터": "nhndata.com", "아임클라우드": "imcloud.co.kr", "클루커스": "cloocus.com", "알세미": "alsemy.com", "피에스디이": "psd-inc.co.kr", "씨피에스": "oncps.modoo.at"};
 const RELATIONS = [["네이버", "네이버클라우드", "group"], ["SK텔레콤", "SK하이닉스", "group"], ["SK텔레콤", "사피온", "group"], ["SK텔레콤", "SK C&C", "group"], ["KT", "KT클라우드", "group"], ["카카오", "카카오클라우드", "group"], ["LG AI Research", "LG CNS", "group"], ["삼성전자", "삼성SDS", "group"], ["포티투닷", "포티투마루", "group"], ["업스테이지", "크라우드웍스", "tech"], ["업스테이지", "슈퍼브에이아이", "tech"], ["업스테이지", "셀렉트스타", "tech"], ["뤼튼테크놀로지스", "업스테이지", "tech"], ["뤼튼테크놀로지스", "네이버", "tech"], ["루닛", "네이버클라우드", "tech"], ["뷰노", "KT클라우드", "tech"], ["트웰브랩스", "네이버클라우드", "tech"], ["모레", "LG AI Research", "tech"], ["모레", "업스테이지", "tech"], ["모레", "KT클라우드", "tech"], ["라이너", "업스테이지", "tech"], ["딥브레인AI", "SK C&C", "tech"], ["네오사피엔스", "네이버클라우드", "tech"], ["에이모", "포티투닷", "tech"], ["HyperAccel", "LG AI Research", "tech"], ["오픈엣지테크놀로지", "삼성전자", "tech"], ["삼성전자", "네이버", "supply"], ["삼성전자", "LG AI Research", "supply"], ["SK하이닉스", "네이버", "supply"], ["SK하이닉스", "LG AI Research", "supply"], ["SK하이닉스", "카카오", "supply"], ["리벨리온", "KT", "supply"], ["리벨리온", "KT클라우드", "supply"], ["퓨리오사AI", "네이버클라우드", "supply"], ["딥엑스", "NHN클라우드", "supply"], ["사피온", "SK C&C", "supply"], ["네이버", "트웰브랩스", "invest"], ["카카오", "뤼튼테크놀로지스", "invest"], ["SK텔레콤", "리벨리온", "invest"], ["삼성전자", "퓨리오사AI", "invest"], ["KT", "솔트룩스", "invest"], ["네이버클라우드", "서울로보틱스", "invest"]];
 const REL_COL = { group:"#f59e0b", tech:"#10b981", supply:"#a855f7", invest:"#ec4899" };
+const REL_LABELS = { group:'그룹', tech:'기술', supply:'공급망', invest:'투자' };
 
 const ST = { selected:null, layerFilter:null, query:"", zoomK:1, theme:(localStorage.getItem('korea-ai-ecosystem-theme') || 'dark') };
 
@@ -370,11 +387,100 @@ RAW.forEach(d => layerCounts.set(d.layer, (layerCounts.get(d.layer) || 0) + 1));
 const subCounts = new Map();
 RAW.forEach(d => subCounts.set(`${d.layer}:${d.sub}`, (subCounts.get(`${d.layer}:${d.sub}`) || 0) + 1));
 
+const SCENE_PACK_X = 0.84;
+const SCENE_PACK_Y = 0.86;
+const SCENE_SHIFT_Y = -10;
+
+function getLayerCenter(layerOrId) {
+  const layer = typeof layerOrId === 'string' ? layerMap[layerOrId] : layerOrId;
+  const rawX = layer.cx_pct * W;
+  const rawY = layer.cy_pct * H;
+  return {
+    x: W / 2 + (rawX - W / 2) * SCENE_PACK_X,
+    y: H / 2 + (rawY - H / 2) * SCENE_PACK_Y + SCENE_SHIFT_Y
+  };
+}
+
+function sanitizeSummary(summary) {
+  return (summary || '')
+    .replace(/기업편람\/NIPA\s*수록\s*/g, '')
+    .replace(/기업편람\s*수록\s*/g, '')
+    .replace(/NIPA 사례집\s*수록\s*/g, '')
+    .replace(/NIPA\s*수록\s*/g, '')
+    .replace(/^[\s·,:-]+/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+const SIZE_ORDER = { large: 0, mid: 1, startup: 2 };
+
+const SUBPILL_DATA = Object.entries(SUBCAT_DEFS).flatMap(([layer, subs]) =>
+  subs.map(s => ({ layer, ...s, count: subCounts.get(`${layer}:${s.id}`) || 0 }))
+);
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function spiralOffset(idx, step) {
+  if (idx === 0) return { x: 0, y: 0 };
+  const angle = idx * 2.399963229728653;
+  const radius = Math.sqrt(idx) * step;
+  return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+}
+
+function assignSubclusterOffsets(list) {
+  const groups = d3.group(list, d => `${d.layer}:${d.sub}`);
+
+  groups.forEach(group => {
+    group.sort((a, b) =>
+      (SIZE_ORDER[a.size] - SIZE_ORDER[b.size]) ||
+      d3.ascending(a.id, b.id)
+    );
+
+    const step = Math.max(18, Math.min(42, 16 + Math.sqrt(group.length) * 4.2));
+
+    group.forEach((n, idx) => {
+      const o = spiralOffset(idx, step + n.r * 0.6);
+      n.localBase = { x: o.x, y: o.y };
+      n.groupCount = group.length;
+    });
+  });
+}
+
+const LAYOUT_LEVELS = [
+  { subSpread: 0.94, nodeScale: 0.24, force: 0.050, pillScale: 0.94, pillOpacity: 0.58 },
+  { subSpread: 1.02, nodeScale: 0.42, force: 0.056, pillScale: 1.00, pillOpacity: 0.66 },
+  { subSpread: 1.18, nodeScale: 0.72, force: 0.062, pillScale: 1.06, pillOpacity: 0.74 },
+  { subSpread: 1.42, nodeScale: 1.02, force: 0.069, pillScale: 1.12, pillOpacity: 0.82 },
+  { subSpread: 1.76, nodeScale: 1.38, force: 0.076, pillScale: 1.18, pillOpacity: 0.88 },
+  { subSpread: 2.12, nodeScale: 1.76, force: 0.084, pillScale: 1.24, pillOpacity: 0.94 },
+  { subSpread: 2.46, nodeScale: 2.08, force: 0.091, pillScale: 1.30, pillOpacity: 0.98 }
+];
+
+function getLayoutLevel(layerId) {
+  const z = ST.zoomK;
+  let level = z < 0.92 ? 0 : z < 1.12 ? 1 : z < 1.38 ? 2 : z < 1.76 ? 3 : z < 2.25 ? 4 : z < 2.95 ? 5 : 6;
+
+  if (ST.layerFilter === layerId) level += 1;
+
+  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
+  if (selectedNode && selectedNode.layer === layerId) level += 1;
+
+  if (ST.layerFilter && ST.layerFilter !== layerId) level = Math.max(0, level - 1);
+
+  return clamp(level, 0, LAYOUT_LEVELS.length - 1);
+}
+
+function getLayoutCfg(layerId) {
+  return LAYOUT_LEVELS[getLayoutLevel(layerId)];
+}
+
 const layerRadius = {};
 LAYER_DEFS.forEach(l => {
-  const base = Math.max(Math.min(W, H) * 0.12, 98);
+  const base = Math.max(Math.min(W, H) * 0.105, 92);
   const cnt = layerCounts.get(l.id) || 0;
-  layerRadius[l.id] = base + Math.sqrt(cnt) * 6.5;
+  layerRadius[l.id] = base + Math.sqrt(cnt) * 5.9;
 });
 
 const DOMAIN_URL = name => DOMAIN[name] ? `https://logo.clearbit.com/${DOMAIN[name]}` : null;
@@ -383,12 +489,14 @@ const nodes = RAW.map(d => {
   const layer = layerMap[d.layer];
   const size = SIZE_DEFS[d.size];
   const sub = subMap[`${d.layer}:${d.sub}`];
-  const cx = layer.cx_pct * W, cy = layer.cy_pct * H;
+  const center = getLayerCenter(layer);
   const R = layerRadius[d.layer];
-  const tx = cx + (sub ? sub.dx * R : 0);
-  const ty = cy + (sub ? sub.dy * R : 0);
+  const tx = center.x + (sub ? sub.dx * R : 0);
+  const ty = center.y + (sub ? sub.dy * R : 0);
+
   return {
     ...d,
+    summary: sanitizeSummary(d.summary),
     accent: layer.accent,
     layerName: layer.name,
     subName: sub ? sub.name : '',
@@ -397,15 +505,52 @@ const nodes = RAW.map(d => {
     r: size.r,
     logo: DOMAIN_URL(d.id),
     tx, ty,
-    x: tx + (Math.random() - 0.5) * 110,
-    y: ty + (Math.random() - 0.5) * 110
+    targetX: tx,
+    targetY: ty,
+    clusterForce: 0.055,
+    renderScale: 1,
+    x: tx,
+    y: ty
   };
+});
+
+assignSubclusterOffsets(nodes);
+
+nodes.forEach(n => {
+  n.targetX = n.tx + n.localBase.x * LAYOUT_LEVELS[0].nodeScale;
+  n.targetY = n.ty + n.localBase.y * LAYOUT_LEVELS[0].nodeScale;
+  n.x = n.targetX + (Math.random() - 0.5) * 16;
+  n.y = n.targetY + (Math.random() - 0.5) * 16;
 });
 
 const nodeIndex = Object.fromEntries(nodes.map((n,i) => [n.id, i]));
 const links = RELATIONS
   .filter(([a,b]) => nodeIndex[a] !== undefined && nodeIndex[b] !== undefined)
   .map(([a,b,type]) => ({ source:a, target:b, type }));
+
+const adjacency = new Map();
+function addAdjacency(from, to, type) {
+  if (!adjacency.has(from)) adjacency.set(from, []);
+  const arr = adjacency.get(from);
+  let entry = arr.find(item => item.id === to);
+  if (!entry) {
+    entry = { id: to, types: [] };
+    arr.push(entry);
+  }
+  if (!entry.types.includes(type)) entry.types.push(type);
+}
+
+links.forEach(l => {
+  addAdjacency(l.source, l.target, l.type);
+  addAdjacency(l.target, l.source, l.type);
+});
+
+let subpillSel;
+let subpillRoot;
+let lastLayoutKey = '';
+let renderPending = false;
+let motionLite = false;
+let motionTimer = null;
 
 const svg = d3.select('#graph-svg').attr('width', W).attr('height', H);
 const defs = svg.append('defs');
@@ -428,25 +573,30 @@ const zoom = d3.zoom().scaleExtent([0.35, 4.5]).on('zoom', ev => {
   ST.zoomK = ev.transform.k;
   zoomG.attr('transform', ev.transform);
   updateLabelVisibility();
+  maybeUpdateLayout();
 });
 svg.call(zoom);
 
 const zoneG = zoomG.append('g').attr('id','zones');
 
 LAYER_DEFS.forEach(l => {
-  const cx = l.cx_pct * W, cy = l.cy_pct * H, R = layerRadius[l.id];
-  zoneG.append('circle').attr('cx',cx).attr('cy',cy)
-    .attr('r', R * 1.22)
+  const center = getLayerCenter(l);
+  const cx = center.x, cy = center.y, R = layerRadius[l.id];
+
+  zoneG.append('circle')
+    .attr('cx', cx).attr('cy', cy)
+    .attr('r', R * 1.18)
     .attr('fill', 'none')
     .attr('stroke', l.accent)
     .attr('stroke-width', 1)
     .attr('stroke-opacity', 0.08)
     .attr('stroke-dasharray', '4 6');
 
-  zoneG.append('circle').attr('cx',cx).attr('cy',cy)
+  zoneG.append('circle')
+    .attr('cx', cx).attr('cy', cy)
     .attr('r', R)
     .attr('fill', l.accent)
-    .attr('fill-opacity', 0.042)
+    .attr('fill-opacity', 0.044)
     .attr('stroke', l.accent)
     .attr('stroke-width', 1)
     .attr('stroke-opacity', 0.18)
@@ -454,38 +604,48 @@ LAYER_DEFS.forEach(l => {
 
   zoneG.append('text')
     .attr('x', cx).attr('y', cy - R - 18)
-    .attr('text-anchor','middle')
+    .attr('text-anchor', 'middle')
     .attr('fill', l.accent)
-    .attr('font-size','14px')
-    .attr('opacity',0.88)
-    .attr('class',`zone-label zone-label-${l.id}`)
+    .attr('font-size', '14px')
+    .attr('opacity', 0.88)
+    .attr('class', `zone-label zone-label-${l.id}`)
     .text(l.name);
 
   zoneG.append('text')
     .attr('x', cx).attr('y', cy - R + 2)
-    .attr('text-anchor','middle')
+    .attr('text-anchor', 'middle')
     .attr('fill', l.accent)
-    .attr('font-size','10px')
-    .attr('opacity',0.48)
-    .attr('class',`zone-count zone-count-${l.id}`)
+    .attr('font-size', '10px')
+    .attr('opacity', 0.48)
+    .attr('class', `zone-count zone-count-${l.id}`)
     .text(`${layerCounts.get(l.id) || 0}개`);
-
-  (SUBCAT_DEFS[l.id] || []).forEach(s => {
-    const sx = cx + s.dx * R;
-    const sy = cy + s.dy * R;
-    const count = subCounts.get(`${l.id}:${s.id}`) || 0;
-    const g = zoneG.append('g').attr('class', `subpill subpill-${l.id}`).attr('transform', `translate(${sx},${sy})`);
-    const txt = g.append('text')
-      .attr('text-anchor','middle')
-      .attr('dominant-baseline','central')
-      .text(`${s.name} · ${count}`);
-    const bb = txt.node().getBBox();
-    g.insert('rect', 'text')
-      .attr('x', bb.x - 8).attr('y', bb.y - 4)
-      .attr('width', bb.width + 16).attr('height', bb.height + 8)
-      .attr('fill', l.accent).attr('stroke', l.accent).attr('stroke-opacity', 0.22);
-  });
 });
+
+subpillSel = zoneG.append('g')
+  .attr('id', 'subpill-g')
+  .selectAll('g.subpill')
+  .data(SUBPILL_DATA)
+  .join('g')
+  .attr('class', d => `subpill subpill-${d.layer}`);
+
+subpillSel.each(function(d) {
+  const g = d3.select(this);
+  const txt = g.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .text(`${d.name} · ${d.count}`);
+
+  const bb = txt.node().getBBox();
+
+  g.insert('rect', 'text')
+    .attr('x', bb.x - 10).attr('y', bb.y - 5)
+    .attr('width', bb.width + 20).attr('height', bb.height + 10)
+    .attr('fill', layerMap[d.layer].accent)
+    .attr('stroke', layerMap[d.layer].accent)
+    .attr('stroke-opacity', 0.32);
+});
+
+refreshLayoutTargets(false);
 
 const linkG = zoomG.append('g').attr('id','links');
 const linkSel = linkG.selectAll('line').data(links).join('line')
@@ -511,8 +671,16 @@ nodeGSel.append('circle')
   .attr('fill', 'none')
   .attr('stroke', d => d.accent)
   .attr('stroke-width', 2)
+  .attr('stroke-opacity', 0);
+
+nodeGSel.append('circle')
+  .attr('class','node-halo')
+  .attr('r', d => d.r + 11)
+  .attr('fill', 'none')
+  .attr('stroke', d => d.accent)
+  .attr('stroke-width', 1.5)
   .attr('stroke-opacity', 0)
-  .attr('filter', d => `url(#glow-${d.layer})`);
+  .attr('stroke-dasharray', '4 4');
 
 nodeGSel.append('circle')
   .attr('class','node-circle')
@@ -527,7 +695,9 @@ nodeGSel.append('circle')
   .attr('class','node-core')
   .attr('r', d => Math.max(7, d.r - 1))
   .attr('fill', d => d.sizeColor)
-  .attr('fill-opacity', 0.96);
+  .attr('fill-opacity', 0.96)
+  .attr('stroke', 'rgba(255,255,255,0)')
+  .attr('stroke-width', 0);
 
 nodeGSel.append('circle')
   .attr('class','node-logo-bg')
@@ -592,25 +762,120 @@ nodeGSel.append('text')
   .attr('pointer-events','none')
   .text(d => d.id.length > 10 ? d.id.slice(0,9)+'…' : d.id);
 
-const sim = d3.forceSimulation(nodes)
-  .force('link', d3.forceLink(links).id(d => d.id).distance(150).strength(0.045))
-  .force('charge', d3.forceManyBody().strength(d => d.size === 'large' ? -300 : d.size === 'mid' ? -220 : -170))
-  .force('collision', d3.forceCollide().radius(d => d.r + 12).strength(0.96))
-  .force('cluster', () => {
-    nodes.forEach(n => {
-      const alpha = 0.05;
-      n.vx += (n.tx - n.x) * alpha;
-      n.vy += (n.ty - n.y) * alpha;
-    });
-  })
-  .alphaDecay(0.024)
-  .velocityDecay(0.42);
+subpillRoot = d3.select('#subpill-g').attr('pointer-events', 'none');
+zoomG.node().appendChild(subpillRoot.node());
+subpillRoot.raise();
 
-sim.on('tick', () => {
+function setMotionLite(active) {
+  if (motionLite === active) return;
+  motionLite = active;
+  nodeG.classed('motion-lite', active);
+}
+
+function refreshLayoutTargets(animateSubpills = true) {
+  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
+
+  nodes.forEach(n => {
+    const sub = subMap[`${n.layer}:${n.sub}`];
+    const cfg = getLayoutCfg(n.layer);
+    const center = getLayerCenter(n.layer);
+    const R = layerRadius[n.layer];
+
+    const baseX = center.x + (sub ? sub.dx * R * cfg.subSpread : 0);
+    const baseY = center.y + (sub ? sub.dy * R * cfg.subSpread : 0);
+    const off = n.localBase || { x: 0, y: 0 };
+
+    n.targetX = baseX + off.x * cfg.nodeScale;
+    n.targetY = baseY + off.y * cfg.nodeScale;
+    n.clusterForce = cfg.force;
+  });
+
+  if (!subpillSel) return;
+
+  subpillSel.each(function(d) {
+    const cfg = getLayoutCfg(d.layer);
+    const center = getLayerCenter(d.layer);
+    const R = layerRadius[d.layer];
+    const x = center.x + d.dx * R * cfg.subSpread;
+    const y = center.y + d.dy * R * cfg.subSpread;
+    const active = !ST.layerFilter || ST.layerFilter === d.layer;
+    const selectedInLayer = selectedNode && selectedNode.layer === d.layer;
+    const scale = selectedInLayer ? cfg.pillScale * 1.05 : cfg.pillScale;
+    const opacity = active ? cfg.pillOpacity : Math.max(0.12, cfg.pillOpacity * 0.22);
+
+    const sel = d3.select(this);
+    const painter = animateSubpills ? sel.transition().duration(280).ease(d3.easeCubicOut) : sel;
+    painter
+      .attr('transform', `translate(${x},${y}) scale(${scale})`)
+      .attr('opacity', opacity);
+
+    sel.select('rect')
+      .attr('fill-opacity', active ? (selectedInLayer ? 0.18 : 0.15) : 0.07)
+      .attr('stroke-opacity', active ? (selectedInLayer ? 0.5 : 0.36) : 0.18);
+  });
+
+  if (subpillRoot) subpillRoot.raise();
+}
+
+function renderScene() {
+  renderPending = false;
   linkSel
     .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-  nodeGSel.attr('transform', d => `translate(${d.x},${d.y})`);
+
+  nodeGSel.attr('transform', d => `translate(${d.x},${d.y}) scale(${d.renderScale || 1})`);
+  if (subpillRoot) subpillRoot.raise();
+}
+
+function scheduleRender() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(renderScene);
+}
+
+function kickSimulation(alpha = 0.16) {
+  clearTimeout(motionTimer);
+  setMotionLite(true);
+  sim.alpha(Math.max(sim.alpha(), alpha)).restart();
+
+  motionTimer = setTimeout(() => {
+    if (sim.alpha() < 0.06) setMotionLite(false);
+  }, 280);
+}
+
+function maybeUpdateLayout(force = false) {
+  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
+  const key = `${ST.layerFilter || 'all'}:${selectedNode ? selectedNode.layer : 'none'}:${LAYER_DEFS.map(l => getLayoutLevel(l.id)).join('-')}`;
+  if (!force && key === lastLayoutKey) return;
+
+  lastLayoutKey = key;
+  refreshLayoutTargets(!force);
+  kickSimulation(0.16);
+}
+
+const sim = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d => d.id).distance(122).strength(0.03))
+  .force('charge', d3.forceManyBody().strength(d => d.size === 'large' ? -250 : d.size === 'mid' ? -195 : -150))
+  .force('collision', d3.forceCollide().radius(d => d.r + 9).strength(0.92))
+  .force('cluster', () => {
+    nodes.forEach(n => {
+      const k = n.clusterForce || 0.055;
+      n.vx += (n.targetX - n.x) * k;
+      n.vy += (n.targetY - n.y) * k;
+    });
+  })
+  .alphaDecay(0.046)
+  .alphaMin(0.02)
+  .velocityDecay(0.47);
+
+sim.on('tick', () => {
+  if (sim.alpha() > 0.07) setMotionLite(true);
+  scheduleRender();
+});
+
+sim.on('end', () => {
+  setMotionLite(false);
+  renderScene();
 });
 
 function applyTheme(theme) {
@@ -639,82 +904,168 @@ function queryMatch(d, q) {
          (d.tags || []).some(t => (t || '').toLowerCase().includes(q));
 }
 
-function relatedIds(name) {
+function getSelectionContext(name) {
+  const empty = { connected: new Set(), similar: new Set(), highlighted: new Set(), connectedMeta: new Map() };
+  if (!name) return empty;
+
   const base = nodes.find(n => n.id === name);
-  if (!base) return new Set();
-  const baseSet = new Set(base.tags);
-  return new Set(
+  if (!base) return empty;
+
+  const connectedEntries = adjacency.get(name) || [];
+  const connected = new Set(connectedEntries.map(item => item.id));
+  const connectedMeta = new Map(connectedEntries.map(item => [item.id, item]));
+  const baseTags = new Set(base.tags || []);
+  const similar = new Set(
     nodes.filter(n =>
       n.id !== name &&
-      (n.sub === base.sub || n.tags.some(t => baseSet.has(t)))
+      !connected.has(n.id) &&
+      (n.sub === base.sub || n.tags.some(t => baseTags.has(t)))
     ).map(n => n.id)
   );
+
+  return {
+    connected,
+    similar,
+    highlighted: new Set([...connected, ...similar]),
+    connectedMeta
+  };
 }
 
-function labelOpacityFor(d, isSelected, isRelated, isActive, isQueryMatch) {
-  if (!isActive) return 0;
+function relationColorFor(meta, fallback) {
+  if (!meta || !meta.types || !meta.types.length) return fallback;
+  const priority = ['group', 'invest', 'tech', 'supply'];
+  const type = priority.find(t => meta.types.includes(t)) || meta.types[0];
+  return REL_COL[type] || fallback;
+}
+
+function nodePriority(d, ctx) {
+  if (ST.selected === d.id) return 4;
+  if (ctx.connected.has(d.id)) return 3;
+  if (ctx.similar.has(d.id)) return 2;
+  return 1;
+}
+
+function updateNodeOrder(ctx) {
+  nodeGSel.sort((a, b) => d3.ascending(nodePriority(a, ctx), nodePriority(b, ctx)));
+  if (subpillRoot) subpillRoot.raise();
+}
+
+function labelOpacityFor(d, ctx, isActive, isQueryMatch) {
+  const isSelected = ST.selected === d.id;
+  const isConnected = ctx.connected.has(d.id);
+  const isSimilar = ctx.similar.has(d.id);
+
+  if (!isActive && !isSelected && !isConnected && !isSimilar) return 0;
   if (isSelected) return 1;
-  if (ST.selected && !isRelated) return 0;
+  if (isConnected) return 0.98;
+  if (isSimilar) return 0.86;
+  if (ST.selected) return 0;
   if (d.size === 'large') return 0.95;
-  if (d.size === 'mid') return 0.75;
-  if (ST.zoomK > 1.35 || ST.query || isQueryMatch) return 0.66;
+  if (d.size === 'mid') return 0.78;
+  if (ST.zoomK > 1.25 || ST.query || isQueryMatch) return 0.66;
   return 0;
 }
 
 function updateLabelVisibility() {
   const q = ST.query.trim().toLowerCase();
-  const rel = ST.selected ? relatedIds(ST.selected) : null;
+  const ctx = getSelectionContext(ST.selected);
   nodeGSel.each(function(d) {
-    const isSelected = ST.selected === d.id;
-    const isRelated = rel && rel.has(d.id);
     const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
     const isQ = queryMatch(d, q);
     const isActive = layerMatch && isQ;
-    d3.select(this).select('.node-label').attr('opacity', labelOpacityFor(d, isSelected, isRelated, isActive, isQ));
+    d3.select(this).select('.node-label').attr('opacity', labelOpacityFor(d, ctx, isActive, isQ));
   });
 }
 
 function applyVisual() {
   const q = ST.query.trim().toLowerCase();
-  const rel = ST.selected ? relatedIds(ST.selected) : null;
+  const ctx = getSelectionContext(ST.selected);
+  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
 
   nodeGSel.each(function(d) {
     const el = d3.select(this);
     const isSelected = ST.selected === d.id;
-    const isRelated  = rel && rel.has(d.id);
+    const isConnected = ctx.connected.has(d.id);
+    const isSimilar = ctx.similar.has(d.id);
     const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
     const isQ = queryMatch(d, q);
     const active = layerMatch && isQ;
+
     let opacity = 1;
-    if (ST.selected) opacity = isSelected ? 1 : isRelated ? 0.88 : 0.12;
-    else if (!active) opacity = 0.10;
+    if (ST.selected) opacity = isSelected ? 1 : isConnected ? 1 : isSimilar ? 0.9 : 0.08;
+    else if (!active) opacity = 0.1;
+
+    d.renderScale = isSelected ? 1.1 : isConnected ? 1.06 : isSimilar ? 1.03 : 1;
 
     el.attr('opacity', opacity);
-    el.select('.node-ring').attr('stroke-opacity', isSelected ? 0.96 : isRelated ? 0.52 : 0);
+
+    const relationCol = relationColorFor(ctx.connectedMeta.get(d.id), d.accent);
+
+    el.select('.node-ring')
+      .attr('stroke', isConnected ? relationCol : d.accent)
+      .attr('stroke-width', isSelected ? 3.2 : isConnected ? 2.7 : isSimilar ? 2.1 : 2)
+      .attr('stroke-opacity', isSelected ? 0.98 : isConnected ? 0.92 : isSimilar ? 0.5 : 0)
+      .attr('stroke-dasharray', isSimilar && !isConnected ? '5 4' : null)
+      .attr('filter', (isSelected || isConnected || isSimilar) && !motionLite ? `url(#glow-${d.layer})` : null);
+
+    el.select('.node-halo')
+      .attr('stroke', isConnected ? relationCol : d.accent)
+      .attr('stroke-width', isSelected ? 2.1 : isConnected ? 1.8 : isSimilar ? 1.45 : 1.5)
+      .attr('stroke-opacity', isSelected ? 0.42 : isConnected ? 0.34 : isSimilar ? 0.2 : 0)
+      .attr('stroke-dasharray', isConnected ? null : '4 4');
+
     el.select('.node-circle')
-      .attr('fill-opacity', isSelected ? 0.28 : d.size === 'large' ? 0.18 : 0.15)
-      .attr('stroke-width', isSelected ? 3.1 : 1.8);
-    el.select('.node-label').attr('opacity', labelOpacityFor(d, isSelected, isRelated, active, isQ));
+      .attr('fill-opacity', isSelected ? 0.34 : isConnected ? 0.27 : isSimilar ? 0.21 : d.size === 'large' ? 0.18 : 0.15)
+      .attr('stroke-width', isSelected ? 3.2 : isConnected ? 2.6 : isSimilar ? 2.1 : 1.8)
+      .attr('stroke', isConnected ? relationCol : d.accent);
+
+    el.select('.node-core')
+      .attr('stroke', isSelected || isConnected ? 'rgba(255,255,255,.9)' : isSimilar ? 'rgba(255,255,255,.42)' : 'rgba(255,255,255,0)')
+      .attr('stroke-width', isSelected ? 2.2 : isConnected ? 1.6 : isSimilar ? 1 : 0);
+
+    el.select('.node-logo-bg')
+      .attr('fill-opacity', isSelected || isConnected ? 1 : isSimilar ? 0.97 : 0.95);
+
+    el.select('.node-label').attr('opacity', labelOpacityFor(d, ctx, active, isQ));
   });
 
   linkSel
+    .attr('stroke', d => {
+      if (!ST.selected) return REL_COL[d.type] || '#fff';
+      const connected = d.source.id === ST.selected || d.target.id === ST.selected;
+      return connected ? (REL_COL[d.type] || '#fff') : 'rgba(255,255,255,.14)';
+    })
     .attr('stroke-opacity', d => {
       if (!ST.selected) return 0.16;
       const connected = d.source.id === ST.selected || d.target.id === ST.selected;
-      return connected ? 0.76 : 0.035;
+      return connected ? 0.94 : 0.028;
     })
     .attr('stroke-width', d => {
       if (!ST.selected) return 1;
-      return (d.source.id === ST.selected || d.target.id === ST.selected) ? 2 : 1;
+      return (d.source.id === ST.selected || d.target.id === ST.selected) ? 2.5 : 1;
+    })
+    .attr('stroke-dasharray', d => {
+      if (!ST.selected) return d.type === 'invest' ? '4,3' : null;
+      const connected = d.source.id === ST.selected || d.target.id === ST.selected;
+      if (!connected) return d.type === 'invest' ? '3,4' : null;
+      return d.type === 'invest' ? '6,4' : null;
     });
 
   LAYER_DEFS.forEach(l => {
     const active = !ST.layerFilter || ST.layerFilter === l.id;
-    d3.select(`.zone-${l.id}`).attr('fill-opacity', active ? 0.055 : 0.018).attr('stroke-opacity', active ? 0.22 : 0.07);
-    d3.select(`.zone-label-${l.id}`).attr('opacity', active ? 0.9 : 0.22);
-    d3.select(`.zone-count-${l.id}`).attr('opacity', active ? 0.48 : 0.16);
-    d3.selectAll(`.subpill-${l.id}`).attr('opacity', active ? 1 : 0.18);
+    const cfg = getLayoutCfg(l.id);
+    const selectedInLayer = selectedNode && selectedNode.layer === l.id;
+    d3.select(`.zone-${l.id}`)
+      .attr('fill-opacity', active ? (selectedInLayer ? 0.078 : 0.058) : 0.02)
+      .attr('stroke-opacity', active ? (selectedInLayer ? 0.3 : 0.22) : 0.07);
+    d3.select(`.zone-label-${l.id}`).attr('opacity', active ? 0.92 : 0.22);
+    d3.select(`.zone-count-${l.id}`).attr('opacity', active ? 0.52 : 0.16);
+    d3.selectAll(`.subpill-${l.id}`).attr('opacity', active ? cfg.pillOpacity : Math.max(0.12, cfg.pillOpacity * 0.22));
   });
+
+  updateNodeOrder(ctx);
+  if (subpillRoot) subpillRoot.raise();
+  scheduleRender();
 }
 
 function updateDetail() {
@@ -722,15 +1073,22 @@ function updateDetail() {
   if (!ST.selected) { panel.classList.remove('visible'); return; }
   const d = nodes.find(n => n.id === ST.selected); if (!d) return;
 
-  const baseSet = new Set(d.tags);
-  const related = nodes
-    .filter(n => n.id !== d.id && (n.sub === d.sub || n.tags.some(t => baseSet.has(t))))
+  const ctx = getSelectionContext(d.id);
+  const connected = (adjacency.get(d.id) || [])
+    .map(meta => ({ ...nodes.find(n => n.id === meta.id), relMeta: meta }))
+    .filter(Boolean)
+    .sort((a, b) => d3.ascending(a.id, b.id))
+    .slice(0, 6);
+
+  const baseSet = new Set(d.tags || []);
+  const similar = nodes
+    .filter(n => n.id !== d.id && !ctx.connected.has(n.id) && (n.sub === d.sub || n.tags.some(t => baseSet.has(t))))
     .map(n => {
       const shared = n.tags.filter(t => baseSet.has(t));
       return { ...n, score: (n.sub === d.sub ? 12 : 0) + shared.length * 5 };
     })
     .sort((a,b) => b.score - a.score)
-    .slice(0, 8);
+    .slice(0, 6);
 
   document.getElementById('d-layer').textContent = d.layerName;
   document.getElementById('d-layer').style.color = d.accent;
@@ -743,12 +1101,30 @@ function updateDetail() {
   document.getElementById('d-size').style.background = d.sizeColor + '1A';
   document.getElementById('d-summary').textContent = d.summary || '';
   document.getElementById('d-tags').innerHTML = (d.tags || []).map(t => `<span class="detail-tag">${t}</span>`).join('');
-  document.getElementById('d-related').innerHTML = related.map(r => `
-    <div class="related-item">
-      <div class="related-dot" style="background:${r.accent}"></div>
-      <div class="related-name">${r.id}</div>
-      <div class="related-layer" style="color:${r.accent}">${r.subName}</div>
-    </div>`).join('') || '<div style="font-size:11px;color:rgba(255,255,255,.24)">관련 플레이어 없음</div>';
+
+  const directHtml = connected.length ? `
+    <div class="related-group-label">직접 연결</div>
+    ${connected.map(r => {
+      const relColor = relationColorFor(r.relMeta, r.accent);
+      const relText = (r.relMeta.types || []).map(t => REL_LABELS[t] || t).join(' · ');
+      return `
+      <div class="related-item related-direct">
+        <div class="related-dot" style="background:${relColor}"></div>
+        <div class="related-name">${r.id}</div>
+        <div class="related-layer" style="color:${relColor}">${relText}</div>
+      </div>`;
+    }).join('')}` : '';
+
+  const similarHtml = similar.length ? `
+    <div class="related-group-label">유사 기업</div>
+    ${similar.map(r => `
+      <div class="related-item">
+        <div class="related-dot" style="background:${r.accent}"></div>
+        <div class="related-name">${r.id}</div>
+        <div class="related-layer" style="color:${r.accent}">${r.subName}</div>
+      </div>`).join('')}` : '';
+
+  document.getElementById('d-related').innerHTML = (directHtml + similarHtml) || '<div style="font-size:11px;color:rgba(255,255,255,.24)">관련 플레이어 없음</div>';
 
   panel.classList.add('visible');
 }
@@ -790,6 +1166,7 @@ filterRow.querySelectorAll('.f-pill').forEach(btn => {
     filterRow.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     ST.layerFilter = btn.dataset.layer || null;
+    maybeUpdateLayout();
     applyVisual();
   });
 });
@@ -816,8 +1193,8 @@ document.getElementById('close-detail').addEventListener('click', ev => {
 
 function fitZoom(duration = 700) {
   const bounds = zoomG.node().getBBox();
-  const pad = 64;
-  const scale = Math.min((W - pad * 2) / bounds.width, (H - pad * 2) / bounds.height, 1);
+  const pad = 56;
+  const scale = Math.min((W - pad * 2) / bounds.width, (H - pad * 2) / bounds.height, 1.12);
   const tx = W / 2 - scale * (bounds.x + bounds.width / 2);
   const ty = H / 2 - scale * (bounds.y + bounds.height / 2);
   svg.transition().duration(duration).call(
@@ -846,6 +1223,8 @@ document.getElementById('stats-bar').innerHTML = [
 applyTheme(ST.theme);
 applyVisual();
 updateLabelVisibility();
+renderScene();
+maybeUpdateLayout(true);
 
 setTimeout(() => fitZoom(850), 1200);
 window.addEventListener('resize', drawBgGrid);
