@@ -23,6 +23,7 @@
   --topbar-grad: linear-gradient(180deg,rgba(7,9,15,.97) 72%,transparent);
   --shadow-stroke: rgba(7,9,15,0.95);
   --grid-color: rgba(255,255,255,0.028);
+  --accent-blue: #3b82f6;
 }
 html[data-theme="light"] {
   --bg: #f8fafc;
@@ -41,207 +42,278 @@ html[data-theme="light"] {
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); }
-body { font-family:'Noto Sans KR',sans-serif; color:#e2e8f0; }
+body { font-family:'Noto Sans KR',sans-serif; color:var(--text-main); }
+
+/* ─── UX #1: Smooth loading transition ─── */
+@keyframes fadeInUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes pulseHint { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
 #bg-canvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
-#graph-svg { position:fixed; inset:0; z-index:1; }
+#graph-svg { position:fixed; inset:0; z-index:1; animation: fadeIn .6s ease; }
 
+/* ─── UX #2: Responsive top bar ─── */
 .top-bar {
   position:fixed; top:0; left:0; right:0; z-index:30;
   display:flex; align-items:flex-start; gap:14px;
   padding:14px 24px 18px;
-  background:linear-gradient(180deg,rgba(7,9,15,.97) 72%,transparent);
+  background:var(--topbar-grad);
   pointer-events:none;
+  animation: fadeInUp .5s ease .2s both;
 }
 .top-bar > * { pointer-events:auto; }
 .logo {
-  display:flex; flex-direction:column; gap:3px; margin-right:6px; min-width:180px;
+  display:flex; flex-direction:column; gap:3px; margin-right:6px; min-width:140px;
 }
-.logo-title { font-size:16px; font-weight:900; letter-spacing:-.4px; color:#f8fafc; }
-.logo-sub { font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.34); letter-spacing:2px; text-transform:uppercase; }
-.logo-note { font-size:11px; color:rgba(255,255,255,.45); line-height:1.4; margin-top:2px; max-width:200px; }
+.logo-title { font-size:16px; font-weight:900; letter-spacing:-.4px; color:var(--text-main); }
+.logo-sub { font-family:var(--mono); font-size:9px; color:var(--text-faint); letter-spacing:2px; text-transform:uppercase; }
+.logo-note { font-size:11px; color:var(--text-muted); line-height:1.4; margin-top:2px; max-width:200px; }
 
-.bar-main { display:flex; flex-direction:column; gap:8px; flex:1; }
+.bar-main { display:flex; flex-direction:column; gap:8px; flex:1; min-width:0; }
+
+/* ─── UX #3: Enhanced search with result count, clear btn, keyboard hint ─── */
 .search-box {
   display:flex; align-items:center; gap:8px;
-  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-  border-radius:10px; padding:8px 12px; width:230px;
+  background:var(--surface-1); border:1px solid var(--panel-border);
+  border-radius:10px; padding:8px 12px; width:280px; max-width:100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-box:focus-within {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
 }
 .search-box input {
-  background:transparent; border:0; outline:0; color:#e2e8f0;
-  font-family:'Noto Sans KR',sans-serif; font-size:12px; width:100%;
+  background:transparent; border:0; outline:0; color:var(--text-main);
+  font-family:'Noto Sans KR',sans-serif; font-size:12px; width:100%; min-width:0;
 }
-.search-box input::placeholder { color:rgba(255,255,255,.26); }
-.search-icon { color:rgba(255,255,255,.3); flex-shrink:0; }
+.search-box input::placeholder { color:var(--text-faint); }
+.search-icon { color:var(--text-faint); flex-shrink:0; transition: color .2s; }
+.search-box:focus-within .search-icon { color: var(--accent-blue); }
+.search-kbd {
+  font-family:var(--mono); font-size:9px; color:var(--text-faint);
+  background:var(--surface-2); border:1px solid var(--panel-border);
+  border-radius:4px; padding:2px 5px; flex-shrink:0; white-space:nowrap;
+  transition: opacity .2s;
+}
+.search-box:focus-within .search-kbd { opacity:0; pointer-events:none; width:0; padding:0; border:0; margin:0; overflow:hidden; }
+.search-clear {
+  display:none; align-items:center; justify-content:center;
+  width:18px; height:18px; border-radius:50%; border:0;
+  background:var(--surface-3); color:var(--text-muted);
+  cursor:pointer; font-size:10px; flex-shrink:0; transition:.15s;
+}
+.search-clear:hover { background:rgba(239,68,68,.15); color:#ef4444; }
+.search-clear.visible { display:flex; }
+.search-count {
+  font-family:var(--mono); font-size:9px; color:var(--text-faint);
+  flex-shrink:0; white-space:nowrap; min-width:32px; text-align:right;
+  transition: opacity .2s;
+}
 
 .filter-wrap { display:flex; flex-direction:column; gap:6px; }
 .filter-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
 .row-label {
-  font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.24);
+  font-family:var(--mono); font-size:9px; color:var(--text-faint);
   letter-spacing:1.4px; text-transform:uppercase; margin-right:4px;
 }
+
+/* ─── UX #4: Better filter pills with count badges ─── */
 .f-pill {
   font-family:var(--mono); font-size:10px; padding:5px 10px; border-radius:999px;
-  border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04);
-  color:rgba(255,255,255,.45); cursor:pointer; transition:.15s; white-space:nowrap;
+  border:1px solid var(--panel-border); background:var(--surface-2);
+  color:var(--text-muted); cursor:pointer; transition: all .18s ease; white-space:nowrap;
+  position:relative; user-select:none;
 }
-.f-pill:hover { border-color:rgba(255,255,255,.28); color:#fff; }
-.f-pill.active { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.4); color:#fff; }
+.f-pill:hover { border-color:rgba(255,255,255,.28); color:var(--text-main); transform:translateY(-1px); }
+.f-pill:active { transform:translateY(0) scale(.97); }
+.f-pill.active { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.4); color:var(--text-main); }
+.f-pill .pill-count {
+  display:inline-block; font-size:8px; background:rgba(255,255,255,.1);
+  border-radius:999px; padding:1px 5px; margin-left:4px; vertical-align:middle;
+}
 .f-pill[data-layer="service"].active  { background:rgba(245,158,11,.15); border-color:#f59e0b; color:#fbbf24; }
 .f-pill[data-layer="model"].active    { background:rgba(139,92,246,.15); border-color:#8b5cf6; color:#a78bfa; }
 .f-pill[data-layer="data"].active     { background:rgba(6,182,212,.15);  border-color:#06b6d4; color:#22d3ee; }
 .f-pill[data-layer="cloud"].active    { background:rgba(16,185,129,.15); border-color:#10b981; color:#34d399; }
 .f-pill[data-layer="chip"].active     { background:rgba(239,68,68,.15);  border-color:#ef4444; color:#f87171; }
 
+/* ─── UX #5: Improved control panel with labels ─── */
 .ctrl-panel {
-  position:fixed; top:50%; right:20px; transform:translateY(-50%);
-  z-index:30; display:flex; flex-direction:column; gap:8px;
+  position:fixed; top:50%; right:16px; transform:translateY(-50%);
+  z-index:30; display:flex; flex-direction:column; gap:6px;
+  animation: fadeInUp .5s ease .4s both;
 }
 .ctrl-btn {
   width:36px; height:36px; border-radius:10px;
-  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
-  color:rgba(255,255,255,.5); cursor:pointer; font-size:16px;
-  display:flex; align-items:center; justify-content:center; transition:.15s;
+  background:var(--panel); border:1px solid var(--panel-border);
+  color:var(--text-muted); cursor:pointer; font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+  transition: all .18s ease; position:relative;
 }
-.ctrl-btn:hover { background:rgba(255,255,255,.13); color:#fff; }
+.ctrl-btn:hover { background:rgba(255,255,255,.13); color:var(--text-main); transform:scale(1.08); }
+.ctrl-btn:active { transform:scale(.95); }
+.ctrl-btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip); position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%);
+  font-size:11px; white-space:nowrap; background:var(--panel); border:1px solid var(--panel-border);
+  border-radius:6px; padding:4px 8px; color:var(--text-soft); pointer-events:none;
+}
 
+/* ─── UX #6: Collapsible legend ─── */
 .legend {
   position:fixed; bottom:24px; left:24px; z-index:30;
   display:flex; flex-direction:column; gap:6px;
   padding:14px 16px;
-  background:rgba(12,16,28,.75); backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,.08); border-radius:14px;
-  max-width:270px;
+  background:var(--panel); backdrop-filter:blur(14px);
+  border:1px solid var(--panel-border); border-radius:14px;
+  max-width:270px; transition: all .3s ease;
+  animation: fadeInUp .5s ease .5s both;
 }
+.legend-toggle {
+  display:none; align-items:center; justify-content:center;
+  width:100%; border:0; background:transparent; color:var(--text-muted);
+  cursor:pointer; font-size:10px; font-family:var(--mono); padding:2px 0;
+  letter-spacing:1px; text-transform:uppercase; transition:.2s;
+}
+.legend-toggle:hover { color:var(--text-main); }
+.legend-content { display:flex; flex-direction:column; gap:6px; }
+.legend.collapsed .legend-content { display:none; }
 .legend-item {
   display:flex; align-items:center; gap:8px;
-  font-size:11px; color:rgba(255,255,255,.56);
+  font-size:11px; color:var(--text-soft);
 }
 .legend-swatch { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.legend-div { width:100%; height:1px; margin:4px 0; background:rgba(255,255,255,.08); }
+.legend-div { width:100%; height:1px; margin:4px 0; background:var(--panel-border); }
 
+/* ─── UX #7: Improved detail panel with scroll & better hierarchy ─── */
 .detail-panel {
   position:fixed; bottom:24px; right:24px; z-index:30;
-  width:320px; background:var(--panel); backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,.1); border-radius:18px;
-  padding:20px; transition:opacity .25s,transform .25s;
-  opacity:0; transform:translateY(12px); pointer-events:none;
+  width:340px; max-height:calc(100vh - 100px);
+  background:var(--panel); backdrop-filter:blur(20px);
+  border:1px solid var(--panel-border); border-radius:18px;
+  padding:20px; transition: opacity .25s ease, transform .25s ease;
+  opacity:0; transform:translateY(12px) scale(.98); pointer-events:none;
+  overflow-y:auto; overscroll-behavior:contain;
 }
-.detail-panel.visible { opacity:1; transform:translateY(0); pointer-events:auto; }
+.detail-panel::-webkit-scrollbar { width:4px; }
+.detail-panel::-webkit-scrollbar-thumb { background:var(--panel-border); border-radius:2px; }
+.detail-panel.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
 .detail-layer {
   font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase;
   margin-bottom:6px; opacity:.72;
 }
-.detail-name { font-size:23px; font-weight:800; letter-spacing:-.5px; margin-bottom:4px; line-height:1.1; }
-.detail-subcat { font-size:12px; color:rgba(255,255,255,.5); margin-bottom:10px; }
+.detail-name { font-size:22px; font-weight:800; letter-spacing:-.5px; margin-bottom:4px; line-height:1.15; }
+.detail-subcat { font-size:12px; color:var(--text-muted); margin-bottom:10px; }
 .detail-meta { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
 .detail-focus, .detail-size {
   font-family:var(--mono); font-size:10px; padding:4px 9px; border-radius:7px;
-  display:inline-block; background:rgba(255,255,255,.07); color:rgba(255,255,255,.65);
-  border:1px solid rgba(255,255,255,.08);
+  display:inline-block; background:var(--surface-1); color:var(--text-soft);
+  border:1px solid var(--panel-border);
 }
-.detail-summary { font-size:12px; line-height:1.68; color:rgba(255,255,255,.62); margin-bottom:12px; }
+.detail-summary { font-size:12px; line-height:1.72; color:var(--text-soft); margin-bottom:12px; }
 .detail-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
 .detail-tag {
   font-size:10px; padding:4px 8px; border-radius:999px;
-  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.54);
+  background:var(--surface-1); border:1px solid var(--panel-border); color:var(--text-muted);
+  cursor:pointer; transition:.15s;
 }
+.detail-tag:hover { background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.3); color:var(--accent-blue); }
 .detail-related-title {
   font-family:var(--mono); font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
-  color:rgba(255,255,255,.25); margin-bottom:8px;
+  color:var(--text-faint); margin-bottom:8px;
 }
-.related-list { display:flex; flex-direction:column; gap:4px; max-height:140px; overflow-y:auto; }
+.related-list { display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto; }
 .related-list::-webkit-scrollbar { width:4px; }
-.related-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
+.related-list::-webkit-scrollbar-thumb { background:var(--panel-border); border-radius:2px; }
 .related-item {
   display:flex; align-items:center; gap:8px;
-  font-size:11px; color:rgba(255,255,255,.5); padding:4px 0;
+  font-size:11px; color:var(--text-muted); padding:5px 0;
   border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer; transition:.15s; border-radius:6px;
 }
+.related-item:hover { background:var(--surface-1); padding-left:6px; }
 .related-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-.related-name { flex:1; font-weight:600; color:rgba(255,255,255,.78); }
+.related-name { flex:1; font-weight:600; color:var(--text-soft); }
 .related-layer { font-size:9px; font-family:var(--mono); }
 .related-group-label {
   font-family:var(--mono); font-size:9px; letter-spacing:1.3px; text-transform:uppercase;
-  color:rgba(255,255,255,.28); margin-top:8px; margin-bottom:4px;
+  color:var(--text-faint); margin-top:8px; margin-bottom:4px;
 }
-.related-item.related-direct { background:rgba(255,255,255,.03); border-radius:8px; padding:6px 8px; }
+.related-item.related-direct { background:var(--surface-2); border-radius:8px; padding:6px 8px; }
 .close-btn {
-  position:absolute; top:14px; right:14px; width:24px; height:24px; border-radius:6px;
-  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-  color:rgba(255,255,255,.3); cursor:pointer; font-size:12px;
-  display:flex; align-items:center; justify-content:center;
+  position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:8px;
+  background:var(--surface-1); border:1px solid var(--panel-border);
+  color:var(--text-faint); cursor:pointer; font-size:12px;
+  display:flex; align-items:center; justify-content:center; transition:.18s;
 }
-.close-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+.close-btn:hover { background:rgba(239,68,68,.12); color:#ef4444; border-color:rgba(239,68,68,.3); }
 
+/* ─── UX #8: Responsive stats bar ─── */
 .stats-bar {
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
   z-index:30; display:flex; gap:0;
-  background:rgba(12,16,28,.88); backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden;
+  background:var(--panel); backdrop-filter:blur(16px);
+  border:1px solid var(--panel-border); border-radius:14px; overflow:hidden;
+  animation: fadeInUp .5s ease .6s both;
 }
 .stat-item {
-  padding:10px 18px; display:flex; flex-direction:column; gap:2px;
+  padding:10px 16px; display:flex; flex-direction:column; gap:2px;
   border-right:1px solid rgba(255,255,255,.06);
 }
 .stat-item:last-child { border-right:0; }
-.stat-val { font-size:18px; font-weight:800; color:#f1f5f9; line-height:1; }
-.stat-lbl { font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.3); letter-spacing:1px; text-transform:uppercase; }
+.stat-val { font-size:17px; font-weight:800; color:var(--text-main); line-height:1; }
+.stat-lbl { font-family:var(--mono); font-size:9px; color:var(--text-faint); letter-spacing:1px; text-transform:uppercase; }
 
+/* ─── UX #9: Better tooltip ─── */
 .node-tooltip {
   position:fixed; pointer-events:none; z-index:50;
-  background:rgba(12,16,28,.96); border:1px solid rgba(255,255,255,.12);
-  border-radius:10px; padding:8px 12px; font-size:12px;
-  opacity:0; transition:opacity .1s; max-width:220px;
+  background:var(--panel); border:1px solid var(--panel-border);
+  border-radius:10px; padding:10px 14px; font-size:12px;
+  opacity:0; transition:opacity .12s; max-width:240px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
 }
 .node-tooltip.visible { opacity:1; }
-.node-tooltip-name { font-weight:700; color:#f1f5f9; margin-bottom:2px; }
-.node-tooltip-sub  { color:rgba(255,255,255,.45); font-size:10px; font-family:var(--mono); line-height:1.5; }
+.node-tooltip-name { font-weight:700; color:var(--text-main); margin-bottom:3px; }
+.node-tooltip-sub  { color:var(--text-muted); font-size:10px; font-family:var(--mono); line-height:1.5; }
+.node-tooltip-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
+.node-tooltip-tags span {
+  font-size:8px; padding:2px 5px; border-radius:999px;
+  background:var(--surface-1); color:var(--text-faint); border:1px solid var(--panel-border);
+}
+
+/* ─── UX #10: Onboarding hint ─── */
+.onboard-hint {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+  z-index:35; font-size:11px; color:var(--text-faint);
+  background:var(--panel); border:1px solid var(--panel-border);
+  border-radius:10px; padding:8px 16px; white-space:nowrap;
+  animation: fadeInUp .5s ease 2s both, pulseHint 2s ease 3s 3;
+  pointer-events:none; transition: opacity .5s;
+}
+.onboard-hint.hidden { opacity:0 !important; }
+
+/* ─── UX #11: Empty state for search ─── */
+.search-empty {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:25; text-align:center; pointer-events:none;
+  opacity:0; transition:opacity .3s;
+}
+.search-empty.visible { opacity:1; }
+.search-empty-icon { font-size:32px; margin-bottom:8px; opacity:.3; }
+.search-empty-text { font-size:13px; color:var(--text-muted); }
+.search-empty-hint { font-size:11px; color:var(--text-faint); margin-top:4px; }
 
 .subpill { pointer-events:none; }
 .subpill text {
-  font-size:10px; font-family:var(--mono); font-weight:700; fill:rgba(255,255,255,.7);
+  font-size:10px; font-family:var(--mono); font-weight:700; fill:var(--text-soft);
   pointer-events:none; paint-order:stroke; stroke:var(--shadow-stroke); stroke-width:3px; stroke-linejoin:round;
 }
 .subpill rect {
   fill-opacity:.14; stroke-width:1.15; rx:10; ry:10;
 }
-.zone-label {
-  font-family:'Noto Sans KR',sans-serif; font-weight:800; letter-spacing:-.2px;
-}
-.zone-count {
-  font-family:var(--mono);
-}
+.zone-label { font-family:'Noto Sans KR',sans-serif; font-weight:800; letter-spacing:-.2px; }
+.zone-count { font-family:var(--mono); }
 
-
-body { color: var(--text-main); }
-.top-bar { background: var(--topbar-grad) !important; }
-.logo-title { color: var(--text-main) !important; }
-.logo-sub, .logo-note, .row-label, .stat-lbl, .detail-related-title { color: var(--text-faint) !important; }
-.search-box, .ctrl-btn, .legend, .detail-panel, .stats-bar, .node-tooltip {
-  background: var(--panel) !important;
-  border-color: var(--panel-border) !important;
-}
-.search-box { background: var(--surface-1) !important; }
-.search-box input { color: var(--text-main) !important; }
-.search-box input::placeholder, .search-icon { color: var(--text-faint) !important; }
-.f-pill {
-  background: var(--surface-2) !important;
-  border-color: var(--panel-border) !important;
-  color: var(--text-muted) !important;
-}
-.f-pill:hover { color: var(--text-main) !important; }
-.f-pill.active { color: var(--text-main) !important; }
-.theme-pill.active[data-theme-mode="light"] {
-  background: rgba(59,130,246,.12) !important;
-  border-color: rgba(59,130,246,.45) !important;
-  color: #2563eb !important;
-}
-.theme-pill.active[data-theme-mode="dark"] {
-  background: rgba(148,163,184,.18) !important;
-  border-color: rgba(148,163,184,.45) !important;
-  color: #e2e8f0 !important;
-}
+/* Light theme overrides */
 html[data-theme="light"] .ctrl-btn,
 html[data-theme="light"] .close-btn {
   color: rgba(15,23,42,.6) !important;
@@ -252,44 +324,40 @@ html[data-theme="light"] .close-btn:hover {
   color: #0f172a !important;
   background: rgba(255,255,255,1) !important;
 }
-html[data-theme="light"] .legend-item,
-html[data-theme="light"] .detail-summary,
-html[data-theme="light"] .detail-subcat,
-html[data-theme="light"] .related-item,
-html[data-theme="light"] .node-tooltip-sub,
-html[data-theme="light"] .stat-lbl {
-  color: rgba(15,23,42,.64) !important;
-}
-html[data-theme="light"] .detail-name,
-html[data-theme="light"] .node-tooltip-name,
-html[data-theme="light"] .related-name,
-html[data-theme="light"] .stat-val {
-  color: #0f172a !important;
-}
-html[data-theme="light"] .detail-focus,
-html[data-theme="light"] .detail-size,
-html[data-theme="light"] .detail-tag {
-  background: rgba(15,23,42,.04) !important;
-  border-color: rgba(15,23,42,.1) !important;
-  color: rgba(15,23,42,.7) !important;
-}
-html[data-theme="light"] .legend-div,
-html[data-theme="light"] .related-item,
-html[data-theme="light"] .stat-item {
-  border-color: rgba(15,23,42,.08) !important;
-  background-image: none !important;
-}
 html[data-theme="light"] .subpill text { fill: rgba(15,23,42,.78); }
 html[data-theme="light"] .subpill rect { fill-opacity: .085; stroke-opacity: .32; }
-html[data-theme="light"] .related-group-label { color: rgba(15,23,42,.42); }
 
-/* --- render optimization --- */
+/* ─── render optimization ─── */
 #links { shape-rendering: optimizeSpeed; }
 #node-g.motion-lite .node-logo { opacity: 0 !important; }
 #node-g.motion-lite .node-fallback { opacity: 1 !important; }
 #node-g.motion-lite .node-label { opacity: 0 !important; }
 #node-g.motion-lite .node-ring { filter: none !important; }
 
+/* ─── UX #12: Mobile responsive ─── */
+@media (max-width: 900px) {
+  .top-bar { padding:10px 14px 14px; gap:10px; flex-wrap:wrap; }
+  .logo { min-width:auto; }
+  .logo-note { display:none; }
+  .search-box { width:100%; }
+  .search-kbd { display:none; }
+  .filter-row { gap:4px; }
+  .f-pill { font-size:9px; padding:4px 8px; }
+  .f-pill .pill-count { display:none; }
+  .detail-panel { width:calc(100vw - 32px); right:16px; bottom:16px; max-height:50vh; }
+  .legend { bottom:16px; left:16px; padding:10px 12px; max-width:200px; }
+  .legend-toggle { display:flex; }
+  .stats-bar { bottom:16px; }
+  .stat-item { padding:8px 10px; }
+  .stat-val { font-size:14px; }
+  .ctrl-panel { right:10px; }
+  .ctrl-btn { width:32px; height:32px; font-size:14px; }
+  .onboard-hint { font-size:10px; bottom:70px; }
+}
+@media (max-width: 600px) {
+  .stats-bar { display:none; }
+  .legend { display:none; }
+}
 </style>
 </head>
 <body>
@@ -304,34 +372,41 @@ html[data-theme="light"] .related-group-label { color: rgba(15,23,42,.42); }
     <div class="logo-note">beta version</div>
   </div>
   <div class="bar-main">
-    <div class="search-box">
+    <div class="search-box" role="search">
       <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
-      <input id="search-input" type="text" placeholder="기업명·세부구분·태그 검색…" autocomplete="off"/>
+      <input id="search-input" type="text" placeholder="기업명·세부구분·태그 검색…" autocomplete="off" aria-label="기업 검색"/>
+      <span class="search-count" id="search-count"></span>
+      <button class="search-clear" id="search-clear" aria-label="검색어 지우기">✕</button>
+      <span class="search-kbd">⌘K</span>
     </div>
     <div class="filter-wrap">
-      <div class="filter-row" id="filter-row"></div>
+      <div class="filter-row" id="filter-row" role="tablist" aria-label="레이어 필터"></div>
       <div class="filter-row" id="theme-row">
         <span class="row-label">테마</span>
-        <button class="f-pill theme-pill" data-theme-mode="light">라이트</button>
-        <button class="f-pill theme-pill" data-theme-mode="dark">다크</button>
+        <button class="f-pill theme-pill" data-theme-mode="light" aria-label="라이트 모드">☀ 라이트</button>
+        <button class="f-pill theme-pill" data-theme-mode="dark" aria-label="다크 모드">☾ 다크</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="ctrl-panel">
-  <button class="ctrl-btn" id="btn-zi" title="확대">+</button>
-  <button class="ctrl-btn" id="btn-zo" title="축소">−</button>
-  <button class="ctrl-btn" id="btn-fit" title="전체보기" style="font-size:12px">⊞</button>
+<div class="ctrl-panel" role="toolbar" aria-label="줌 컨트롤">
+  <button class="ctrl-btn" id="btn-zi" data-tooltip="확대 (⌘+)" aria-label="확대">+</button>
+  <button class="ctrl-btn" id="btn-zo" data-tooltip="축소 (⌘−)" aria-label="축소">−</button>
+  <button class="ctrl-btn" id="btn-fit" data-tooltip="전체보기 (0)" aria-label="전체보기" style="font-size:12px">⊞</button>
 </div>
 
-<div class="legend" id="legend"></div>
+<div class="legend" id="legend">
+  <button class="legend-toggle" id="legend-toggle">범례 ▾</button>
+  <div class="legend-content" id="legend-content"></div>
+</div>
+
 <div class="stats-bar" id="stats-bar"></div>
 
-<div class="detail-panel" id="detail-panel">
-  <button class="close-btn" id="close-detail">✕</button>
+<div class="detail-panel" id="detail-panel" role="dialog" aria-label="기업 상세정보">
+  <button class="close-btn" id="close-detail" aria-label="닫기 (Esc)">✕</button>
   <div class="detail-layer" id="d-layer"></div>
   <div class="detail-name" id="d-name"></div>
   <div class="detail-subcat" id="d-subcat"></div>
@@ -347,887 +422,434 @@ html[data-theme="light"] .related-group-label { color: rgba(15,23,42,.42); }
 
 <div class="node-tooltip" id="node-tooltip">
   <div class="node-tooltip-name" id="tt-name"></div>
-  <div class="node-tooltip-sub"  id="tt-sub"></div>
+  <div class="node-tooltip-sub" id="tt-sub"></div>
+  <div class="node-tooltip-tags" id="tt-tags"></div>
+</div>
+
+<div class="onboard-hint" id="onboard-hint">
+  🖱 노드를 클릭하면 상세 정보를 볼 수 있습니다 · 스크롤로 확대/축소
+</div>
+
+<div class="search-empty" id="search-empty">
+  <div class="search-empty-icon">🔍</div>
+  <div class="search-empty-text">검색 결과가 없습니다</div>
+  <div class="search-empty-hint">다른 키워드로 검색해보세요</div>
 </div>
 
 <script>
 'use strict';
 
-const LAYER_DEFS = [{"id": "service", "name": "AI 서비스", "accent": "#f59e0b", "cx_pct": 0.12, "cy_pct": 0.42}, {"id": "model", "name": "AI 모델", "accent": "#8b5cf6", "cx_pct": 0.37, "cy_pct": 0.2}, {"id": "data", "name": "데이터", "accent": "#06b6d4", "cx_pct": 0.69, "cy_pct": 0.28}, {"id": "cloud", "name": "클라우드·인프라", "accent": "#10b981", "cx_pct": 0.37, "cy_pct": 0.74}, {"id": "chip", "name": "AI 반도체", "accent": "#ef4444", "cx_pct": 0.82, "cy_pct": 0.68}];
-const SUBCAT_DEFS = {"service": [{"id": "agent", "name": "검색·에이전트", "dx": -0.46, "dy": -0.24}, {"id": "edu_fin", "name": "교육·금융·리걸", "dx": -0.42, "dy": 0.34}, {"id": "health", "name": "헬스케어·바이오", "dx": 0.04, "dy": -0.38}, {"id": "multimodal", "name": "멀티모달·음성", "dx": 0.42, "dy": -0.04}, {"id": "mobility", "name": "비전·로보틱스·산업", "dx": 0.16, "dy": 0.36}], "model": [{"id": "foundation", "name": "파운데이션 LLM", "dx": -0.38, "dy": -0.24}, {"id": "domain", "name": "도메인 언어모델", "dx": 0.36, "dy": -0.18}, {"id": "vision", "name": "비전·멀티모달 모델", "dx": -0.2, "dy": 0.32}, {"id": "inference", "name": "추론·플랫폼 SW", "dx": 0.34, "dy": 0.34}], "data": [{"id": "labeling", "name": "라벨링·수집", "dx": -0.42, "dy": -0.18}, {"id": "mlops", "name": "MLOps·평가", "dx": 0.38, "dy": -0.24}, {"id": "analytics", "name": "분석·컨설팅", "dx": -0.18, "dy": 0.34}, {"id": "platform", "name": "데이터 플랫폼", "dx": 0.36, "dy": 0.3}], "cloud": [{"id": "cloud", "name": "국산·퍼블릭 클라우드", "dx": -0.36, "dy": -0.22}, {"id": "msp", "name": "MSP·SI", "dx": 0.36, "dy": -0.14}, {"id": "compute", "name": "AI 컴퓨트·GPU Ops", "dx": -0.18, "dy": 0.34}, {"id": "edge", "name": "데이터센터·엣지", "dx": 0.34, "dy": 0.34}], "chip": [{"id": "memory", "name": "HBM·메모리", "dx": -0.36, "dy": -0.22}, {"id": "accelerator", "name": "NPU·가속기", "dx": 0.36, "dy": -0.18}, {"id": "ondevice", "name": "온디바이스·IP", "dx": -0.2, "dy": 0.34}, {"id": "supplychain", "name": "제조·장비·패키징", "dx": 0.34, "dy": 0.34}]};
-const SIZE_DEFS = {"large": {"name": "대기업", "color": "#fb7185", "r": 21}, "mid": {"name": "중견·스케일업", "color": "#22c55e", "r": 17}, "startup": {"name": "스타트업", "color": "#38bdf8", "r": 13}};
-const RAW = [{"id": "라이너", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Search", "summary": "AI 검색·리서치 에이전트 인터페이스", "tags": ["검색/생산성", "에이전트", "LLM/모델"]}, {"id": "뤼튼테크놀로지스", "layer": "service", "sub": "agent", "size": "startup", "focus": "AI Agent", "summary": "대중형 AI 에이전트·LLM 멀티플렉서 앱", "tags": ["에이전트", "검색/생산성", "LLM/모델"]}, {"id": "스캐터랩", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Conversational", "summary": "대화형 AI 서비스·이루다", "tags": ["대화형AI", "소비자", "LLM/모델"]}, {"id": "올거나이즈", "layer": "service", "sub": "agent", "size": "mid", "focus": "Alli", "summary": "엔터프라이즈 AI 에이전트·문서 자동화", "tags": ["에이전트", "엔터프라이즈", "문서AI"]}, {"id": "뤼이드", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Edu AI", "summary": "AI 튜터·개인화 학습 에듀테크", "tags": ["교육", "적응형학습", "서비스"]}, {"id": "매스프레소", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "QANDA", "summary": "QANDA 기반 학습 AI 플랫폼", "tags": ["교육", "모바일", "서비스"]}, {"id": "클래스팅", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "Classing AI", "summary": "AI 기반 학습관리·맞춤학습", "tags": ["교육", "플랫폼", "공공AI"]}, {"id": "포티투마루", "layer": "service", "sub": "agent", "size": "mid", "focus": "42Maru", "summary": "QA·도메인 특화 언어 AI 서비스", "tags": ["질의응답", "엔터프라이즈", "자연어처리"]}, {"id": "코난테크놀로지", "layer": "service", "sub": "agent", "size": "mid", "focus": "NLP Solution", "summary": "NLP·검색 기반 기업 AI 솔루션", "tags": ["자연어처리", "검색", "엔터프라이즈"]}, {"id": "솔트룩스", "layer": "service", "sub": "agent", "size": "mid", "focus": "Agentic AI", "summary": "LLM·에이전트·지식 서비스 플랫폼", "tags": ["에이전트", "지식서비스", "엔터프라이즈"]}, {"id": "루닛", "layer": "service", "sub": "health", "size": "mid", "focus": "Imaging AI", "summary": "암 진단·영상 분석 AI", "tags": ["의료AI", "비전", "상장"]}, {"id": "뷰노", "layer": "service", "sub": "health", "size": "mid", "focus": "Clinical AI", "summary": "생체신호·영상 의료 AI", "tags": ["의료AI", "예측", "상장"]}, {"id": "딥노이드", "layer": "service", "sub": "health", "size": "mid", "focus": "Deep:NEURO", "summary": "의료 영상·판독 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "JLK", "layer": "service", "sub": "health", "size": "mid", "focus": "Stroke AI", "summary": "뇌졸중 중심 의료 영상 AI", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "딥바이오", "layer": "service", "sub": "health", "size": "startup", "focus": "Pathology", "summary": "AI 기반 병리 이미지 진단", "tags": ["의료AI", "병리", "글로벌"]}, {"id": "메디웨일", "layer": "service", "sub": "health", "size": "startup", "focus": "Retinal AI", "summary": "안저 기반 질환 예측 AI", "tags": ["의료AI", "예측", "헬스케어"]}, {"id": "코어라인소프트", "layer": "service", "sub": "health", "size": "mid", "focus": "Thoracic AI", "summary": "흉부 영상·폐질환 AI 분석", "tags": ["의료AI", "영상판독", "상장"]}, {"id": "에이아이트릭스", "layer": "service", "sub": "health", "size": "startup", "focus": "Vitals AI", "summary": "중환자·임상 예측 AI", "tags": ["의료AI", "예측", "병원"]}, {"id": "트웰브랩스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Video AI", "summary": "비디오 이해·멀티모달 AI", "tags": ["멀티모달", "비전", "글로벌"]}, {"id": "딥브레인AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "AI Human", "summary": "AI 휴먼·영상 생성 서비스", "tags": ["멀티모달", "영상", "아바타"]}, {"id": "클레온", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Avatar", "summary": "디지털 휴먼·더빙 플랫폼", "tags": ["멀티모달", "아바타", "음성"]}, {"id": "네오사피엔스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Typecast", "summary": "AI 음성·TTS·보이스 클로닝", "tags": ["음성", "TTS", "글로벌"]}, {"id": "펄스나인", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Virtual Human", "summary": "버추얼 휴먼·K팝 IP 콘텐츠", "tags": ["아바타", "엔터테인먼트", "콘텐츠"]}, {"id": "마인드로직", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Character AI", "summary": "AI 캐릭터·인터랙션 플랫폼", "tags": ["캐릭터AI", "소비자", "대화형AI"]}, {"id": "포티투닷", "layer": "service", "sub": "mobility", "size": "large", "focus": "42dot", "summary": "현대차 계열 SDV·모빌리티 AI", "tags": ["모빌리티", "플랫폼", "자율주행"]}, {"id": "서울로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "3D Percep.", "summary": "3D 인식 AI·산업 자율화", "tags": ["로보틱스", "비전", "모빌리티"]}, {"id": "모빌테크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "HD Map", "summary": "HD맵·자율주행 공간 데이터", "tags": ["모빌리티", "공간정보", "자율주행"]}, {"id": "라이드플럭스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Autonomy", "summary": "자율주행 플랫폼 소프트웨어", "tags": ["모빌리티", "자율주행", "서비스"]}, {"id": "스트라드비젼", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Perception", "summary": "ADAS 비전 인식 소프트웨어", "tags": ["모빌리티", "비전", "온디바이스"]}, {"id": "베어로보틱스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Servi", "summary": "서비스 로봇·식당 배달 자율주행", "tags": ["로봇", "서비스", "자율주행"]}, {"id": "S2W", "layer": "service", "sub": "agent", "size": "mid", "focus": "Data Intel.", "summary": "AI 사이버 위협 인텔리전스", "tags": ["보안", "지식그래프", "엔터프라이즈"]}, {"id": "마키나락스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Industrial", "summary": "산업 특화 AI·공장 운영 최적화", "tags": ["산업AI", "최적화", "엔터프라이즈"]}, {"id": "네이버", "layer": "model", "sub": "foundation", "size": "large", "focus": "HyperCLOVA X", "summary": "HyperCLOVA X 계열 파운데이션 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "LG AI Research", "layer": "model", "sub": "foundation", "size": "large", "focus": "EXAONE", "summary": "EXAONE 오픈소스 LLM·멀티모달 연구", "tags": ["LLM/모델", "연구", "플랫폼"]}, {"id": "카카오", "layer": "model", "sub": "foundation", "size": "large", "focus": "GenAI", "summary": "생성형 AI 연구·Kakao 계열 모델", "tags": ["LLM/모델", "플랫폼", "검색"]}, {"id": "SK텔레콤", "layer": "model", "sub": "foundation", "size": "large", "focus": "A.X", "summary": "A.X 기반 AI 서비스·통신 AI", "tags": ["LLM/모델", "통신", "플랫폼"]}, {"id": "KT", "layer": "model", "sub": "foundation", "size": "large", "focus": "Mi:dm", "summary": "Mi:dm LLM·공공·금융 B2B", "tags": ["LLM/모델", "통신", "엔터프라이즈"]}, {"id": "삼성SDS", "layer": "model", "sub": "inference", "size": "large", "focus": "Brity LLM", "summary": "Brity LLM·엔터프라이즈 AI 플랫폼", "tags": ["LLM/모델", "엔터프라이즈", "클라우드"]}, {"id": "업스테이지", "layer": "model", "sub": "foundation", "size": "mid", "focus": "Solar", "summary": "Solar LLM·문서 AI·Document AI API", "tags": ["LLM/모델", "문서AI", "엔터프라이즈"]}, {"id": "모레", "layer": "model", "sub": "inference", "size": "startup", "focus": "MoAI", "summary": "AI 컴퓨팅 최적화·AI 인프라 SW", "tags": ["AI인프라", "컴퓨트", "모델학습"]}, {"id": "Motif Technologies", "layer": "model", "sub": "inference", "size": "startup", "focus": "Motif", "summary": "소버린 AI·멀티에이전트 플랫폼", "tags": ["에이전트", "플랫폼", "LLM/모델"]}, {"id": "FriendliAI", "layer": "model", "sub": "inference", "size": "startup", "focus": "Inference", "summary": "LLM 추론·서빙 인프라 플랫폼", "tags": ["서빙", "추론", "인프라"]}, {"id": "튜닙", "layer": "model", "sub": "domain", "size": "startup", "focus": "TuNIB", "summary": "감성 대화·소형 특화 언어 모델", "tags": ["LLM/모델", "대화형AI", "연구"]}, {"id": "알체라", "layer": "model", "sub": "vision", "size": "mid", "focus": "Face/Vision", "summary": "얼굴·생체인식 비전 AI 모델", "tags": ["비전모델", "생체인식", "엔터프라이즈"]}, {"id": "NC AI", "layer": "model", "sub": "vision", "size": "mid", "focus": "VARCO", "summary": "게임·멀티모달 콘텐츠 생성 AI", "tags": ["멀티모달", "게임", "생성형AI"]}, {"id": "크라우드웍스", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataOps", "summary": "데이터 라벨링·AI 데이터 운영 플랫폼", "tags": ["데이터가공", "라벨링", "플랫폼"]}, {"id": "슈퍼브에이아이", "layer": "data", "sub": "mlops", "size": "mid", "focus": "Vision AI", "summary": "비전 데이터 파이프라인·MLOps", "tags": ["비전", "MLOps", "데이터"]}, {"id": "마인즈앤컴퍼니", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Consulting", "summary": "기업 AI 도입·MLOps 컨설팅", "tags": ["컨설팅", "MLOps", "엔터프라이즈"]}, {"id": "스케일업랩스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Scale-up", "summary": "AI 데이터 구축·스케일 운영", "tags": ["데이터가공", "라벨링", "운영"]}, {"id": "셀렉트스타", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Evaluation", "summary": "데이터 검증·평가·RLHF 파이프라인", "tags": ["평가", "정렬", "데이터"]}, {"id": "에이모", "layer": "data", "sub": "labeling", "size": "startup", "focus": "AIMMO", "summary": "자율주행·산업용 데이터 플랫폼", "tags": ["자율주행", "데이터", "플랫폼"]}, {"id": "테스트웍스", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data QA", "summary": "AI 데이터 구축·검증 서비스", "tags": ["데이터가공", "검증", "플랫폼"]}, {"id": "아크릴", "layer": "data", "sub": "platform", "size": "startup", "focus": "Graph AI", "summary": "지식그래프·분석형 AI 플랫폼", "tags": ["지식그래프", "데이터", "엔터프라이즈"]}, {"id": "VESSL AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "GPU Ops", "summary": "GPU 클라우드·MLOps 운영 플랫폼", "tags": ["GPU", "MLOps", "클라우드"]}, {"id": "노타AI", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Optimization", "summary": "온디바이스 AI 경량화·최적화", "tags": ["온디바이스", "최적화", "비전"]}, {"id": "씨이랩", "layer": "data", "sub": "platform", "size": "startup", "focus": "Video AI", "summary": "비디오 분석·AI 인프라 솔루션", "tags": ["비디오", "인프라", "엔터프라이즈"]}, {"id": "네이버클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Ncloud", "summary": "국산 AI 클라우드·HyperCLOVA API", "tags": ["클라우드", "플랫폼", "공공AI"]}, {"id": "KT클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "KT Cloud", "summary": "AI·공공·금융 버티컬 클라우드", "tags": ["클라우드", "플랫폼", "통신"]}, {"id": "NHN클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "NHN Cloud", "summary": "클라우드·AI 서비스 인프라", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "카카오클라우드", "layer": "cloud", "sub": "cloud", "size": "large", "focus": "Kakao Cloud", "summary": "카카오 계열 퍼블릭 클라우드", "tags": ["클라우드", "플랫폼", "엔터프라이즈"]}, {"id": "LG CNS", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AX", "summary": "AX 전환·기업 클라우드·SI 서비스", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "SK C&C", "layer": "cloud", "sub": "msp", "size": "large", "focus": "AIX", "summary": "AIX·클라우드·IT서비스 전환", "tags": ["클라우드", "엔터프라이즈", "SI"]}, {"id": "메가존클라우드", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "MSP", "summary": "AWS·Azure 기반 클라우드 MSP·AI 구축", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "베스핀글로벌", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Bespin", "summary": "멀티클라우드·AI 운영·FinOps", "tags": ["클라우드", "MSP", "FinOps"]}, {"id": "케이아이엔엑스", "layer": "cloud", "sub": "edge", "size": "mid", "focus": "KINX", "summary": "데이터센터·인터넷 교환 인프라", "tags": ["데이터센터", "인프라", "네트워크"]}, {"id": "그리드원", "layer": "cloud", "sub": "edge", "size": "startup", "focus": "Edge Infra", "summary": "엣지 컴퓨팅·분산 AI 인프라", "tags": ["엣지", "인프라", "온디바이스"]}, {"id": "삼성전자", "layer": "chip", "sub": "memory", "size": "large", "focus": "Samsung", "summary": "HBM·파운드리·시스템 반도체 종합", "tags": ["반도체", "HBM", "대기업"]}, {"id": "SK하이닉스", "layer": "chip", "sub": "memory", "size": "large", "focus": "SK hynix", "summary": "HBM3E·메모리 중심 AI 반도체", "tags": ["반도체", "HBM", "대기업"]}, {"id": "리벨리온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "Rebellions", "summary": "데이터센터용 ATOM·REBEL AI 칩", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "퓨리오사AI", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "FuriosaAI", "summary": "AI 추론 가속기 WARBOY·RNGD", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "딥엑스", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "DEEPX", "summary": "온디바이스·엣지 AI NPU", "tags": ["반도체", "온디바이스", "엣지"]}, {"id": "HyperAccel", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "LPU", "summary": "LLM 추론 특화 가속 칩 LPU", "tags": ["반도체", "추론", "LLM/모델"]}, {"id": "사피온", "layer": "chip", "sub": "accelerator", "size": "startup", "focus": "SAPEON", "summary": "AI 가속칩 X220", "tags": ["반도체", "NPU", "데이터센터"]}, {"id": "오픈엣지테크놀로지", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "OPENEDGES", "summary": "NPU·메모리 시스템 반도체 IP", "tags": ["반도체", "IP", "온디바이스"]}, {"id": "Mobilint", "layer": "chip", "sub": "ondevice", "size": "startup", "focus": "Mobilint", "summary": "온프레미스·온디바이스 추론 NPU", "tags": ["반도체", "NPU", "온디바이스"]}, {"id": "네패스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Packaging", "summary": "AI 반도체 패키징·후공정 전문", "tags": ["반도체", "패키징", "중견"]}, {"id": "심심이", "layer": "service", "sub": "agent", "size": "mid", "focus": "Chatbot", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["대화형AI", "글로벌", "자연어처리"]}, {"id": "에버트란", "layer": "service", "sub": "agent", "size": "mid", "focus": "MTPE", "summary": "기업편람 수록 자연어 처리·문서 AI 서비스 기업", "tags": ["번역", "언어AI", "서비스"]}, {"id": "로민", "layer": "service", "sub": "agent", "size": "startup", "focus": "OCR", "summary": "기업편람 수록 AI OCR·문서인식 서비스 기업", "tags": ["OCR", "문서AI", "비전"]}, {"id": "에듀템", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "EdTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "외국어학습", "서비스"]}, {"id": "위고", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "CRM/VOC AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "VOC", "서비스"]}, {"id": "잡쇼퍼", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "학쫑", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["교육", "추천", "서비스"]}, {"id": "히어로웍스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Revenue AI", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["관광", "수요예측", "버티컬AI"]}, {"id": "로앤컴퍼니", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "리걸테크", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["리걸테크", "판례검색", "서비스"]}, {"id": "아이지넷", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "보닥", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["보험AI", "추천", "핀테크"]}, {"id": "컴트루테크놀로지", "layer": "service", "sub": "edu_fin", "size": "mid", "focus": "eKYC/aiSee", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["eKYC", "비전", "핀테크"]}, {"id": "탱커", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "PropTech", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["프롭테크", "부동산AI", "서비스"]}, {"id": "텐스페이스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "ASTER", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["핀테크", "신용평가", "서비스"]}, {"id": "블루바이저시스템즈", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "HighBuff", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["면접AI", "재테크AI", "서비스"]}, {"id": "빅트리", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "BIGBOT", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["로보어드바이저", "금융AI", "서비스"]}, {"id": "콰라소프트", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "KOSHO", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "투자가이드", "서비스"]}, {"id": "크래프트테크놀로지스", "layer": "service", "sub": "edu_fin", "size": "startup", "focus": "Electronic Trading", "summary": "기업편람 수록 교육·금융·리걸·버티컬 AI 서비스 기업", "tags": ["금융AI", "트레이딩", "서비스"]}, {"id": "닥터송", "layer": "service", "sub": "health", "size": "startup", "focus": "의료상담/DTx", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "챗봇", "디지털치료제"]}, {"id": "메디아이플러스", "layer": "service", "sub": "health", "size": "startup", "focus": "MediC", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["임상시험", "데이터", "헬스케어"]}, {"id": "에이아이플랫폼", "layer": "service", "sub": "health", "size": "startup", "focus": "의료 마이데이터", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["의료AI", "마이데이터", "헬스케어"]}, {"id": "카이팜", "layer": "service", "sub": "health", "size": "startup", "focus": "Drug Discovery", "summary": "기업편람 수록 헬스케어·바이오 AI 기업", "tags": ["신약개발", "오믹스", "헬스케어"]}, {"id": "피디젠", "layer": "service", "sub": "health", "size": "startup", "focus": "Digital Medicine", "summary": "기업편람 수록 진단예측", "tags": ["진단예측", "바이오", "헬스케어"]}, {"id": "뉴로핏", "layer": "service", "sub": "health", "size": "mid", "focus": "Neuro AI", "summary": "기업편람 수록 뇌·신경계 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "메디컬아이피", "layer": "service", "sub": "health", "size": "mid", "focus": "Medical 3D", "summary": "기업편람 수록 의료영상·디지털트윈 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "노을", "layer": "service", "sub": "health", "size": "mid", "focus": "Digital Pathology", "summary": "기업편람 수록 디지털 병리·진단 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "아이도트", "layer": "service", "sub": "health", "size": "mid", "focus": "Women Health", "summary": "기업편람 수록 여성·검진 중심 헬스케어 AI 기업", "tags": ["의료AI", "헬스케어", "바이오"]}, {"id": "빈드컴퍼니", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Music Gen", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["생성형AI", "음악", "콘텐츠"]}, {"id": "오투오", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "MetaData/Recomm.", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["추천", "리뷰필터링", "서비스"]}, {"id": "세미콘네트웍스", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "문서분류/감정인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성", "감정인식", "서비스"]}, {"id": "솔루게이트", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "음성인식", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성인식", "컨택센터", "서비스"]}, {"id": "데브언리밋", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Sparky", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["피트니스AI", "비전", "서비스"]}, {"id": "록스", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "Region TTS", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["음성합성", "TTS", "서비스"]}, {"id": "딥픽셀", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "StyleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "블루프린트랩", "layer": "service", "sub": "multimodal", "size": "startup", "focus": "SpectacleAR", "summary": "기업편람/NIPA 수록 멀티모달·음성·콘텐츠 AI 기업", "tags": ["AR", "커머스", "비전AI"]}, {"id": "마음AI", "layer": "service", "sub": "multimodal", "size": "mid", "focus": "Embodied AI", "summary": "NIPA 사례집 수록 Embodied AI·인공인간 서비스 기업", "tags": ["Embodied AI", "AI Human", "서비스"]}, {"id": "비트플로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Rail/Smart City", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["스마트시티", "비전", "공공AI"]}, {"id": "코액터스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "고요한M", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "유니버설디자인", "서비스"]}, {"id": "인트플로우", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Edge Farm", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["에너지/환경", "스마트팜", "비전"]}, {"id": "넥스트랩", "layer": "service", "sub": "mobility", "size": "mid", "focus": "Beyond AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "품질검사", "산업AI"]}, {"id": "델타엑스", "layer": "service", "sub": "mobility", "size": "startup", "focus": "X-Pilot", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["모빌리티", "비전", "자율주행"]}, {"id": "드로미", "layer": "service", "sub": "mobility", "size": "startup", "focus": "GeoAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "공간정보", "비전"]}, {"id": "라온피플", "layer": "service", "sub": "mobility", "size": "mid", "focus": "NAVIAI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "스마트팩토리", "상장"]}, {"id": "카이어", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Kaier Vision", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "산업AI", "이상탐지"]}, {"id": "핀텔", "layer": "service", "sub": "mobility", "size": "mid", "focus": "교통/보안 AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "비전", "상장"]}, {"id": "하이브비전", "layer": "service", "sub": "mobility", "size": "mid", "focus": "DeepCulus", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["머신비전", "제조AI", "산업AI"]}, {"id": "와이즈레이크", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Agri AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["애그테크", "스마트팜", "비전"]}, {"id": "코코넛사일로", "layer": "service", "sub": "mobility", "size": "startup", "focus": "COCOTRUCK", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["물류AI", "공급망", "버티컬AI"]}, {"id": "모라이", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Simulation", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["자율주행", "시뮬레이션", "모빌리티"]}, {"id": "니어스랩", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Drone AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["드론", "비전", "산업AI"]}, {"id": "트위니", "layer": "service", "sub": "mobility", "size": "startup", "focus": "자율주행 로봇", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["로봇", "물류", "모빌리티"]}, {"id": "블루시그널", "layer": "service", "sub": "mobility", "size": "startup", "focus": "Traffic AI", "summary": "기업편람 수록 비전·로보틱스·스마트시티·산업 AI 기업", "tags": ["교통AI", "예측", "스마트시티"]}, {"id": "마인즈랩", "layer": "model", "sub": "domain", "size": "mid", "focus": "Voice/AI Human", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "AI Human", "플랫폼"]}, {"id": "셀바스AI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Speech AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "의료AI", "상장"]}, {"id": "스켈터랩스", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational LLM", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "엔터프라이즈"]}, {"id": "TmaxAI", "layer": "model", "sub": "domain", "size": "mid", "focus": "Enterprise AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["엔터프라이즈", "LLM/모델", "플랫폼"]}, {"id": "뉴럴웍스랩", "layer": "model", "sub": "domain", "size": "startup", "focus": "Speech/NLP", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["음성AI", "언어모델", "서비스"]}, {"id": "마인드에이아이", "layer": "model", "sub": "domain", "size": "startup", "focus": "Conversational AI", "summary": "기업편람/NIPA 수록 도메인 언어·음성 모델 기업", "tags": ["대화형AI", "모델", "서비스"]}, {"id": "디에스랩글로벌", "layer": "data", "sub": "labeling", "size": "startup", "focus": "CLICK AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["오토라벨링", "데이터가공", "플랫폼"]}, {"id": "인피닉", "layer": "data", "sub": "labeling", "size": "mid", "focus": "DataStudio", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "중견"]}, {"id": "데이터메이커", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Synapse", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "3D LiDAR", "플랫폼"]}, {"id": "어노테이션에이아이", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Annotation AI", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["라벨링", "데이터가공", "플랫폼"]}, {"id": "젠데이터", "layer": "data", "sub": "labeling", "size": "startup", "focus": "Data Ops", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["데이터가공", "플랫폼", "라벨링"]}, {"id": "바이트브릿지", "layer": "data", "sub": "labeling", "size": "startup", "focus": "자율주행 데이터", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["자율주행", "데이터가공", "라벨링"]}, {"id": "브레인컨테이너", "layer": "data", "sub": "labeling", "size": "startup", "focus": "LiDAR Seg.", "summary": "기업편람 수록 데이터 라벨링·수집·가공 기업", "tags": ["LiDAR", "데이터가공", "라벨링"]}, {"id": "몬드리안에이아이", "layer": "data", "sub": "mlops", "size": "startup", "focus": "Yennefer", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["AI-PaaS", "MLOps", "플랫폼"]}, {"id": "데이콘", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Hackathon", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["해커톤", "평가", "교육"]}, {"id": "인공지능팩토리", "layer": "data", "sub": "mlops", "size": "startup", "focus": "AI Competition", "summary": "기업편람 수록 MLOps·평가·해커톤 기반 데이터 기업", "tags": ["MLOps", "평가", "플랫폼"]}, {"id": "KSTEC", "layer": "data", "sub": "analytics", "size": "mid", "focus": "SyncPlan/Dataiku", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["최적화", "RPA", "컨설팅"]}, {"id": "TG360 테크놀로지스", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Molecule", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["비식별데이터", "DMP", "플랫폼"]}, {"id": "누리꿈소프트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Smart-Eye", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "예측", "플랫폼"]}, {"id": "더블유에이아이", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Quant Athena", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["금융시계열", "분석", "서비스"]}, {"id": "데이터에듀", "layer": "data", "sub": "analytics", "size": "startup", "focus": "두런", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AI교육", "컨설팅", "분석"]}, {"id": "리서치림", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Insight", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["리서치", "분석", "데이터"]}, {"id": "리스트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Commerce Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "추천", "분석"]}, {"id": "마켓링크", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Marketing Data", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "메트릭스", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Metrics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "데이터"]}, {"id": "비즈스프링", "layer": "data", "sub": "analytics", "size": "mid", "focus": "BizSpring", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["마케팅", "분석", "SaaS"]}, {"id": "애자일소다", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Decision AI", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["AutoML", "분석", "엔터프라이즈"]}, {"id": "웨슬리퀘스트", "layer": "data", "sub": "analytics", "size": "mid", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["컨설팅", "분석", "엔터프라이즈"]}, {"id": "유클리드소프트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Data Science", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["분석", "컨설팅", "데이터"]}, {"id": "인그래디언트", "layer": "data", "sub": "analytics", "size": "startup", "focus": "Analytics", "summary": "기업편람 수록 데이터 분석·컨설팅·최적화 기업", "tags": ["데이터", "최적화", "AI"]}, {"id": "이트너스", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Portal/ESAI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["AICC", "플랫폼", "업무자동화"]}, {"id": "넥타르소프트", "layer": "data", "sub": "platform", "size": "mid", "focus": "AI Advisor", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["예측", "음성/NLP", "플랫폼"]}, {"id": "디지털존 마포지점", "layer": "data", "sub": "platform", "size": "mid", "focus": "전자문서", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["전자문서", "증명서", "플랫폼"]}, {"id": "로아인텔리전스", "layer": "data", "sub": "platform", "size": "startup", "focus": "기업가치정보", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["기업정보", "분석", "플랫폼"]}, {"id": "오브젠", "layer": "data", "sub": "platform", "size": "mid", "focus": "CRM AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["CRM", "분석", "플랫폼"]}, {"id": "엔에이치엔데이터", "layer": "data", "sub": "platform", "size": "mid", "focus": "Data Infra", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["데이터", "인프라", "플랫폼"]}, {"id": "아임클라우드", "layer": "data", "sub": "platform", "size": "mid", "focus": "BigData/AI", "summary": "기업편람 수록 데이터 플랫폼·문서·엔터프라이즈 데이터 기업", "tags": ["클라우드", "데이터", "플랫폼"]}, {"id": "클루커스", "layer": "cloud", "sub": "msp", "size": "mid", "focus": "Cloud MSP", "summary": "기업편람 수록 클라우드 전환·운영 기업", "tags": ["클라우드", "MSP", "엔터프라이즈"]}, {"id": "알세미", "layer": "chip", "sub": "supplychain", "size": "startup", "focus": "EDA/Modeling", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "EDA", "설계자동화"]}, {"id": "피에스디이", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Equipment", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "배관/모듈"]}, {"id": "씨피에스", "layer": "chip", "sub": "supplychain", "size": "mid", "focus": "Semiconductor Process", "summary": "기업편람 수록 반도체 제조·장비·설계 자동화 관련 기업", "tags": ["반도체", "장비", "제조"]}];
-const DOMAIN = {"네이버": "naver.com", "LG AI Research": "lge.com", "카카오": "kakao.com", "SK텔레콤": "sktelecom.com", "KT": "kt.com", "삼성SDS": "samsungsds.com", "업스테이지": "upstage.ai", "모레": "moreh.io", "FriendliAI": "friendli.ai", "튜닙": "tunib.ai", "알체라": "alcherainc.com", "NC AI": "ncsoft.com", "Motif Technologies": "motif.inc", "라이너": "getliner.com", "뤼튼테크놀로지스": "wrtn.ai", "스캐터랩": "scatterlab.co.kr", "올거나이즈": "allganize.ai", "뤼이드": "riiid.co", "매스프레소": "mathpresso.com", "클래스팅": "classting.com", "포티투마루": "42maru.ai", "코난테크놀로지": "conantech.co.kr", "솔트룩스": "saltlux.com", "루닛": "lunit.io", "뷰노": "vuno.co", "딥노이드": "deepnoid.com", "JLK": "jlkgroup.com", "딥바이오": "deepbio.co.kr", "메디웨일": "mediwhale.com", "코어라인소프트": "corelinesoft.com", "에이아이트릭스": "aitrics.com", "트웰브랩스": "twelvelabs.io", "딥브레인AI": "deepbrain.io", "클레온": "cleon.ai", "네오사피엔스": "neosapience.com", "펄스나인": "pulsenine.com", "마인드로직": "mindlogic.ai", "포티투닷": "42dot.ai", "서울로보틱스": "seoulrobotics.org", "모빌테크": "mobiltech.io", "라이드플럭스": "rideflux.com", "스트라드비젼": "stradvision.com", "베어로보틱스": "bearrobotics.ai", "S2W": "s2w.inc", "마키나락스": "makinarocks.ai", "크라우드웍스": "crowdworks.kr", "슈퍼브에이아이": "superb-ai.com", "마인즈앤컴퍼니": "mindsandcompany.com", "스케일업랩스": "scaleuplabs.ai", "셀렉트스타": "selectstar.ai", "에이모": "aimmo.ai", "테스트웍스": "testworks.co.kr", "아크릴": "acryl.ai", "VESSL AI": "vessl.ai", "노타AI": "nota.ai", "씨이랩": "celab.ai", "네이버클라우드": "ncloud.com", "KT클라우드": "ktcloud.com", "NHN클라우드": "nhncloud.com", "카카오클라우드": "kakaocloud.com", "LG CNS": "lgcns.com", "SK C&C": "skcc.com", "메가존클라우드": "megazone.com", "베스핀글로벌": "bespinglobal.com", "케이아이엔엑스": "kinx.net", "그리드원": "gridone.ai", "삼성전자": "samsung.com", "SK하이닉스": "skhynix.com", "리벨리온": "rebellions.ai", "퓨리오사AI": "furiosa.ai", "딥엑스": "deepx.ai", "HyperAccel": "hyperaccel.ai", "사피온": "sapeon.com", "오픈엣지테크놀로지": "openedges.com", "Mobilint": "mobilint.com", "네패스": "nepes.com", "심심이": "simsimi.com", "에버트란": "evertran.com", "로민": "lomin.ai", "에듀템": "edutem.net", "위고": "wigo.ai", "잡쇼퍼": "jobshopper.co.kr", "히어로웍스": "heroworks.co.kr", "로앤컴퍼니": "lawcompany.co.kr", "아이지넷": "aijinet.com", "컴트루테크놀로지": "comtrue.com", "탱커": "tanker.ai", "텐스페이스": "tenspace.co.kr", "블루바이저시스템즈": "bluevisor.kr", "빅트리": "ibigtree.kr", "콰라소프트": "owwl.kr", "크래프트테크놀로지스": "qraftec.com", "닥터송": "dsong.co.kr", "메디아이플러스": "mediaiplus.com", "에이아이플랫폼": "aiplatform.co.kr", "카이팜": "kaipharm.com", "피디젠": "pdxen.com", "뉴로핏": "neurophet.com", "메디컬아이피": "medicalip.com", "노을": "nouel.com", "아이도트": "aidot.ai", "빈드컴퍼니": "vvind.in", "오투오": "o2o.kr", "세미콘네트웍스": "sns.co.kr", "솔루게이트": "solugate.com", "데브언리밋": "devunlimit.com", "록스": "locslab.com", "딥픽셀": "deepixel.xyz", "블루프린트랩": "blueprint-lab.com", "마음AI": "maum.ai", "비트플로": "bitflow.ai", "코액터스": "goyohanmobility.com", "인트플로우": "intflow.ai", "넥스트랩": "nextlab.ai", "델타엑스": "deltax.ai", "드로미": "dromii.com", "라온피플": "laonpeople.com", "카이어": "kaier.co.kr", "핀텔": "pintel.co.kr", "하이브비전": "hivevision.co.kr", "와이즈레이크": "wiselake.co.kr", "코코넛사일로": "coconutsilo.com", "모라이": "morai.ai", "니어스랩": "nearthlab.com", "트위니": "twinny.ai", "블루시그널": "bluesignal.ai", "마인즈랩": "mindslab.ai", "셀바스AI": "selvasai.com", "스켈터랩스": "skelterlabs.com", "TmaxAI": "tmax.co.kr", "뉴럴웍스랩": "neuralworkslab.com", "마인드에이아이": "mindslab.ai", "디에스랩글로벌": "dslab.global", "인피닉": "infiniq.co.kr", "데이터메이커": "datamaker.io", "어노테이션에이아이": "annotation-ai.com", "젠데이터": "gendata.kr", "바이트브릿지": "bytebridge.io", "브레인컨테이너": "braincontainer.co.kr", "몬드리안에이아이": "mondrian.ai", "데이콘": "dacon.io", "인공지능팩토리": "aifactory.page", "KSTEC": "kstec.co.kr", "TG360 테크놀로지스": "tg360tech.com", "누리꿈소프트": "nuriggum.com", "더블유에이아이": "waikorea.com", "데이터에듀": "dataedu.kr", "리서치림": "research-lim.com", "리스트": "list.company", "마켓링크": "marketlink.co.kr", "메트릭스": "metrix.co.kr", "비즈스프링": "bizspring.co.kr", "애자일소다": "agilesoda.ai", "웨슬리퀘스트": "wesleyquest.com", "유클리드소프트": "euclidsoft.co.kr", "인그래디언트": "ingredient.co.kr", "이트너스": "etners.com", "넥타르소프트": "nectarsoft.co.kr", "디지털존 마포지점": "digitalzone.co.kr", "로아인텔리전스": "roa.ai", "오브젠": "obzen.com", "엔에이치엔데이터": "nhndata.com", "아임클라우드": "imcloud.co.kr", "클루커스": "cloocus.com", "알세미": "alsemy.com", "피에스디이": "psd-inc.co.kr", "씨피에스": "oncps.modoo.at"};
-const RELATIONS = [["네이버", "네이버클라우드", "group"], ["SK텔레콤", "SK하이닉스", "group"], ["SK텔레콤", "사피온", "group"], ["SK텔레콤", "SK C&C", "group"], ["KT", "KT클라우드", "group"], ["카카오", "카카오클라우드", "group"], ["LG AI Research", "LG CNS", "group"], ["삼성전자", "삼성SDS", "group"], ["포티투닷", "포티투마루", "group"], ["업스테이지", "크라우드웍스", "tech"], ["업스테이지", "슈퍼브에이아이", "tech"], ["업스테이지", "셀렉트스타", "tech"], ["뤼튼테크놀로지스", "업스테이지", "tech"], ["뤼튼테크놀로지스", "네이버", "tech"], ["루닛", "네이버클라우드", "tech"], ["뷰노", "KT클라우드", "tech"], ["트웰브랩스", "네이버클라우드", "tech"], ["모레", "LG AI Research", "tech"], ["모레", "업스테이지", "tech"], ["모레", "KT클라우드", "tech"], ["라이너", "업스테이지", "tech"], ["딥브레인AI", "SK C&C", "tech"], ["네오사피엔스", "네이버클라우드", "tech"], ["에이모", "포티투닷", "tech"], ["HyperAccel", "LG AI Research", "tech"], ["오픈엣지테크놀로지", "삼성전자", "tech"], ["삼성전자", "네이버", "supply"], ["삼성전자", "LG AI Research", "supply"], ["SK하이닉스", "네이버", "supply"], ["SK하이닉스", "LG AI Research", "supply"], ["SK하이닉스", "카카오", "supply"], ["리벨리온", "KT", "supply"], ["리벨리온", "KT클라우드", "supply"], ["퓨리오사AI", "네이버클라우드", "supply"], ["딥엑스", "NHN클라우드", "supply"], ["사피온", "SK C&C", "supply"], ["네이버", "트웰브랩스", "invest"], ["카카오", "뤼튼테크놀로지스", "invest"], ["SK텔레콤", "리벨리온", "invest"], ["삼성전자", "퓨리오사AI", "invest"], ["KT", "솔트룩스", "invest"], ["네이버클라우드", "서울로보틱스", "invest"]];
+const LAYER_DEFS = [{"id":"service","name":"AI 서비스","accent":"#f59e0b","cx_pct":0.12,"cy_pct":0.42},{"id":"model","name":"AI 모델","accent":"#8b5cf6","cx_pct":0.37,"cy_pct":0.2},{"id":"data","name":"데이터","accent":"#06b6d4","cx_pct":0.69,"cy_pct":0.28},{"id":"cloud","name":"클라우드·인프라","accent":"#10b981","cx_pct":0.37,"cy_pct":0.74},{"id":"chip","name":"AI 반도체","accent":"#ef4444","cx_pct":0.82,"cy_pct":0.68}];
+const SUBCAT_DEFS = {"service":[{"id":"agent","name":"검색·에이전트","dx":-0.46,"dy":-0.24},{"id":"edu_fin","name":"교육·금융·리걸","dx":-0.42,"dy":0.34},{"id":"health","name":"헬스케어·바이오","dx":0.04,"dy":-0.38},{"id":"multimodal","name":"멀티모달·음성","dx":0.42,"dy":-0.04},{"id":"mobility","name":"비전·로보틱스·산업","dx":0.16,"dy":0.36}],"model":[{"id":"foundation","name":"파운데이션 LLM","dx":-0.38,"dy":-0.24},{"id":"domain","name":"도메인 언어모델","dx":0.36,"dy":-0.18},{"id":"vision","name":"비전·멀티모달 모델","dx":-0.2,"dy":0.32},{"id":"inference","name":"추론·플랫폼 SW","dx":0.34,"dy":0.34}],"data":[{"id":"labeling","name":"라벨링·수집","dx":-0.42,"dy":-0.18},{"id":"mlops","name":"MLOps·평가","dx":0.38,"dy":-0.24},{"id":"analytics","name":"분석·컨설팅","dx":-0.18,"dy":0.34},{"id":"platform","name":"데이터 플랫폼","dx":0.36,"dy":0.3}],"cloud":[{"id":"cloud","name":"국산·퍼블릭 클라우드","dx":-0.36,"dy":-0.22},{"id":"msp","name":"MSP·SI","dx":0.36,"dy":-0.14},{"id":"compute","name":"AI 컴퓨트·GPU Ops","dx":-0.18,"dy":0.34},{"id":"edge","name":"데이터센터·엣지","dx":0.34,"dy":0.34}],"chip":[{"id":"memory","name":"HBM·메모리","dx":-0.36,"dy":-0.22},{"id":"accelerator","name":"NPU·가속기","dx":0.36,"dy":-0.18},{"id":"ondevice","name":"온디바이스·IP","dx":-0.2,"dy":0.34},{"id":"supplychain","name":"제조·장비·패키징","dx":0.34,"dy":0.34}]};
+const SIZE_DEFS = {"large":{"name":"대기업","color":"#fb7185","r":21},"mid":{"name":"중견·스케일업","color":"#22c55e","r":17},"startup":{"name":"스타트업","color":"#38bdf8","r":13}};
+const RAW = [{"id":"라이너","layer":"service","sub":"agent","size":"startup","focus":"AI Search","summary":"AI 검색·리서치 에이전트 인터페이스","tags":["검색/생산성","에이전트","LLM/모델"]},{"id":"뤼튼테크놀로지스","layer":"service","sub":"agent","size":"startup","focus":"AI Agent","summary":"대중형 AI 에이전트·LLM 멀티플렉서 앱","tags":["에이전트","검색/생산성","LLM/모델"]},{"id":"스캐터랩","layer":"service","sub":"multimodal","size":"mid","focus":"Conversational","summary":"대화형 AI 서비스·이루다","tags":["대화형AI","소비자","LLM/모델"]},{"id":"올거나이즈","layer":"service","sub":"agent","size":"mid","focus":"Alli","summary":"엔터프라이즈 AI 에이전트·문서 자동화","tags":["에이전트","엔터프라이즈","문서AI"]},{"id":"뤼이드","layer":"service","sub":"edu_fin","size":"mid","focus":"Edu AI","summary":"AI 튜터·개인화 학습 에듀테크","tags":["교육","적응형학습","서비스"]},{"id":"매스프레소","layer":"service","sub":"edu_fin","size":"mid","focus":"QANDA","summary":"QANDA 기반 학습 AI 플랫폼","tags":["교육","모바일","서비스"]},{"id":"클래스팅","layer":"service","sub":"edu_fin","size":"mid","focus":"Classing AI","summary":"AI 기반 학습관리·맞춤학습","tags":["교육","플랫폼","공공AI"]},{"id":"포티투마루","layer":"service","sub":"agent","size":"mid","focus":"42Maru","summary":"QA·도메인 특화 언어 AI 서비스","tags":["질의응답","엔터프라이즈","자연어처리"]},{"id":"코난테크놀로지","layer":"service","sub":"agent","size":"mid","focus":"NLP Solution","summary":"NLP·검색 기반 기업 AI 솔루션","tags":["자연어처리","검색","엔터프라이즈"]},{"id":"솔트룩스","layer":"service","sub":"agent","size":"mid","focus":"Agentic AI","summary":"LLM·에이전트·지식 서비스 플랫폼","tags":["에이전트","지식서비스","엔터프라이즈"]},{"id":"루닛","layer":"service","sub":"health","size":"mid","focus":"Imaging AI","summary":"암 진단·영상 분석 AI","tags":["의료AI","비전","상장"]},{"id":"뷰노","layer":"service","sub":"health","size":"mid","focus":"Clinical AI","summary":"생체신호·영상 의료 AI","tags":["의료AI","예측","상장"]},{"id":"딥노이드","layer":"service","sub":"health","size":"mid","focus":"Deep:NEURO","summary":"의료 영상·판독 AI","tags":["의료AI","영상판독","상장"]},{"id":"JLK","layer":"service","sub":"health","size":"mid","focus":"Stroke AI","summary":"뇌졸중 중심 의료 영상 AI","tags":["의료AI","영상판독","상장"]},{"id":"딥바이오","layer":"service","sub":"health","size":"startup","focus":"Pathology","summary":"AI 기반 병리 이미지 진단","tags":["의료AI","병리","글로벌"]},{"id":"메디웨일","layer":"service","sub":"health","size":"startup","focus":"Retinal AI","summary":"안저 기반 질환 예측 AI","tags":["의료AI","예측","헬스케어"]},{"id":"코어라인소프트","layer":"service","sub":"health","size":"mid","focus":"Thoracic AI","summary":"흉부 영상·폐질환 AI 분석","tags":["의료AI","영상판독","상장"]},{"id":"에이아이트릭스","layer":"service","sub":"health","size":"startup","focus":"Vitals AI","summary":"중환자·임상 예측 AI","tags":["의료AI","예측","병원"]},{"id":"트웰브랩스","layer":"service","sub":"multimodal","size":"startup","focus":"Video AI","summary":"비디오 이해·멀티모달 AI","tags":["멀티모달","비전","글로벌"]},{"id":"딥브레인AI","layer":"service","sub":"multimodal","size":"mid","focus":"AI Human","summary":"AI 휴먼·영상 생성 서비스","tags":["멀티모달","영상","아바타"]},{"id":"클레온","layer":"service","sub":"multimodal","size":"startup","focus":"Avatar","summary":"디지털 휴먼·더빙 플랫폼","tags":["멀티모달","아바타","음성"]},{"id":"네오사피엔스","layer":"service","sub":"multimodal","size":"startup","focus":"Typecast","summary":"AI 음성·TTS·보이스 클로닝","tags":["음성","TTS","글로벌"]},{"id":"펄스나인","layer":"service","sub":"multimodal","size":"startup","focus":"Virtual Human","summary":"버추얼 휴먼·K팝 IP 콘텐츠","tags":["아바타","엔터테인먼트","콘텐츠"]},{"id":"마인드로직","layer":"service","sub":"multimodal","size":"startup","focus":"Character AI","summary":"AI 캐릭터·인터랙션 플랫폼","tags":["캐릭터AI","소비자","대화형AI"]},{"id":"포티투닷","layer":"service","sub":"mobility","size":"large","focus":"42dot","summary":"현대차 계열 SDV·모빌리티 AI","tags":["모빌리티","플랫폼","자율주행"]},{"id":"서울로보틱스","layer":"service","sub":"mobility","size":"startup","focus":"3D Percep.","summary":"3D 인식 AI·산업 자율화","tags":["로보틱스","비전","모빌리티"]},{"id":"모빌테크","layer":"service","sub":"mobility","size":"startup","focus":"HD Map","summary":"HD맵·자율주행 공간 데이터","tags":["모빌리티","공간정보","자율주행"]},{"id":"라이드플럭스","layer":"service","sub":"mobility","size":"startup","focus":"Autonomy","summary":"자율주행 플랫폼 소프트웨어","tags":["모빌리티","자율주행","서비스"]},{"id":"스트라드비젼","layer":"service","sub":"mobility","size":"mid","focus":"Perception","summary":"ADAS 비전 인식 소프트웨어","tags":["모빌리티","비전","온디바이스"]},{"id":"베어로보틱스","layer":"service","sub":"mobility","size":"startup","focus":"Servi","summary":"서비스 로봇·식당 배달 자율주행","tags":["로봇","서비스","자율주행"]},{"id":"S2W","layer":"service","sub":"agent","size":"mid","focus":"Data Intel.","summary":"AI 사이버 위협 인텔리전스","tags":["보안","지식그래프","엔터프라이즈"]},{"id":"마키나락스","layer":"service","sub":"mobility","size":"startup","focus":"Industrial","summary":"산업 특화 AI·공장 운영 최적화","tags":["산업AI","최적화","엔터프라이즈"]},{"id":"네이버","layer":"model","sub":"foundation","size":"large","focus":"HyperCLOVA X","summary":"HyperCLOVA X 계열 파운데이션 모델","tags":["LLM/모델","플랫폼","검색"]},{"id":"LG AI Research","layer":"model","sub":"foundation","size":"large","focus":"EXAONE","summary":"EXAONE 오픈소스 LLM·멀티모달 연구","tags":["LLM/모델","연구","플랫폼"]},{"id":"카카오","layer":"model","sub":"foundation","size":"large","focus":"GenAI","summary":"생성형 AI 연구·Kakao 계열 모델","tags":["LLM/모델","플랫폼","검색"]},{"id":"SK텔레콤","layer":"model","sub":"foundation","size":"large","focus":"A.X","summary":"A.X 기반 AI 서비스·통신 AI","tags":["LLM/모델","통신","플랫폼"]},{"id":"KT","layer":"model","sub":"foundation","size":"large","focus":"Mi:dm","summary":"Mi:dm LLM·공공·금융 B2B","tags":["LLM/모델","통신","엔터프라이즈"]},{"id":"삼성SDS","layer":"model","sub":"inference","size":"large","focus":"Brity LLM","summary":"Brity LLM·엔터프라이즈 AI 플랫폼","tags":["LLM/모델","엔터프라이즈","클라우드"]},{"id":"업스테이지","layer":"model","sub":"foundation","size":"mid","focus":"Solar","summary":"Solar LLM·문서 AI·Document AI API","tags":["LLM/모델","문서AI","엔터프라이즈"]},{"id":"모레","layer":"model","sub":"inference","size":"startup","focus":"MoAI","summary":"AI 컴퓨팅 최적화·AI 인프라 SW","tags":["AI인프라","컴퓨트","모델학습"]},{"id":"Motif Technologies","layer":"model","sub":"inference","size":"startup","focus":"Motif","summary":"소버린 AI·멀티에이전트 플랫폼","tags":["에이전트","플랫폼","LLM/모델"]},{"id":"FriendliAI","layer":"model","sub":"inference","size":"startup","focus":"Inference","summary":"LLM 추론·서빙 인프라 플랫폼","tags":["서빙","추론","인프라"]},{"id":"튜닙","layer":"model","sub":"domain","size":"startup","focus":"TuNIB","summary":"감성 대화·소형 특화 언어 모델","tags":["LLM/모델","대화형AI","연구"]},{"id":"알체라","layer":"model","sub":"vision","size":"mid","focus":"Face/Vision","summary":"얼굴·생체인식 비전 AI 모델","tags":["비전모델","생체인식","엔터프라이즈"]},{"id":"NC AI","layer":"model","sub":"vision","size":"mid","focus":"VARCO","summary":"게임·멀티모달 콘텐츠 생성 AI","tags":["멀티모달","게임","생성형AI"]},{"id":"크라우드웍스","layer":"data","sub":"labeling","size":"mid","focus":"DataOps","summary":"데이터 라벨링·AI 데이터 운영 플랫폼","tags":["데이터가공","라벨링","플랫폼"]},{"id":"슈퍼브에이아이","layer":"data","sub":"mlops","size":"mid","focus":"Vision AI","summary":"비전 데이터 파이프라인·MLOps","tags":["비전","MLOps","데이터"]},{"id":"마인즈앤컴퍼니","layer":"data","sub":"analytics","size":"mid","focus":"Consulting","summary":"기업 AI 도입·MLOps 컨설팅","tags":["컨설팅","MLOps","엔터프라이즈"]},{"id":"스케일업랩스","layer":"data","sub":"labeling","size":"startup","focus":"Scale-up","summary":"AI 데이터 구축·스케일 운영","tags":["데이터가공","라벨링","운영"]},{"id":"셀렉트스타","layer":"data","sub":"mlops","size":"startup","focus":"Evaluation","summary":"데이터 검증·평가·RLHF 파이프라인","tags":["평가","정렬","데이터"]},{"id":"에이모","layer":"data","sub":"labeling","size":"startup","focus":"AIMMO","summary":"자율주행·산업용 데이터 플랫폼","tags":["자율주행","데이터","플랫폼"]},{"id":"테스트웍스","layer":"data","sub":"labeling","size":"startup","focus":"Data QA","summary":"AI 데이터 구축·검증 서비스","tags":["데이터가공","검증","플랫폼"]},{"id":"아크릴","layer":"data","sub":"platform","size":"startup","focus":"Graph AI","summary":"지식그래프·분석형 AI 플랫폼","tags":["지식그래프","데이터","엔터프라이즈"]},{"id":"VESSL AI","layer":"data","sub":"mlops","size":"startup","focus":"GPU Ops","summary":"GPU 클라우드·MLOps 운영 플랫폼","tags":["GPU","MLOps","클라우드"]},{"id":"노타AI","layer":"data","sub":"mlops","size":"startup","focus":"Optimization","summary":"온디바이스 AI 경량화·최적화","tags":["온디바이스","최적화","비전"]},{"id":"씨이랩","layer":"data","sub":"platform","size":"startup","focus":"Video AI","summary":"비디오 분석·AI 인프라 솔루션","tags":["비디오","인프라","엔터프라이즈"]},{"id":"네이버클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"Ncloud","summary":"국산 AI 클라우드·HyperCLOVA API","tags":["클라우드","플랫폼","공공AI"]},{"id":"KT클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"KT Cloud","summary":"AI·공공·금융 버티컬 클라우드","tags":["클라우드","플랫폼","통신"]},{"id":"NHN클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"NHN Cloud","summary":"클라우드·AI 서비스 인프라","tags":["클라우드","플랫폼","엔터프라이즈"]},{"id":"카카오클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"Kakao Cloud","summary":"카카오 계열 퍼블릭 클라우드","tags":["클라우드","플랫폼","엔터프라이즈"]},{"id":"LG CNS","layer":"cloud","sub":"msp","size":"large","focus":"AX","summary":"AX 전환·기업 클라우드·SI 서비스","tags":["클라우드","엔터프라이즈","SI"]},{"id":"SK C&C","layer":"cloud","sub":"msp","size":"large","focus":"AIX","summary":"AIX·클라우드·IT서비스 전환","tags":["클라우드","엔터프라이즈","SI"]},{"id":"메가존클라우드","layer":"cloud","sub":"msp","size":"mid","focus":"MSP","summary":"AWS·Azure 기반 클라우드 MSP·AI 구축","tags":["클라우드","MSP","엔터프라이즈"]},{"id":"베스핀글로벌","layer":"cloud","sub":"msp","size":"mid","focus":"Bespin","summary":"멀티클라우드·AI 운영·FinOps","tags":["클라우드","MSP","FinOps"]},{"id":"케이아이엔엑스","layer":"cloud","sub":"edge","size":"mid","focus":"KINX","summary":"데이터센터·인터넷 교환 인프라","tags":["데이터센터","인프라","네트워크"]},{"id":"그리드원","layer":"cloud","sub":"edge","size":"startup","focus":"Edge Infra","summary":"엣지 컴퓨팅·분산 AI 인프라","tags":["엣지","인프라","온디바이스"]},{"id":"삼성전자","layer":"chip","sub":"memory","size":"large","focus":"Samsung","summary":"HBM·파운드리·시스템 반도체 종합","tags":["반도체","HBM","대기업"]},{"id":"SK하이닉스","layer":"chip","sub":"memory","size":"large","focus":"SK hynix","summary":"HBM3E·메모리 중심 AI 반도체","tags":["반도체","HBM","대기업"]},{"id":"리벨리온","layer":"chip","sub":"accelerator","size":"startup","focus":"Rebellions","summary":"데이터센터용 ATOM·REBEL AI 칩","tags":["반도체","NPU","데이터센터"]},{"id":"퓨리오사AI","layer":"chip","sub":"accelerator","size":"startup","focus":"FuriosaAI","summary":"AI 추론 가속기 WARBOY·RNGD","tags":["반도체","NPU","데이터센터"]},{"id":"딥엑스","layer":"chip","sub":"ondevice","size":"startup","focus":"DEEPX","summary":"온디바이스·엣지 AI NPU","tags":["반도체","온디바이스","엣지"]},{"id":"HyperAccel","layer":"chip","sub":"accelerator","size":"startup","focus":"LPU","summary":"LLM 추론 특화 가속 칩 LPU","tags":["반도체","추론","LLM/모델"]},{"id":"사피온","layer":"chip","sub":"accelerator","size":"startup","focus":"SAPEON","summary":"AI 가속칩 X220","tags":["반도체","NPU","데이터센터"]},{"id":"오픈엣지테크놀로지","layer":"chip","sub":"ondevice","size":"startup","focus":"OPENEDGES","summary":"NPU·메모리 시스템 반도체 IP","tags":["반도체","IP","온디바이스"]},{"id":"Mobilint","layer":"chip","sub":"ondevice","size":"startup","focus":"Mobilint","summary":"온프레미스·온디바이스 추론 NPU","tags":["반도체","NPU","온디바이스"]},{"id":"네패스","layer":"chip","sub":"supplychain","size":"mid","focus":"Packaging","summary":"AI 반도체 패키징·후공정 전문","tags":["반도체","패키징","중견"]},{"id":"심심이","layer":"service","sub":"agent","size":"mid","focus":"Chatbot","summary":"자연어 처리·문서 AI 서비스","tags":["대화형AI","글로벌","자연어처리"]},{"id":"에버트란","layer":"service","sub":"agent","size":"mid","focus":"MTPE","summary":"자연어 처리·문서 AI 서비스","tags":["번역","언어AI","서비스"]},{"id":"로민","layer":"service","sub":"agent","size":"startup","focus":"OCR","summary":"AI OCR·문서인식 서비스","tags":["OCR","문서AI","비전"]},{"id":"에듀템","layer":"service","sub":"edu_fin","size":"startup","focus":"EdTech","summary":"교육·외국어학습 AI 서비스","tags":["교육","외국어학습","서비스"]},{"id":"위고","layer":"service","sub":"edu_fin","size":"mid","focus":"CRM/VOC AI","summary":"금융 VOC 분석 AI 서비스","tags":["금융AI","VOC","서비스"]},{"id":"잡쇼퍼","layer":"service","sub":"edu_fin","size":"startup","focus":"학쫑","summary":"교육 추천 AI 서비스","tags":["교육","추천","서비스"]},{"id":"히어로웍스","layer":"service","sub":"edu_fin","size":"startup","focus":"Revenue AI","summary":"관광·수요예측 AI 서비스","tags":["관광","수요예측","버티컬AI"]},{"id":"로앤컴퍼니","layer":"service","sub":"edu_fin","size":"mid","focus":"리걸테크","summary":"리걸테크·판례검색 서비스","tags":["리걸테크","판례검색","서비스"]},{"id":"아이지넷","layer":"service","sub":"edu_fin","size":"startup","focus":"보닥","summary":"보험 추천 AI 서비스","tags":["보험AI","추천","핀테크"]},{"id":"컴트루테크놀로지","layer":"service","sub":"edu_fin","size":"mid","focus":"eKYC/aiSee","summary":"eKYC·비전 핀테크 서비스","tags":["eKYC","비전","핀테크"]},{"id":"탱커","layer":"service","sub":"edu_fin","size":"startup","focus":"PropTech","summary":"부동산 AI 서비스","tags":["프롭테크","부동산AI","서비스"]},{"id":"텐스페이스","layer":"service","sub":"edu_fin","size":"startup","focus":"ASTER","summary":"핀테크 신용평가 서비스","tags":["핀테크","신용평가","서비스"]},{"id":"블루바이저시스템즈","layer":"service","sub":"edu_fin","size":"startup","focus":"HighBuff","summary":"면접·재테크 AI 서비스","tags":["면접AI","재테크AI","서비스"]},{"id":"빅트리","layer":"service","sub":"edu_fin","size":"startup","focus":"BIGBOT","summary":"로보어드바이저 서비스","tags":["로보어드바이저","금융AI","서비스"]},{"id":"콰라소프트","layer":"service","sub":"edu_fin","size":"startup","focus":"KOSHO","summary":"금융 투자가이드 AI 서비스","tags":["금융AI","투자가이드","서비스"]},{"id":"크래프트테크놀로지스","layer":"service","sub":"edu_fin","size":"startup","focus":"Electronic Trading","summary":"금융 트레이딩 AI 서비스","tags":["금융AI","트레이딩","서비스"]},{"id":"닥터송","layer":"service","sub":"health","size":"startup","focus":"의료상담/DTx","summary":"의료상담 디지털치료제 AI","tags":["의료AI","챗봇","디지털치료제"]},{"id":"메디아이플러스","layer":"service","sub":"health","size":"startup","focus":"MediC","summary":"임상시험 데이터 헬스케어 AI","tags":["임상시험","데이터","헬스케어"]},{"id":"에이아이플랫폼","layer":"service","sub":"health","size":"startup","focus":"의료 마이데이터","summary":"의료 마이데이터 헬스케어 AI","tags":["의료AI","마이데이터","헬스케어"]},{"id":"카이팜","layer":"service","sub":"health","size":"startup","focus":"Drug Discovery","summary":"신약개발 AI","tags":["신약개발","오믹스","헬스케어"]},{"id":"피디젠","layer":"service","sub":"health","size":"startup","focus":"Digital Medicine","summary":"진단예측 바이오 AI","tags":["진단예측","바이오","헬스케어"]},{"id":"뉴로핏","layer":"service","sub":"health","size":"mid","focus":"Neuro AI","summary":"뇌·신경계 중심 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"메디컬아이피","layer":"service","sub":"health","size":"mid","focus":"Medical 3D","summary":"의료영상·디지털트윈 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"노을","layer":"service","sub":"health","size":"mid","focus":"Digital Pathology","summary":"디지털 병리·진단 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"아이도트","layer":"service","sub":"health","size":"mid","focus":"Women Health","summary":"여성·검진 중심 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"빈드컴퍼니","layer":"service","sub":"multimodal","size":"startup","focus":"Music Gen","summary":"AI 음악 생성 콘텐츠","tags":["생성형AI","음악","콘텐츠"]},{"id":"오투오","layer":"service","sub":"multimodal","size":"startup","focus":"MetaData/Recomm.","summary":"추천·리뷰필터링 AI","tags":["추천","리뷰필터링","서비스"]},{"id":"세미콘네트웍스","layer":"service","sub":"multimodal","size":"mid","focus":"문서분류/감정인식","summary":"문서분류·감정인식 AI","tags":["음성","감정인식","서비스"]},{"id":"솔루게이트","layer":"service","sub":"multimodal","size":"mid","focus":"음성인식","summary":"음성인식 컨택센터 AI","tags":["음성인식","컨택센터","서비스"]},{"id":"데브언리밋","layer":"service","sub":"multimodal","size":"startup","focus":"Sparky","summary":"피트니스 비전 AI","tags":["피트니스AI","비전","서비스"]},{"id":"록스","layer":"service","sub":"multimodal","size":"startup","focus":"Region TTS","summary":"음성합성 TTS AI","tags":["음성합성","TTS","서비스"]},{"id":"딥픽셀","layer":"service","sub":"multimodal","size":"startup","focus":"StyleAR","summary":"AR 커머스 비전AI","tags":["AR","커머스","비전AI"]},{"id":"블루프린트랩","layer":"service","sub":"multimodal","size":"startup","focus":"SpectacleAR","summary":"AR 커머스 비전AI","tags":["AR","커머스","비전AI"]},{"id":"마음AI","layer":"service","sub":"multimodal","size":"mid","focus":"Embodied AI","summary":"Embodied AI·인공인간 서비스","tags":["Embodied AI","AI Human","서비스"]},{"id":"비트플로","layer":"service","sub":"mobility","size":"startup","focus":"Rail/Smart City","summary":"스마트시티·비전 공공 AI","tags":["스마트시티","비전","공공AI"]},{"id":"코액터스","layer":"service","sub":"mobility","size":"startup","focus":"고요한M","summary":"유니버설디자인 모빌리티 AI","tags":["모빌리티","유니버설디자인","서비스"]},{"id":"인트플로우","layer":"service","sub":"mobility","size":"startup","focus":"Edge Farm","summary":"에너지·스마트팜 비전 AI","tags":["에너지/환경","스마트팜","비전"]},{"id":"넥스트랩","layer":"service","sub":"mobility","size":"mid","focus":"Beyond AI","summary":"머신비전·품질검사 산업 AI","tags":["머신비전","품질검사","산업AI"]},{"id":"델타엑스","layer":"service","sub":"mobility","size":"startup","focus":"X-Pilot","summary":"비전 자율주행 모빌리티 AI","tags":["모빌리티","비전","자율주행"]},{"id":"드로미","layer":"service","sub":"mobility","size":"startup","focus":"GeoAI","summary":"드론·공간정보 비전 AI","tags":["드론","공간정보","비전"]},{"id":"라온피플","layer":"service","sub":"mobility","size":"mid","focus":"NAVIAI","summary":"머신비전·스마트팩토리 AI","tags":["머신비전","스마트팩토리","상장"]},{"id":"카이어","layer":"service","sub":"mobility","size":"startup","focus":"Kaier Vision","summary":"머신비전·이상탐지 산업 AI","tags":["머신비전","산업AI","이상탐지"]},{"id":"핀텔","layer":"service","sub":"mobility","size":"mid","focus":"교통/보안 AI","summary":"교통·보안 비전 AI","tags":["교통AI","비전","상장"]},{"id":"하이브비전","layer":"service","sub":"mobility","size":"mid","focus":"DeepCulus","summary":"머신비전·제조 산업 AI","tags":["머신비전","제조AI","산업AI"]},{"id":"와이즈레이크","layer":"service","sub":"mobility","size":"startup","focus":"Agri AI","summary":"스마트팜·비전 애그테크 AI","tags":["애그테크","스마트팜","비전"]},{"id":"코코넛사일로","layer":"service","sub":"mobility","size":"startup","focus":"COCOTRUCK","summary":"물류·공급망 AI","tags":["물류AI","공급망","버티컬AI"]},{"id":"모라이","layer":"service","sub":"mobility","size":"startup","focus":"Simulation","summary":"자율주행 시뮬레이션 AI","tags":["자율주행","시뮬레이션","모빌리티"]},{"id":"니어스랩","layer":"service","sub":"mobility","size":"startup","focus":"Drone AI","summary":"드론 비전 산업 AI","tags":["드론","비전","산업AI"]},{"id":"트위니","layer":"service","sub":"mobility","size":"startup","focus":"자율주행 로봇","summary":"물류 자율주행 로봇 AI","tags":["로봇","물류","모빌리티"]},{"id":"블루시그널","layer":"service","sub":"mobility","size":"startup","focus":"Traffic AI","summary":"교통 예측 스마트시티 AI","tags":["교통AI","예측","스마트시티"]},{"id":"마인즈랩","layer":"model","sub":"domain","size":"mid","focus":"Voice/AI Human","summary":"도메인 음성·AI Human 모델","tags":["음성AI","AI Human","플랫폼"]},{"id":"셀바스AI","layer":"model","sub":"domain","size":"mid","focus":"Speech AI","summary":"음성·의료 도메인 AI 모델","tags":["음성AI","의료AI","상장"]},{"id":"스켈터랩스","layer":"model","sub":"domain","size":"startup","focus":"Conversational LLM","summary":"대화형 도메인 LLM 모델","tags":["대화형AI","모델","엔터프라이즈"]},{"id":"TmaxAI","layer":"model","sub":"domain","size":"mid","focus":"Enterprise AI","summary":"엔터프라이즈 도메인 AI 모델","tags":["엔터프라이즈","LLM/모델","플랫폼"]},{"id":"뉴럴웍스랩","layer":"model","sub":"domain","size":"startup","focus":"Speech/NLP","summary":"음성·NLP 도메인 모델","tags":["음성AI","언어모델","서비스"]},{"id":"마인드에이아이","layer":"model","sub":"domain","size":"startup","focus":"Conversational AI","summary":"대화형 도메인 AI 모델","tags":["대화형AI","모델","서비스"]},{"id":"디에스랩글로벌","layer":"data","sub":"labeling","size":"startup","focus":"CLICK AI","summary":"오토라벨링 데이터가공 플랫폼","tags":["오토라벨링","데이터가공","플랫폼"]},{"id":"인피닉","layer":"data","sub":"labeling","size":"mid","focus":"DataStudio","summary":"데이터가공 플랫폼","tags":["데이터가공","플랫폼","중견"]},{"id":"데이터메이커","layer":"data","sub":"labeling","size":"startup","focus":"Synapse","summary":"라벨링·3D LiDAR 플랫폼","tags":["라벨링","3D LiDAR","플랫폼"]},{"id":"어노테이션에이아이","layer":"data","sub":"labeling","size":"startup","focus":"Annotation AI","summary":"라벨링·데이터가공 플랫폼","tags":["라벨링","데이터가공","플랫폼"]},{"id":"젠데이터","layer":"data","sub":"labeling","size":"startup","focus":"Data Ops","summary":"데이터가공 플랫폼","tags":["데이터가공","플랫폼","라벨링"]},{"id":"바이트브릿지","layer":"data","sub":"labeling","size":"startup","focus":"자율주행 데이터","summary":"자율주행 데이터가공 라벨링","tags":["자율주행","데이터가공","라벨링"]},{"id":"브레인컨테이너","layer":"data","sub":"labeling","size":"startup","focus":"LiDAR Seg.","summary":"LiDAR 데이터가공 라벨링","tags":["LiDAR","데이터가공","라벨링"]},{"id":"몬드리안에이아이","layer":"data","sub":"mlops","size":"startup","focus":"Yennefer","summary":"AI-PaaS MLOps 플랫폼","tags":["AI-PaaS","MLOps","플랫폼"]},{"id":"데이콘","layer":"data","sub":"mlops","size":"startup","focus":"AI Hackathon","summary":"해커톤·평가·교육 데이터 플랫폼","tags":["해커톤","평가","교육"]},{"id":"인공지능팩토리","layer":"data","sub":"mlops","size":"startup","focus":"AI Competition","summary":"MLOps 평가 플랫폼","tags":["MLOps","평가","플랫폼"]},{"id":"KSTEC","layer":"data","sub":"analytics","size":"mid","focus":"SyncPlan/Dataiku","summary":"최적화·RPA 컨설팅","tags":["최적화","RPA","컨설팅"]},{"id":"TG360 테크놀로지스","layer":"data","sub":"analytics","size":"mid","focus":"Molecule","summary":"비식별데이터 DMP 플랫폼","tags":["비식별데이터","DMP","플랫폼"]},{"id":"누리꿈소프트","layer":"data","sub":"analytics","size":"mid","focus":"Smart-Eye","summary":"분석·예측 플랫폼","tags":["분석","예측","플랫폼"]},{"id":"더블유에이아이","layer":"data","sub":"analytics","size":"startup","focus":"Quant Athena","summary":"금융시계열 분석 서비스","tags":["금융시계열","분석","서비스"]},{"id":"데이터에듀","layer":"data","sub":"analytics","size":"startup","focus":"두런","summary":"AI교육 컨설팅 분석","tags":["AI교육","컨설팅","분석"]},{"id":"리서치림","layer":"data","sub":"analytics","size":"startup","focus":"Insight","summary":"리서치 분석 데이터","tags":["리서치","분석","데이터"]},{"id":"리스트","layer":"data","sub":"analytics","size":"startup","focus":"Commerce Data","summary":"데이터 추천 분석","tags":["데이터","추천","분석"]},{"id":"마켓링크","layer":"data","sub":"analytics","size":"startup","focus":"Marketing Data","summary":"마케팅 분석 데이터","tags":["마케팅","분석","데이터"]},{"id":"메트릭스","layer":"data","sub":"analytics","size":"startup","focus":"Metrics","summary":"마케팅 분석 데이터","tags":["마케팅","분석","데이터"]},{"id":"비즈스프링","layer":"data","sub":"analytics","size":"mid","focus":"BizSpring","summary":"마케팅 분석 SaaS","tags":["마케팅","분석","SaaS"]},{"id":"애자일소다","layer":"data","sub":"analytics","size":"startup","focus":"Decision AI","summary":"AutoML 분석 엔터프라이즈","tags":["AutoML","분석","엔터프라이즈"]},{"id":"웨슬리퀘스트","layer":"data","sub":"analytics","size":"mid","focus":"Analytics","summary":"컨설팅 분석 엔터프라이즈","tags":["컨설팅","분석","엔터프라이즈"]},{"id":"유클리드소프트","layer":"data","sub":"analytics","size":"startup","focus":"Data Science","summary":"분석 컨설팅 데이터","tags":["분석","컨설팅","데이터"]},{"id":"인그래디언트","layer":"data","sub":"analytics","size":"startup","focus":"Analytics","summary":"데이터 최적화 AI","tags":["데이터","최적화","AI"]},{"id":"이트너스","layer":"data","sub":"platform","size":"mid","focus":"AI Portal/ESAI","summary":"AICC 업무자동화 플랫폼","tags":["AICC","플랫폼","업무자동화"]},{"id":"넥타르소프트","layer":"data","sub":"platform","size":"mid","focus":"AI Advisor","summary":"예측·음성/NLP 플랫폼","tags":["예측","음성/NLP","플랫폼"]},{"id":"디지털존 마포지점","layer":"data","sub":"platform","size":"mid","focus":"전자문서","summary":"전자문서·증명서 플랫폼","tags":["전자문서","증명서","플랫폼"]},{"id":"로아인텔리전스","layer":"data","sub":"platform","size":"startup","focus":"기업가치정보","summary":"기업정보 분석 플랫폼","tags":["기업정보","분석","플랫폼"]},{"id":"오브젠","layer":"data","sub":"platform","size":"mid","focus":"CRM AI","summary":"CRM 분석 플랫폼","tags":["CRM","분석","플랫폼"]},{"id":"엔에이치엔데이터","layer":"data","sub":"platform","size":"mid","focus":"Data Infra","summary":"데이터 인프라 플랫폼","tags":["데이터","인프라","플랫폼"]},{"id":"아임클라우드","layer":"data","sub":"platform","size":"mid","focus":"BigData/AI","summary":"클라우드 데이터 플랫폼","tags":["클라우드","데이터","플랫폼"]},{"id":"클루커스","layer":"cloud","sub":"msp","size":"mid","focus":"Cloud MSP","summary":"클라우드 전환·운영 MSP","tags":["클라우드","MSP","엔터프라이즈"]},{"id":"알세미","layer":"chip","sub":"supplychain","size":"startup","focus":"EDA/Modeling","summary":"반도체 EDA 설계자동화","tags":["반도체","EDA","설계자동화"]},{"id":"피에스디이","layer":"chip","sub":"supplychain","size":"mid","focus":"Semiconductor Equipment","summary":"반도체 장비·배관/모듈","tags":["반도체","장비","배관/모듈"]},{"id":"씨피에스","layer":"chip","sub":"supplychain","size":"mid","focus":"Semiconductor Process","summary":"반도체 장비·제조","tags":["반도체","장비","제조"]}];
+const DOMAIN = {"네이버":"naver.com","LG AI Research":"lge.com","카카오":"kakao.com","SK텔레콤":"sktelecom.com","KT":"kt.com","삼성SDS":"samsungsds.com","업스테이지":"upstage.ai","모레":"moreh.io","FriendliAI":"friendli.ai","튜닙":"tunib.ai","알체라":"alcherainc.com","NC AI":"ncsoft.com","Motif Technologies":"motif.inc","라이너":"getliner.com","뤼튼테크놀로지스":"wrtn.ai","스캐터랩":"scatterlab.co.kr","올거나이즈":"allganize.ai","뤼이드":"riiid.co","매스프레소":"mathpresso.com","클래스팅":"classting.com","포티투마루":"42maru.ai","코난테크놀로지":"conantech.co.kr","솔트룩스":"saltlux.com","루닛":"lunit.io","뷰노":"vuno.co","딥노이드":"deepnoid.com","JLK":"jlkgroup.com","딥바이오":"deepbio.co.kr","메디웨일":"mediwhale.com","코어라인소프트":"corelinesoft.com","에이아이트릭스":"aitrics.com","트웰브랩스":"twelvelabs.io","딥브레인AI":"deepbrain.io","클레온":"cleon.ai","네오사피엔스":"neosapience.com","펄스나인":"pulsenine.com","마인드로직":"mindlogic.ai","포티투닷":"42dot.ai","서울로보틱스":"seoulrobotics.org","모빌테크":"mobiltech.io","라이드플럭스":"rideflux.com","스트라드비젼":"stradvision.com","베어로보틱스":"bearrobotics.ai","S2W":"s2w.inc","마키나락스":"makinarocks.ai","크라우드웍스":"crowdworks.kr","슈퍼브에이아이":"superb-ai.com","마인즈앤컴퍼니":"mindsandcompany.com","스케일업랩스":"scaleuplabs.ai","셀렉트스타":"selectstar.ai","에이모":"aimmo.ai","테스트웍스":"testworks.co.kr","아크릴":"acryl.ai","VESSL AI":"vessl.ai","노타AI":"nota.ai","씨이랩":"celab.ai","네이버클라우드":"ncloud.com","KT클라우드":"ktcloud.com","NHN클라우드":"nhncloud.com","카카오클라우드":"kakaocloud.com","LG CNS":"lgcns.com","SK C&C":"skcc.com","메가존클라우드":"megazone.com","베스핀글로벌":"bespinglobal.com","케이아이엔엑스":"kinx.net","그리드원":"gridone.ai","삼성전자":"samsung.com","SK하이닉스":"skhynix.com","리벨리온":"rebellions.ai","퓨리오사AI":"furiosa.ai","딥엑스":"deepx.ai","HyperAccel":"hyperaccel.ai","사피온":"sapeon.com","오픈엣지테크놀로지":"openedges.com","Mobilint":"mobilint.com","네패스":"nepes.com","심심이":"simsimi.com","에버트란":"evertran.com","로민":"lomin.ai","에듀템":"edutem.net","위고":"wigo.ai","잡쇼퍼":"jobshopper.co.kr","히어로웍스":"heroworks.co.kr","로앤컴퍼니":"lawcompany.co.kr","아이지넷":"aijinet.com","컴트루테크놀로지":"comtrue.com","탱커":"tanker.ai","텐스페이스":"tenspace.co.kr","블루바이저시스템즈":"bluevisor.kr","빅트리":"ibigtree.kr","콰라소프트":"owwl.kr","크래프트테크놀로지스":"qraftec.com","닥터송":"dsong.co.kr","메디아이플러스":"mediaiplus.com","에이아이플랫폼":"aiplatform.co.kr","카이팜":"kaipharm.com","피디젠":"pdxen.com","뉴로핏":"neurophet.com","메디컬아이피":"medicalip.com","노을":"nouel.com","아이도트":"aidot.ai","빈드컴퍼니":"vvind.in","오투오":"o2o.kr","세미콘네트웍스":"sns.co.kr","솔루게이트":"solugate.com","데브언리밋":"devunlimit.com","록스":"locslab.com","딥픽셀":"deepixel.xyz","블루프린트랩":"blueprint-lab.com","마음AI":"maum.ai","비트플로":"bitflow.ai","코액터스":"goyohanmobility.com","인트플로우":"intflow.ai","넥스트랩":"nextlab.ai","델타엑스":"deltax.ai","드로미":"dromii.com","라온피플":"laonpeople.com","카이어":"kaier.co.kr","핀텔":"pintel.co.kr","하이브비전":"hivevision.co.kr","와이즈레이크":"wiselake.co.kr","코코넛사일로":"coconutsilo.com","모라이":"morai.ai","니어스랩":"nearthlab.com","트위니":"twinny.ai","블루시그널":"bluesignal.ai","마인즈랩":"mindslab.ai","셀바스AI":"selvasai.com","스켈터랩스":"skelterlabs.com","TmaxAI":"tmax.co.kr","뉴럴웍스랩":"neuralworkslab.com","마인드에이아이":"mindslab.ai","디에스랩글로벌":"dslab.global","인피닉":"infiniq.co.kr","데이터메이커":"datamaker.io","어노테이션에이아이":"annotation-ai.com","젠데이터":"gendata.kr","바이트브릿지":"bytebridge.io","브레인컨테이너":"braincontainer.co.kr","몬드리안에이아이":"mondrian.ai","데이콘":"dacon.io","인공지능팩토리":"aifactory.page","KSTEC":"kstec.co.kr","TG360 테크놀로지스":"tg360tech.com","누리꿈소프트":"nuriggum.com","더블유에이아이":"waikorea.com","데이터에듀":"dataedu.kr","리서치림":"research-lim.com","리스트":"list.company","마켓링크":"marketlink.co.kr","메트릭스":"metrix.co.kr","비즈스프링":"bizspring.co.kr","애자일소다":"agilesoda.ai","웨슬리퀘스트":"wesleyquest.com","유클리드소프트":"euclidsoft.co.kr","인그래디언트":"ingredient.co.kr","이트너스":"etners.com","넥타르소프트":"nectarsoft.co.kr","디지털존 마포지점":"digitalzone.co.kr","로아인텔리전스":"roa.ai","오브젠":"obzen.com","엔에이치엔데이터":"nhndata.com","아임클라우드":"imcloud.co.kr","클루커스":"cloocus.com","알세미":"alsemy.com","피에스디이":"psd-inc.co.kr","씨피에스":"oncps.modoo.at"};
+const RELATIONS = [["네이버","네이버클라우드","group"],["SK텔레콤","SK하이닉스","group"],["SK텔레콤","사피온","group"],["SK텔레콤","SK C&C","group"],["KT","KT클라우드","group"],["카카오","카카오클라우드","group"],["LG AI Research","LG CNS","group"],["삼성전자","삼성SDS","group"],["포티투닷","포티투마루","group"],["업스테이지","크라우드웍스","tech"],["업스테이지","슈퍼브에이아이","tech"],["업스테이지","셀렉트스타","tech"],["뤼튼테크놀로지스","업스테이지","tech"],["뤼튼테크놀로지스","네이버","tech"],["루닛","네이버클라우드","tech"],["뷰노","KT클라우드","tech"],["트웰브랩스","네이버클라우드","tech"],["모레","LG AI Research","tech"],["모레","업스테이지","tech"],["모레","KT클라우드","tech"],["라이너","업스테이지","tech"],["딥브레인AI","SK C&C","tech"],["네오사피엔스","네이버클라우드","tech"],["에이모","포티투닷","tech"],["HyperAccel","LG AI Research","tech"],["오픈엣지테크놀로지","삼성전자","tech"],["삼성전자","네이버","supply"],["삼성전자","LG AI Research","supply"],["SK하이닉스","네이버","supply"],["SK하이닉스","LG AI Research","supply"],["SK하이닉스","카카오","supply"],["리벨리온","KT","supply"],["리벨리온","KT클라우드","supply"],["퓨리오사AI","네이버클라우드","supply"],["딥엑스","NHN클라우드","supply"],["사피온","SK C&C","supply"],["네이버","트웰브랩스","invest"],["카카오","뤼튼테크놀로지스","invest"],["SK텔레콤","리벨리온","invest"],["삼성전자","퓨리오사AI","invest"],["KT","솔트룩스","invest"],["네이버클라우드","서울로보틱스","invest"]];
 const REL_COL = { group:"#f59e0b", tech:"#10b981", supply:"#a855f7", invest:"#ec4899" };
 const REL_LABELS = { group:'그룹', tech:'기술', supply:'공급망', invest:'투자' };
 
-const ST = { selected:null, layerFilter:null, query:"", zoomK:1, theme:(localStorage.getItem('korea-ai-ecosystem-theme') || 'dark') };
+const ST = { selected:null, layerFilter:null, query:"", zoomK:1, theme:(localStorage.getItem('korea-ai-ecosystem-theme')||'dark') };
 
+/* ─── Background grid ─── */
 function drawBgGrid() {
   const cvs = document.getElementById('bg-canvas');
   cvs.width = window.innerWidth; cvs.height = window.innerHeight;
   const ctx = cvs.getContext('2d');
   ctx.clearRect(0,0,cvs.width,cvs.height);
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || 'rgba(255,255,255,0.028)';
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim()||'rgba(255,255,255,0.028)';
   ctx.lineWidth = 1;
   const gs = 48;
-  for (let x = 0; x < cvs.width; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cvs.height); ctx.stroke(); }
-  for (let y = 0; y < cvs.height; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cvs.width,y); ctx.stroke(); }
+  for(let x=0;x<cvs.width;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cvs.height);ctx.stroke();}
+  for(let y=0;y<cvs.height;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cvs.width,y);ctx.stroke();}
 }
 drawBgGrid();
 
-const W = window.innerWidth, H = window.innerHeight;
-const layerMap = Object.fromEntries(LAYER_DEFS.map(l => [l.id, l]));
+let W = window.innerWidth, H = window.innerHeight;
+const layerMap = Object.fromEntries(LAYER_DEFS.map(l=>[l.id,l]));
 const subMap = {};
-Object.entries(SUBCAT_DEFS).forEach(([layer, subs]) => subs.forEach(s => subMap[`${layer}:${s.id}`] = s));
+Object.entries(SUBCAT_DEFS).forEach(([layer,subs])=>subs.forEach(s=>subMap[`${layer}:${s.id}`]=s));
 
 const layerCounts = new Map();
-RAW.forEach(d => layerCounts.set(d.layer, (layerCounts.get(d.layer) || 0) + 1));
+RAW.forEach(d=>layerCounts.set(d.layer,(layerCounts.get(d.layer)||0)+1));
 const subCounts = new Map();
-RAW.forEach(d => subCounts.set(`${d.layer}:${d.sub}`, (subCounts.get(`${d.layer}:${d.sub}`) || 0) + 1));
+RAW.forEach(d=>subCounts.set(`${d.layer}:${d.sub}`,(subCounts.get(`${d.layer}:${d.sub}`)||0)+1));
 
-const SCENE_PACK_X = 0.84;
-const SCENE_PACK_Y = 0.86;
-const SCENE_SHIFT_Y = -10;
+const SCENE_PACK_X=0.84,SCENE_PACK_Y=0.86,SCENE_SHIFT_Y=-10;
+function getLayerCenter(layerOrId){const layer=typeof layerOrId==='string'?layerMap[layerOrId]:layerOrId;const rawX=layer.cx_pct*W;const rawY=layer.cy_pct*H;return{x:W/2+(rawX-W/2)*SCENE_PACK_X,y:H/2+(rawY-H/2)*SCENE_PACK_Y+SCENE_SHIFT_Y};}
+const SIZE_ORDER={large:0,mid:1,startup:2};
 
-function getLayerCenter(layerOrId) {
-  const layer = typeof layerOrId === 'string' ? layerMap[layerOrId] : layerOrId;
-  const rawX = layer.cx_pct * W;
-  const rawY = layer.cy_pct * H;
-  return {
-    x: W / 2 + (rawX - W / 2) * SCENE_PACK_X,
-    y: H / 2 + (rawY - H / 2) * SCENE_PACK_Y + SCENE_SHIFT_Y
-  };
-}
+const SUBPILL_DATA = Object.entries(SUBCAT_DEFS).flatMap(([layer,subs])=>subs.map(s=>({layer,...s,count:subCounts.get(`${layer}:${s.id}`)||0})));
 
-function sanitizeSummary(summary) {
-  return (summary || '')
-    .replace(/기업편람\/NIPA\s*수록\s*/g, '')
-    .replace(/기업편람\s*수록\s*/g, '')
-    .replace(/NIPA 사례집\s*수록\s*/g, '')
-    .replace(/NIPA\s*수록\s*/g, '')
-    .replace(/^[\s·,:-]+/, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function spiralOffset(idx,step){if(idx===0)return{x:0,y:0};const a=idx*2.399963229728653;const r=Math.sqrt(idx)*step;return{x:Math.cos(a)*r,y:Math.sin(a)*r};}
 
-const SIZE_ORDER = { large: 0, mid: 1, startup: 2 };
-
-const SUBPILL_DATA = Object.entries(SUBCAT_DEFS).flatMap(([layer, subs]) =>
-  subs.map(s => ({ layer, ...s, count: subCounts.get(`${layer}:${s.id}`) || 0 }))
-);
-
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
-
-function spiralOffset(idx, step) {
-  if (idx === 0) return { x: 0, y: 0 };
-  const angle = idx * 2.399963229728653;
-  const radius = Math.sqrt(idx) * step;
-  return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-}
-
-function assignSubclusterOffsets(list) {
-  const groups = d3.group(list, d => `${d.layer}:${d.sub}`);
-
-  groups.forEach(group => {
-    group.sort((a, b) =>
-      (SIZE_ORDER[a.size] - SIZE_ORDER[b.size]) ||
-      d3.ascending(a.id, b.id)
-    );
-
-    const step = Math.max(18, Math.min(42, 16 + Math.sqrt(group.length) * 4.2));
-
-    group.forEach((n, idx) => {
-      const o = spiralOffset(idx, step + n.r * 0.6);
-      n.localBase = { x: o.x, y: o.y };
-      n.groupCount = group.length;
-    });
+function assignSubclusterOffsets(list){
+  const groups=d3.group(list,d=>`${d.layer}:${d.sub}`);
+  groups.forEach(group=>{
+    group.sort((a,b)=>(SIZE_ORDER[a.size]-SIZE_ORDER[b.size])||d3.ascending(a.id,b.id));
+    const step=Math.max(18,Math.min(42,16+Math.sqrt(group.length)*4.2));
+    group.forEach((n,idx)=>{const o=spiralOffset(idx,step+n.r*0.6);n.localBase={x:o.x,y:o.y};n.groupCount=group.length;});
   });
 }
 
-const LAYOUT_LEVELS = [
-  { subSpread: 0.94, nodeScale: 0.24, force: 0.050, pillScale: 0.94, pillOpacity: 0.58 },
-  { subSpread: 1.02, nodeScale: 0.42, force: 0.056, pillScale: 1.00, pillOpacity: 0.66 },
-  { subSpread: 1.18, nodeScale: 0.72, force: 0.062, pillScale: 1.06, pillOpacity: 0.74 },
-  { subSpread: 1.42, nodeScale: 1.02, force: 0.069, pillScale: 1.12, pillOpacity: 0.82 },
-  { subSpread: 1.76, nodeScale: 1.38, force: 0.076, pillScale: 1.18, pillOpacity: 0.88 },
-  { subSpread: 2.12, nodeScale: 1.76, force: 0.084, pillScale: 1.24, pillOpacity: 0.94 },
-  { subSpread: 2.46, nodeScale: 2.08, force: 0.091, pillScale: 1.30, pillOpacity: 0.98 }
+const LAYOUT_LEVELS=[
+  {subSpread:0.94,nodeScale:0.24,force:0.050,pillScale:0.94,pillOpacity:0.58},
+  {subSpread:1.02,nodeScale:0.42,force:0.056,pillScale:1.00,pillOpacity:0.66},
+  {subSpread:1.18,nodeScale:0.72,force:0.062,pillScale:1.06,pillOpacity:0.74},
+  {subSpread:1.42,nodeScale:1.02,force:0.069,pillScale:1.12,pillOpacity:0.82},
+  {subSpread:1.76,nodeScale:1.38,force:0.076,pillScale:1.18,pillOpacity:0.88},
+  {subSpread:2.12,nodeScale:1.76,force:0.084,pillScale:1.24,pillOpacity:0.94},
+  {subSpread:2.46,nodeScale:2.08,force:0.091,pillScale:1.30,pillOpacity:0.98}
 ];
 
-function getLayoutLevel(layerId) {
-  const z = ST.zoomK;
-  let level = z < 0.92 ? 0 : z < 1.12 ? 1 : z < 1.38 ? 2 : z < 1.76 ? 3 : z < 2.25 ? 4 : z < 2.95 ? 5 : 6;
-
-  if (ST.layerFilter === layerId) level += 1;
-
-  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
-  if (selectedNode && selectedNode.layer === layerId) level += 1;
-
-  if (ST.layerFilter && ST.layerFilter !== layerId) level = Math.max(0, level - 1);
-
-  return clamp(level, 0, LAYOUT_LEVELS.length - 1);
+function getLayoutLevel(layerId){
+  const z=ST.zoomK;
+  let level=z<0.92?0:z<1.12?1:z<1.38?2:z<1.76?3:z<2.25?4:z<2.95?5:6;
+  if(ST.layerFilter===layerId)level+=1;
+  const sn=ST.selected?nodes.find(n=>n.id===ST.selected):null;
+  if(sn&&sn.layer===layerId)level+=1;
+  if(ST.layerFilter&&ST.layerFilter!==layerId)level=Math.max(0,level-1);
+  return clamp(level,0,LAYOUT_LEVELS.length-1);
 }
-
-function getLayoutCfg(layerId) {
-  return LAYOUT_LEVELS[getLayoutLevel(layerId)];
-}
+function getLayoutCfg(layerId){return LAYOUT_LEVELS[getLayoutLevel(layerId)];}
 
 const layerRadius = {};
-LAYER_DEFS.forEach(l => {
-  const base = Math.max(Math.min(W, H) * 0.105, 92);
-  const cnt = layerCounts.get(l.id) || 0;
-  layerRadius[l.id] = base + Math.sqrt(cnt) * 5.9;
+LAYER_DEFS.forEach(l=>{const base=Math.max(Math.min(W,H)*0.105,92);const cnt=layerCounts.get(l.id)||0;layerRadius[l.id]=base+Math.sqrt(cnt)*5.9;});
+
+const DOMAIN_URL=name=>DOMAIN[name]?`https://logo.clearbit.com/${DOMAIN[name]}`:null;
+
+const nodes=RAW.map(d=>{
+  const layer=layerMap[d.layer];const size=SIZE_DEFS[d.size];const sub=subMap[`${d.layer}:${d.sub}`];
+  const center=getLayerCenter(layer);const R=layerRadius[d.layer];
+  const tx=center.x+(sub?sub.dx*R:0);const ty=center.y+(sub?sub.dy*R:0);
+  return{...d,accent:layer.accent,layerName:layer.name,subName:sub?sub.name:'',sizeName:size.name,sizeColor:size.color,r:size.r,logo:DOMAIN_URL(d.id),tx,ty,targetX:tx,targetY:ty,clusterForce:0.055,renderScale:1,x:tx,y:ty};
 });
-
-const DOMAIN_URL = name => DOMAIN[name] ? `https://logo.clearbit.com/${DOMAIN[name]}` : null;
-
-const nodes = RAW.map(d => {
-  const layer = layerMap[d.layer];
-  const size = SIZE_DEFS[d.size];
-  const sub = subMap[`${d.layer}:${d.sub}`];
-  const center = getLayerCenter(layer);
-  const R = layerRadius[d.layer];
-  const tx = center.x + (sub ? sub.dx * R : 0);
-  const ty = center.y + (sub ? sub.dy * R : 0);
-
-  return {
-    ...d,
-    summary: sanitizeSummary(d.summary),
-    accent: layer.accent,
-    layerName: layer.name,
-    subName: sub ? sub.name : '',
-    sizeName: size.name,
-    sizeColor: size.color,
-    r: size.r,
-    logo: DOMAIN_URL(d.id),
-    tx, ty,
-    targetX: tx,
-    targetY: ty,
-    clusterForce: 0.055,
-    renderScale: 1,
-    x: tx,
-    y: ty
-  };
-});
-
 assignSubclusterOffsets(nodes);
+nodes.forEach(n=>{n.targetX=n.tx+n.localBase.x*LAYOUT_LEVELS[0].nodeScale;n.targetY=n.ty+n.localBase.y*LAYOUT_LEVELS[0].nodeScale;n.x=n.targetX+(Math.random()-0.5)*16;n.y=n.targetY+(Math.random()-0.5)*16;});
 
-nodes.forEach(n => {
-  n.targetX = n.tx + n.localBase.x * LAYOUT_LEVELS[0].nodeScale;
-  n.targetY = n.ty + n.localBase.y * LAYOUT_LEVELS[0].nodeScale;
-  n.x = n.targetX + (Math.random() - 0.5) * 16;
-  n.y = n.targetY + (Math.random() - 0.5) * 16;
-});
+const nodeIndex=Object.fromEntries(nodes.map((n,i)=>[n.id,i]));
+const links=RELATIONS.filter(([a,b])=>nodeIndex[a]!==undefined&&nodeIndex[b]!==undefined).map(([a,b,type])=>({source:a,target:b,type}));
 
-const nodeIndex = Object.fromEntries(nodes.map((n,i) => [n.id, i]));
-const links = RELATIONS
-  .filter(([a,b]) => nodeIndex[a] !== undefined && nodeIndex[b] !== undefined)
-  .map(([a,b,type]) => ({ source:a, target:b, type }));
+const adjacency=new Map();
+function addAdj(from,to,type){if(!adjacency.has(from))adjacency.set(from,[]);const arr=adjacency.get(from);let e=arr.find(i=>i.id===to);if(!e){e={id:to,types:[]};arr.push(e);}if(!e.types.includes(type))e.types.push(type);}
+links.forEach(l=>{addAdj(l.source,l.target,l.type);addAdj(l.target,l.source,l.type);});
 
-const adjacency = new Map();
-function addAdjacency(from, to, type) {
-  if (!adjacency.has(from)) adjacency.set(from, []);
-  const arr = adjacency.get(from);
-  let entry = arr.find(item => item.id === to);
-  if (!entry) {
-    entry = { id: to, types: [] };
-    arr.push(entry);
-  }
-  if (!entry.types.includes(type)) entry.types.push(type);
-}
+let subpillSel,subpillRoot,lastLayoutKey='',renderPending=false,motionLite=false,motionTimer=null;
 
-links.forEach(l => {
-  addAdjacency(l.source, l.target, l.type);
-  addAdjacency(l.target, l.source, l.type);
-});
+const svg=d3.select('#graph-svg').attr('width',W).attr('height',H);
+const defs=svg.append('defs');
+LAYER_DEFS.forEach(l=>{const f=defs.append('filter').attr('id',`glow-${l.id}`).attr('x','-60%').attr('y','-60%').attr('width','220%').attr('height','220%');f.append('feGaussianBlur').attr('in','SourceGraphic').attr('stdDeviation','5').attr('result','blur');const m=f.append('feMerge');m.append('feMergeNode').attr('in','blur');m.append('feMergeNode').attr('in','SourceGraphic');});
+nodes.forEach(n=>{defs.append('clipPath').attr('id',`clip-${n.id.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`).append('circle').attr('r',Math.max(6,n.r-6)).attr('cx',0).attr('cy',0);});
 
-let subpillSel;
-let subpillRoot;
-let lastLayoutKey = '';
-let renderPending = false;
-let motionLite = false;
-let motionTimer = null;
-
-const svg = d3.select('#graph-svg').attr('width', W).attr('height', H);
-const defs = svg.append('defs');
-
-LAYER_DEFS.forEach(l => {
-  const f = defs.append('filter').attr('id', `glow-${l.id}`).attr('x','-60%').attr('y','-60%').attr('width','220%').attr('height','220%');
-  f.append('feGaussianBlur').attr('in','SourceGraphic').attr('stdDeviation','5').attr('result','blur');
-  const m = f.append('feMerge');
-  m.append('feMergeNode').attr('in','blur');
-  m.append('feMergeNode').attr('in','SourceGraphic');
-});
-
-nodes.forEach(n => {
-  defs.append('clipPath').attr('id', `clip-${n.id.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`)
-    .append('circle').attr('r', Math.max(6, n.r - 6)).attr('cx', 0).attr('cy', 0);
-});
-
-const zoomG = svg.append('g').attr('id','zoom-g');
-const zoom = d3.zoom().scaleExtent([0.35, 4.5]).on('zoom', ev => {
-  ST.zoomK = ev.transform.k;
-  zoomG.attr('transform', ev.transform);
-  updateLabelVisibility();
-  maybeUpdateLayout();
-});
+const zoomG=svg.append('g').attr('id','zoom-g');
+const zoom=d3.zoom().scaleExtent([0.35,4.5]).on('zoom',ev=>{ST.zoomK=ev.transform.k;zoomG.attr('transform',ev.transform);updateLabelVisibility();maybeUpdateLayout();hideOnboardHint();});
 svg.call(zoom);
 
-const zoneG = zoomG.append('g').attr('id','zones');
-
-LAYER_DEFS.forEach(l => {
-  const center = getLayerCenter(l);
-  const cx = center.x, cy = center.y, R = layerRadius[l.id];
-
-  zoneG.append('circle')
-    .attr('cx', cx).attr('cy', cy)
-    .attr('r', R * 1.18)
-    .attr('fill', 'none')
-    .attr('stroke', l.accent)
-    .attr('stroke-width', 1)
-    .attr('stroke-opacity', 0.08)
-    .attr('stroke-dasharray', '4 6');
-
-  zoneG.append('circle')
-    .attr('cx', cx).attr('cy', cy)
-    .attr('r', R)
-    .attr('fill', l.accent)
-    .attr('fill-opacity', 0.044)
-    .attr('stroke', l.accent)
-    .attr('stroke-width', 1)
-    .attr('stroke-opacity', 0.18)
-    .attr('class', `zone zone-${l.id}`);
-
-  zoneG.append('text')
-    .attr('x', cx).attr('y', cy - R - 18)
-    .attr('text-anchor', 'middle')
-    .attr('fill', l.accent)
-    .attr('font-size', '14px')
-    .attr('opacity', 0.88)
-    .attr('class', `zone-label zone-label-${l.id}`)
-    .text(l.name);
-
-  zoneG.append('text')
-    .attr('x', cx).attr('y', cy - R + 2)
-    .attr('text-anchor', 'middle')
-    .attr('fill', l.accent)
-    .attr('font-size', '10px')
-    .attr('opacity', 0.48)
-    .attr('class', `zone-count zone-count-${l.id}`)
-    .text(`${layerCounts.get(l.id) || 0}개`);
+const zoneG=zoomG.append('g').attr('id','zones');
+LAYER_DEFS.forEach(l=>{
+  const center=getLayerCenter(l);const cx=center.x,cy=center.y,R=layerRadius[l.id];
+  zoneG.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R*1.18).attr('fill','none').attr('stroke',l.accent).attr('stroke-width',1).attr('stroke-opacity',0.08).attr('stroke-dasharray','4 6');
+  zoneG.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R).attr('fill',l.accent).attr('fill-opacity',0.044).attr('stroke',l.accent).attr('stroke-width',1).attr('stroke-opacity',0.18).attr('class',`zone zone-${l.id}`);
+  zoneG.append('text').attr('x',cx).attr('y',cy-R-18).attr('text-anchor','middle').attr('fill',l.accent).attr('font-size','14px').attr('opacity',0.88).attr('class',`zone-label zone-label-${l.id}`).text(l.name);
+  zoneG.append('text').attr('x',cx).attr('y',cy-R+2).attr('text-anchor','middle').attr('fill',l.accent).attr('font-size','10px').attr('opacity',0.48).attr('class',`zone-count zone-count-${l.id}`).text(`${layerCounts.get(l.id)||0}개`);
 });
 
-subpillSel = zoneG.append('g')
-  .attr('id', 'subpill-g')
-  .selectAll('g.subpill')
-  .data(SUBPILL_DATA)
-  .join('g')
-  .attr('class', d => `subpill subpill-${d.layer}`);
-
-subpillSel.each(function(d) {
-  const g = d3.select(this);
-  const txt = g.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('dominant-baseline', 'central')
-    .text(`${d.name} · ${d.count}`);
-
-  const bb = txt.node().getBBox();
-
-  g.insert('rect', 'text')
-    .attr('x', bb.x - 10).attr('y', bb.y - 5)
-    .attr('width', bb.width + 20).attr('height', bb.height + 10)
-    .attr('fill', layerMap[d.layer].accent)
-    .attr('stroke', layerMap[d.layer].accent)
-    .attr('stroke-opacity', 0.32);
-});
+subpillSel=zoneG.append('g').attr('id','subpill-g').selectAll('g.subpill').data(SUBPILL_DATA).join('g').attr('class',d=>`subpill subpill-${d.layer}`);
+subpillSel.each(function(d){const g=d3.select(this);const txt=g.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').text(`${d.name} · ${d.count}`);const bb=txt.node().getBBox();g.insert('rect','text').attr('x',bb.x-10).attr('y',bb.y-5).attr('width',bb.width+20).attr('height',bb.height+10).attr('fill',layerMap[d.layer].accent).attr('stroke',layerMap[d.layer].accent).attr('stroke-opacity',0.32);});
 
 refreshLayoutTargets(false);
 
-const linkG = zoomG.append('g').attr('id','links');
-const linkSel = linkG.selectAll('line').data(links).join('line')
-  .attr('stroke', d => REL_COL[d.type] || '#fff')
-  .attr('stroke-width', 1)
-  .attr('stroke-opacity', 0.16)
-  .attr('stroke-dasharray', d => d.type === 'invest' ? '4,3' : null);
+const linkG=zoomG.append('g').attr('id','links');
+const linkSel=linkG.selectAll('line').data(links).join('line').attr('stroke',d=>REL_COL[d.type]||'#fff').attr('stroke-width',1).attr('stroke-opacity',0.16).attr('stroke-dasharray',d=>d.type==='invest'?'4,3':null);
 
-const nodeG = zoomG.append('g').attr('id','node-g');
-const nodeGSel = nodeG.selectAll('g.node-wrap').data(nodes, d => d.id)
-  .join('g').attr('class','node-wrap')
-  .style('cursor','pointer')
-  .call(
-    d3.drag()
-      .on('start', (ev, d) => { if (!ev.active) sim.alphaTarget(0.22).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
-      .on('end',   (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+const nodeG=zoomG.append('g').attr('id','node-g');
+const nodeGSel=nodeG.selectAll('g.node-wrap').data(nodes,d=>d.id).join('g').attr('class','node-wrap').style('cursor','pointer')
+  .call(d3.drag()
+    .on('start',(ev,d)=>{if(!ev.active)sim.alphaTarget(0.22).restart();d.fx=d.x;d.fy=d.y;hideOnboardHint();})
+    .on('drag',(ev,d)=>{d.fx=ev.x;d.fy=ev.y;})
+    .on('end',(ev,d)=>{if(!ev.active)sim.alphaTarget(0);d.fx=null;d.fy=null;})
   );
 
-nodeGSel.append('circle')
-  .attr('class','node-ring')
-  .attr('r', d => d.r + 7)
-  .attr('fill', 'none')
-  .attr('stroke', d => d.accent)
-  .attr('stroke-width', 2)
-  .attr('stroke-opacity', 0);
+nodeGSel.append('circle').attr('class','node-ring').attr('r',d=>d.r+7).attr('fill','none').attr('stroke',d=>d.accent).attr('stroke-width',2).attr('stroke-opacity',0);
+nodeGSel.append('circle').attr('class','node-halo').attr('r',d=>d.r+11).attr('fill','none').attr('stroke',d=>d.accent).attr('stroke-width',1.5).attr('stroke-opacity',0).attr('stroke-dasharray','4 4');
+nodeGSel.append('circle').attr('class','node-circle').attr('r',d=>d.r).attr('fill',d=>d.accent).attr('fill-opacity',0.16).attr('stroke',d=>d.accent).attr('stroke-width',1.8).attr('stroke-opacity',0.9);
+nodeGSel.append('circle').attr('class','node-core').attr('r',d=>Math.max(7,d.r-1)).attr('fill',d=>d.sizeColor).attr('fill-opacity',0.96).attr('stroke','rgba(255,255,255,0)').attr('stroke-width',0);
+nodeGSel.append('circle').attr('class','node-logo-bg').attr('r',d=>Math.max(6,d.r-6)).attr('fill','#ffffff').attr('fill-opacity',0.95);
+nodeGSel.append('circle').attr('class','node-size-dot').attr('cx',d=>d.r*0.55).attr('cy',d=>d.r*0.55).attr('r',3.4).attr('fill',d=>d.sizeColor).attr('stroke','#fff').attr('stroke-width',1.2).attr('opacity',0.95);
 
-nodeGSel.append('circle')
-  .attr('class','node-halo')
-  .attr('r', d => d.r + 11)
-  .attr('fill', 'none')
-  .attr('stroke', d => d.accent)
-  .attr('stroke-width', 1.5)
-  .attr('stroke-opacity', 0)
-  .attr('stroke-dasharray', '4 4');
-
-nodeGSel.append('circle')
-  .attr('class','node-circle')
-  .attr('r', d => d.r)
-  .attr('fill', d => d.accent)
-  .attr('fill-opacity', 0.16)
-  .attr('stroke', d => d.accent)
-  .attr('stroke-width', 1.8)
-  .attr('stroke-opacity', 0.9);
-
-nodeGSel.append('circle')
-  .attr('class','node-core')
-  .attr('r', d => Math.max(7, d.r - 1))
-  .attr('fill', d => d.sizeColor)
-  .attr('fill-opacity', 0.96)
-  .attr('stroke', 'rgba(255,255,255,0)')
-  .attr('stroke-width', 0);
-
-nodeGSel.append('circle')
-  .attr('class','node-logo-bg')
-  .attr('r', d => Math.max(6, d.r - 6))
-  .attr('fill', '#ffffff')
-  .attr('fill-opacity', 0.95);
-
-nodeGSel.append('circle')
-  .attr('class','node-size-dot')
-  .attr('cx', d => d.r * 0.55)
-  .attr('cy', d => d.r * 0.55)
-  .attr('r', 3.4)
-  .attr('fill', d => d.sizeColor)
-  .attr('stroke', '#fff')
-  .attr('stroke-width', 1.2)
-  .attr('opacity', 0.95);
-
-nodeGSel.each(function(d) {
-  const el = d3.select(this);
-  const clipId = `clip-${d.id.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`;
-  if (d.logo) {
-    const img = el.append('image')
-      .attr('class','node-logo')
-      .attr('href', d.logo)
-      .attr('x', -Math.max(6, d.r - 6))
-      .attr('y', -Math.max(6, d.r - 6))
-      .attr('width', Math.max(12, (d.r - 6) * 2))
-      .attr('height', Math.max(12, (d.r - 6) * 2))
-      .attr('clip-path', `url(#${clipId})`)
-      .attr('preserveAspectRatio','xMidYMid meet')
-      .attr('opacity', 0);
-
-    const imgEl = img.node();
-    imgEl.addEventListener('load',  () => { d3.select(imgEl).attr('opacity', 1); el.select('.node-fallback').attr('opacity', 0); });
-    imgEl.addEventListener('error', () => { d3.select(imgEl).remove(); el.select('.node-fallback').attr('opacity', 1); });
+nodeGSel.each(function(d){
+  const el=d3.select(this);const clipId=`clip-${d.id.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`;
+  if(d.logo){
+    const img=el.append('image').attr('class','node-logo').attr('href',d.logo).attr('x',-Math.max(6,d.r-6)).attr('y',-Math.max(6,d.r-6)).attr('width',Math.max(12,(d.r-6)*2)).attr('height',Math.max(12,(d.r-6)*2)).attr('clip-path',`url(#${clipId})`).attr('preserveAspectRatio','xMidYMid meet').attr('opacity',0);
+    const imgEl=img.node();
+    imgEl.addEventListener('load',()=>{d3.select(imgEl).attr('opacity',1);el.select('.node-fallback').attr('opacity',0);});
+    imgEl.addEventListener('error',()=>{d3.select(imgEl).remove();el.select('.node-fallback').attr('opacity',1);});
   }
-
-  el.append('text')
-    .attr('class','node-fallback')
-    .attr('text-anchor','middle')
-    .attr('dominant-baseline','central')
-    .attr('fill', '#0f172a')
-    .attr('font-size', d.r * 0.72)
-    .attr('font-weight','900')
-    .attr('font-family','Noto Sans KR,sans-serif')
-    .attr('pointer-events','none')
-    .attr('opacity', d.logo ? 0 : 1)
-    .text(d.id.slice(0,1));
+  el.append('text').attr('class','node-fallback').attr('text-anchor','middle').attr('dominant-baseline','central').attr('fill','#0f172a').attr('font-size',d.r*0.72).attr('font-weight','900').attr('font-family','Noto Sans KR,sans-serif').attr('pointer-events','none').attr('opacity',d.logo?0:1).text(d.id.slice(0,1));
 });
 
-nodeGSel.append('text')
-  .attr('class','node-label')
-  .attr('text-anchor','middle')
-  .attr('dy', d => d.r + 18)
-  .attr('fill','rgba(255,255,255,0.9)')
-  .attr('font-size', d => d.size === 'large' ? '11.5px' : d.size === 'mid' ? '10.5px' : '9.4px')
-  .attr('font-family','Noto Sans KR,sans-serif')
-  .attr('font-weight', d => d.size === 'large' ? '700' : d.size === 'mid' ? '600' : '500')
-  .attr('stroke','rgba(7,9,15,0.95)')
-  .attr('stroke-width', 3)
-  .attr('paint-order','stroke')
-  .attr('pointer-events','none')
-  .text(d => d.id.length > 10 ? d.id.slice(0,9)+'…' : d.id);
+nodeGSel.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',d=>d.r+18).attr('fill','var(--text-main)').attr('font-size',d=>d.size==='large'?'11.5px':d.size==='mid'?'10.5px':'9.4px').attr('font-family','Noto Sans KR,sans-serif').attr('font-weight',d=>d.size==='large'?'700':d.size==='mid'?'600':'500').attr('stroke','var(--shadow-stroke)').attr('stroke-width',3).attr('paint-order','stroke').attr('pointer-events','none').text(d=>d.id.length>10?d.id.slice(0,9)+'…':d.id);
 
-subpillRoot = d3.select('#subpill-g').attr('pointer-events', 'none');
+subpillRoot=d3.select('#subpill-g').attr('pointer-events','none');
 zoomG.node().appendChild(subpillRoot.node());
 subpillRoot.raise();
 
-function setMotionLite(active) {
-  if (motionLite === active) return;
-  motionLite = active;
-  nodeG.classed('motion-lite', active);
-}
+function setMotionLite(active){if(motionLite===active)return;motionLite=active;nodeG.classed('motion-lite',active);}
 
-function refreshLayoutTargets(animateSubpills = true) {
-  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
-
-  nodes.forEach(n => {
-    const sub = subMap[`${n.layer}:${n.sub}`];
-    const cfg = getLayoutCfg(n.layer);
-    const center = getLayerCenter(n.layer);
-    const R = layerRadius[n.layer];
-
-    const baseX = center.x + (sub ? sub.dx * R * cfg.subSpread : 0);
-    const baseY = center.y + (sub ? sub.dy * R * cfg.subSpread : 0);
-    const off = n.localBase || { x: 0, y: 0 };
-
-    n.targetX = baseX + off.x * cfg.nodeScale;
-    n.targetY = baseY + off.y * cfg.nodeScale;
-    n.clusterForce = cfg.force;
+function refreshLayoutTargets(animateSubpills=true){
+  const selectedNode=ST.selected?nodes.find(n=>n.id===ST.selected):null;
+  nodes.forEach(n=>{
+    const sub=subMap[`${n.layer}:${n.sub}`];const cfg=getLayoutCfg(n.layer);const center=getLayerCenter(n.layer);const R=layerRadius[n.layer];
+    const baseX=center.x+(sub?sub.dx*R*cfg.subSpread:0);const baseY=center.y+(sub?sub.dy*R*cfg.subSpread:0);
+    const off=n.localBase||{x:0,y:0};
+    n.targetX=baseX+off.x*cfg.nodeScale;n.targetY=baseY+off.y*cfg.nodeScale;n.clusterForce=cfg.force;
   });
-
-  if (!subpillSel) return;
-
-  subpillSel.each(function(d) {
-    const cfg = getLayoutCfg(d.layer);
-    const center = getLayerCenter(d.layer);
-    const R = layerRadius[d.layer];
-    const x = center.x + d.dx * R * cfg.subSpread;
-    const y = center.y + d.dy * R * cfg.subSpread;
-    const active = !ST.layerFilter || ST.layerFilter === d.layer;
-    const selectedInLayer = selectedNode && selectedNode.layer === d.layer;
-    const scale = selectedInLayer ? cfg.pillScale * 1.05 : cfg.pillScale;
-    const opacity = active ? cfg.pillOpacity : Math.max(0.12, cfg.pillOpacity * 0.22);
-
-    const sel = d3.select(this);
-    const painter = animateSubpills ? sel.transition().duration(280).ease(d3.easeCubicOut) : sel;
-    painter
-      .attr('transform', `translate(${x},${y}) scale(${scale})`)
-      .attr('opacity', opacity);
-
-    sel.select('rect')
-      .attr('fill-opacity', active ? (selectedInLayer ? 0.18 : 0.15) : 0.07)
-      .attr('stroke-opacity', active ? (selectedInLayer ? 0.5 : 0.36) : 0.18);
+  if(!subpillSel)return;
+  subpillSel.each(function(d){
+    const cfg=getLayoutCfg(d.layer);const center=getLayerCenter(d.layer);const R=layerRadius[d.layer];
+    const x=center.x+d.dx*R*cfg.subSpread;const y=center.y+d.dy*R*cfg.subSpread;
+    const active=!ST.layerFilter||ST.layerFilter===d.layer;
+    const selectedInLayer=selectedNode&&selectedNode.layer===d.layer;
+    const scale=selectedInLayer?cfg.pillScale*1.05:cfg.pillScale;
+    const opacity=active?cfg.pillOpacity:Math.max(0.12,cfg.pillOpacity*0.22);
+    const sel=d3.select(this);const painter=animateSubpills?sel.transition().duration(280).ease(d3.easeCubicOut):sel;
+    painter.attr('transform',`translate(${x},${y}) scale(${scale})`).attr('opacity',opacity);
+    sel.select('rect').attr('fill-opacity',active?(selectedInLayer?0.18:0.15):0.07).attr('stroke-opacity',active?(selectedInLayer?0.5:0.36):0.18);
   });
-
-  if (subpillRoot) subpillRoot.raise();
+  if(subpillRoot)subpillRoot.raise();
 }
 
-function renderScene() {
-  renderPending = false;
-  linkSel
-    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+function renderScene(){
+  renderPending=false;
+  linkSel.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+  nodeGSel.attr('transform',d=>`translate(${d.x},${d.y}) scale(${d.renderScale||1})`);
+  if(subpillRoot)subpillRoot.raise();
+}
+function scheduleRender(){if(renderPending)return;renderPending=true;requestAnimationFrame(renderScene);}
 
-  nodeGSel.attr('transform', d => `translate(${d.x},${d.y}) scale(${d.renderScale || 1})`);
-  if (subpillRoot) subpillRoot.raise();
+function kickSimulation(alpha=0.16){
+  clearTimeout(motionTimer);setMotionLite(true);sim.alpha(Math.max(sim.alpha(),alpha)).restart();
+  motionTimer=setTimeout(()=>{if(sim.alpha()<0.06)setMotionLite(false);},280);
+}
+function maybeUpdateLayout(force=false){
+  const sn=ST.selected?nodes.find(n=>n.id===ST.selected):null;
+  const key=`${ST.layerFilter||'all'}:${sn?sn.layer:'none'}:${LAYER_DEFS.map(l=>getLayoutLevel(l.id)).join('-')}`;
+  if(!force&&key===lastLayoutKey)return;lastLayoutKey=key;refreshLayoutTargets(!force);kickSimulation(0.16);
 }
 
-function scheduleRender() {
-  if (renderPending) return;
-  renderPending = true;
-  requestAnimationFrame(renderScene);
-}
+const sim=d3.forceSimulation(nodes)
+  .force('link',d3.forceLink(links).id(d=>d.id).distance(122).strength(0.03))
+  .force('charge',d3.forceManyBody().strength(d=>d.size==='large'?-250:d.size==='mid'?-195:-150))
+  .force('collision',d3.forceCollide().radius(d=>d.r+9).strength(0.92))
+  .force('cluster',()=>{nodes.forEach(n=>{const k=n.clusterForce||0.055;n.vx+=(n.targetX-n.x)*k;n.vy+=(n.targetY-n.y)*k;});})
+  .alphaDecay(0.046).alphaMin(0.02).velocityDecay(0.47);
+sim.on('tick',()=>{if(sim.alpha()>0.07)setMotionLite(true);scheduleRender();});
+sim.on('end',()=>{setMotionLite(false);renderScene();});
 
-function kickSimulation(alpha = 0.16) {
-  clearTimeout(motionTimer);
-  setMotionLite(true);
-  sim.alpha(Math.max(sim.alpha(), alpha)).restart();
-
-  motionTimer = setTimeout(() => {
-    if (sim.alpha() < 0.06) setMotionLite(false);
-  }, 280);
-}
-
-function maybeUpdateLayout(force = false) {
-  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
-  const key = `${ST.layerFilter || 'all'}:${selectedNode ? selectedNode.layer : 'none'}:${LAYER_DEFS.map(l => getLayoutLevel(l.id)).join('-')}`;
-  if (!force && key === lastLayoutKey) return;
-
-  lastLayoutKey = key;
-  refreshLayoutTargets(!force);
-  kickSimulation(0.16);
-}
-
-const sim = d3.forceSimulation(nodes)
-  .force('link', d3.forceLink(links).id(d => d.id).distance(122).strength(0.03))
-  .force('charge', d3.forceManyBody().strength(d => d.size === 'large' ? -250 : d.size === 'mid' ? -195 : -150))
-  .force('collision', d3.forceCollide().radius(d => d.r + 9).strength(0.92))
-  .force('cluster', () => {
-    nodes.forEach(n => {
-      const k = n.clusterForce || 0.055;
-      n.vx += (n.targetX - n.x) * k;
-      n.vy += (n.targetY - n.y) * k;
-    });
-  })
-  .alphaDecay(0.046)
-  .alphaMin(0.02)
-  .velocityDecay(0.47);
-
-sim.on('tick', () => {
-  if (sim.alpha() > 0.07) setMotionLite(true);
-  scheduleRender();
-});
-
-sim.on('end', () => {
-  setMotionLite(false);
-  renderScene();
-});
-
-function applyTheme(theme) {
-  ST.theme = theme === 'light' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', ST.theme);
-  localStorage.setItem('korea-ai-ecosystem-theme', ST.theme);
-  document.querySelectorAll('#theme-row .theme-pill').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.themeMode === ST.theme);
-  });
-  const labelFill = ST.theme === 'light' ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.9)';
-  const labelStroke = ST.theme === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(7,9,15,0.95)';
-  nodeGSel.selectAll('.node-label')
-    .attr('fill', labelFill)
-    .attr('stroke', labelStroke);
-  nodeGSel.selectAll('.node-fallback')
-    .attr('fill', '#0f172a');
+/* ─── Theme ─── */
+function applyTheme(theme){
+  ST.theme=theme==='light'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',ST.theme);
+  localStorage.setItem('korea-ai-ecosystem-theme',ST.theme);
+  document.querySelectorAll('#theme-row .theme-pill').forEach(btn=>{btn.classList.toggle('active',btn.dataset.themeMode===ST.theme);});
   drawBgGrid();
 }
 
-function queryMatch(d, q) {
-  if (!q) return true;
-  return d.id.toLowerCase().includes(q) ||
-         (d.focus || '').toLowerCase().includes(q) ||
-         (d.summary || '').toLowerCase().includes(q) ||
-         (d.subName || '').toLowerCase().includes(q) ||
-         (d.tags || []).some(t => (t || '').toLowerCase().includes(q));
+/* ─── UX: Query match with result counting ─── */
+function queryMatch(d,q){
+  if(!q)return true;
+  return d.id.toLowerCase().includes(q)||(d.focus||'').toLowerCase().includes(q)||(d.summary||'').toLowerCase().includes(q)||(d.subName||'').toLowerCase().includes(q)||(d.tags||[]).some(t=>(t||'').toLowerCase().includes(q));
 }
 
-function getSelectionContext(name) {
-  const empty = { connected: new Set(), similar: new Set(), highlighted: new Set(), connectedMeta: new Map() };
-  if (!name) return empty;
-
-  const base = nodes.find(n => n.id === name);
-  if (!base) return empty;
-
-  const connectedEntries = adjacency.get(name) || [];
-  const connected = new Set(connectedEntries.map(item => item.id));
-  const connectedMeta = new Map(connectedEntries.map(item => [item.id, item]));
-  const baseTags = new Set(base.tags || []);
-  const similar = new Set(
-    nodes.filter(n =>
-      n.id !== name &&
-      !connected.has(n.id) &&
-      (n.sub === base.sub || n.tags.some(t => baseTags.has(t)))
-    ).map(n => n.id)
-  );
-
-  return {
-    connected,
-    similar,
-    highlighted: new Set([...connected, ...similar]),
-    connectedMeta
-  };
+function getSelectionContext(name){
+  const empty={connected:new Set(),similar:new Set(),highlighted:new Set(),connectedMeta:new Map()};
+  if(!name)return empty;const base=nodes.find(n=>n.id===name);if(!base)return empty;
+  const ce=(adjacency.get(name)||[]);const connected=new Set(ce.map(i=>i.id));const connectedMeta=new Map(ce.map(i=>[i.id,i]));
+  const baseTags=new Set(base.tags||[]);
+  const similar=new Set(nodes.filter(n=>n.id!==name&&!connected.has(n.id)&&(n.sub===base.sub||n.tags.some(t=>baseTags.has(t)))).map(n=>n.id));
+  return{connected,similar,highlighted:new Set([...connected,...similar]),connectedMeta};
 }
 
-function relationColorFor(meta, fallback) {
-  if (!meta || !meta.types || !meta.types.length) return fallback;
-  const priority = ['group', 'invest', 'tech', 'supply'];
-  const type = priority.find(t => meta.types.includes(t)) || meta.types[0];
-  return REL_COL[type] || fallback;
+function relationColorFor(meta,fallback){if(!meta||!meta.types||!meta.types.length)return fallback;const p=['group','invest','tech','supply'];const t=p.find(t=>meta.types.includes(t))||meta.types[0];return REL_COL[t]||fallback;}
+function nodePriority(d,ctx){if(ST.selected===d.id)return 4;if(ctx.connected.has(d.id))return 3;if(ctx.similar.has(d.id))return 2;return 1;}
+function updateNodeOrder(ctx){nodeGSel.sort((a,b)=>d3.ascending(nodePriority(a,ctx),nodePriority(b,ctx)));if(subpillRoot)subpillRoot.raise();}
+
+function labelOpacityFor(d,ctx,isActive,isQueryMatch){
+  const isSelected=ST.selected===d.id;const isConnected=ctx.connected.has(d.id);const isSimilar=ctx.similar.has(d.id);
+  if(!isActive&&!isSelected&&!isConnected&&!isSimilar)return 0;if(isSelected)return 1;if(isConnected)return 0.98;if(isSimilar)return 0.86;
+  if(ST.selected)return 0;if(d.size==='large')return 0.95;if(d.size==='mid')return 0.78;if(ST.zoomK>1.25||ST.query||isQueryMatch)return 0.66;return 0;
 }
 
-function nodePriority(d, ctx) {
-  if (ST.selected === d.id) return 4;
-  if (ctx.connected.has(d.id)) return 3;
-  if (ctx.similar.has(d.id)) return 2;
-  return 1;
+function updateLabelVisibility(){
+  const q=ST.query.trim().toLowerCase();const ctx=getSelectionContext(ST.selected);
+  nodeGSel.each(function(d){const lm=!ST.layerFilter||d.layer===ST.layerFilter;const isQ=queryMatch(d,q);const active=lm&&isQ;d3.select(this).select('.node-label').attr('opacity',labelOpacityFor(d,ctx,active,isQ));});
 }
 
-function updateNodeOrder(ctx) {
-  nodeGSel.sort((a, b) => d3.ascending(nodePriority(a, ctx), nodePriority(b, ctx)));
-  if (subpillRoot) subpillRoot.raise();
-}
+/* ─── UX: Search result count & empty state ─── */
+function updateSearchFeedback(){
+  const q=ST.query.trim().toLowerCase();
+  const countEl=document.getElementById('search-count');
+  const clearBtn=document.getElementById('search-clear');
+  const emptyEl=document.getElementById('search-empty');
 
-function labelOpacityFor(d, ctx, isActive, isQueryMatch) {
-  const isSelected = ST.selected === d.id;
-  const isConnected = ctx.connected.has(d.id);
-  const isSimilar = ctx.similar.has(d.id);
-
-  if (!isActive && !isSelected && !isConnected && !isSimilar) return 0;
-  if (isSelected) return 1;
-  if (isConnected) return 0.98;
-  if (isSimilar) return 0.86;
-  if (ST.selected) return 0;
-  if (d.size === 'large') return 0.95;
-  if (d.size === 'mid') return 0.78;
-  if (ST.zoomK > 1.25 || ST.query || isQueryMatch) return 0.66;
-  return 0;
-}
-
-function updateLabelVisibility() {
-  const q = ST.query.trim().toLowerCase();
-  const ctx = getSelectionContext(ST.selected);
-  nodeGSel.each(function(d) {
-    const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
-    const isQ = queryMatch(d, q);
-    const isActive = layerMatch && isQ;
-    d3.select(this).select('.node-label').attr('opacity', labelOpacityFor(d, ctx, isActive, isQ));
+  if(!q){
+    countEl.textContent='';
+    clearBtn.classList.remove('visible');
+    emptyEl.classList.remove('visible');
+    return;
+  }
+  clearBtn.classList.add('visible');
+  const matched=nodes.filter(d=>{
+    const lm=!ST.layerFilter||d.layer===ST.layerFilter;
+    return lm&&queryMatch(d,q);
   });
+  countEl.textContent=`${matched.length}건`;
+  emptyEl.classList.toggle('visible',matched.length===0);
 }
 
-function applyVisual() {
-  const q = ST.query.trim().toLowerCase();
-  const ctx = getSelectionContext(ST.selected);
-  const selectedNode = ST.selected ? nodes.find(n => n.id === ST.selected) : null;
-
-  nodeGSel.each(function(d) {
-    const el = d3.select(this);
-    const isSelected = ST.selected === d.id;
-    const isConnected = ctx.connected.has(d.id);
-    const isSimilar = ctx.similar.has(d.id);
-    const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
-    const isQ = queryMatch(d, q);
-    const active = layerMatch && isQ;
-
-    let opacity = 1;
-    if (ST.selected) opacity = isSelected ? 1 : isConnected ? 1 : isSimilar ? 0.9 : 0.08;
-    else if (!active) opacity = 0.1;
-
-    d.renderScale = isSelected ? 1.1 : isConnected ? 1.06 : isSimilar ? 1.03 : 1;
-
-    el.attr('opacity', opacity);
-
-    const relationCol = relationColorFor(ctx.connectedMeta.get(d.id), d.accent);
-
-    el.select('.node-ring')
-      .attr('stroke', isConnected ? relationCol : d.accent)
-      .attr('stroke-width', isSelected ? 3.2 : isConnected ? 2.7 : isSimilar ? 2.1 : 2)
-      .attr('stroke-opacity', isSelected ? 0.98 : isConnected ? 0.92 : isSimilar ? 0.5 : 0)
-      .attr('stroke-dasharray', isSimilar && !isConnected ? '5 4' : null)
-      .attr('filter', (isSelected || isConnected || isSimilar) && !motionLite ? `url(#glow-${d.layer})` : null);
-
-    el.select('.node-halo')
-      .attr('stroke', isConnected ? relationCol : d.accent)
-      .attr('stroke-width', isSelected ? 2.1 : isConnected ? 1.8 : isSimilar ? 1.45 : 1.5)
-      .attr('stroke-opacity', isSelected ? 0.42 : isConnected ? 0.34 : isSimilar ? 0.2 : 0)
-      .attr('stroke-dasharray', isConnected ? null : '4 4');
-
-    el.select('.node-circle')
-      .attr('fill-opacity', isSelected ? 0.34 : isConnected ? 0.27 : isSimilar ? 0.21 : d.size === 'large' ? 0.18 : 0.15)
-      .attr('stroke-width', isSelected ? 3.2 : isConnected ? 2.6 : isSimilar ? 2.1 : 1.8)
-      .attr('stroke', isConnected ? relationCol : d.accent);
-
-    el.select('.node-core')
-      .attr('stroke', isSelected || isConnected ? 'rgba(255,255,255,.9)' : isSimilar ? 'rgba(255,255,255,.42)' : 'rgba(255,255,255,0)')
-      .attr('stroke-width', isSelected ? 2.2 : isConnected ? 1.6 : isSimilar ? 1 : 0);
-
-    el.select('.node-logo-bg')
-      .attr('fill-opacity', isSelected || isConnected ? 1 : isSimilar ? 0.97 : 0.95);
-
-    el.select('.node-label').attr('opacity', labelOpacityFor(d, ctx, active, isQ));
+function applyVisual(){
+  const q=ST.query.trim().toLowerCase();const ctx=getSelectionContext(ST.selected);const selectedNode=ST.selected?nodes.find(n=>n.id===ST.selected):null;
+  nodeGSel.each(function(d){
+    const el=d3.select(this);const isSelected=ST.selected===d.id;const isConnected=ctx.connected.has(d.id);const isSimilar=ctx.similar.has(d.id);
+    const layerMatch=!ST.layerFilter||d.layer===ST.layerFilter;const isQ=queryMatch(d,q);const active=layerMatch&&isQ;
+    let opacity=1;if(ST.selected)opacity=isSelected?1:isConnected?1:isSimilar?0.9:0.08;else if(!active)opacity=0.1;
+    d.renderScale=isSelected?1.1:isConnected?1.06:isSimilar?1.03:1;
+    el.attr('opacity',opacity);
+    const relationCol=relationColorFor(ctx.connectedMeta.get(d.id),d.accent);
+    el.select('.node-ring').attr('stroke',isConnected?relationCol:d.accent).attr('stroke-width',isSelected?3.2:isConnected?2.7:isSimilar?2.1:2).attr('stroke-opacity',isSelected?0.98:isConnected?0.92:isSimilar?0.5:0).attr('stroke-dasharray',isSimilar&&!isConnected?'5 4':null).attr('filter',(isSelected||isConnected||isSimilar)&&!motionLite?`url(#glow-${d.layer})`:null);
+    el.select('.node-halo').attr('stroke',isConnected?relationCol:d.accent).attr('stroke-width',isSelected?2.1:isConnected?1.8:isSimilar?1.45:1.5).attr('stroke-opacity',isSelected?0.42:isConnected?0.34:isSimilar?0.2:0).attr('stroke-dasharray',isConnected?null:'4 4');
+    el.select('.node-circle').attr('fill-opacity',isSelected?0.34:isConnected?0.27:isSimilar?0.21:d.size==='large'?0.18:0.15).attr('stroke-width',isSelected?3.2:isConnected?2.6:isSimilar?2.1:1.8).attr('stroke',isConnected?relationCol:d.accent);
+    el.select('.node-core').attr('stroke',isSelected||isConnected?'rgba(255,255,255,.9)':isSimilar?'rgba(255,255,255,.42)':'rgba(255,255,255,0)').attr('stroke-width',isSelected?2.2:isConnected?1.6:isSimilar?1:0);
+    el.select('.node-logo-bg').attr('fill-opacity',isSelected||isConnected?1:isSimilar?0.97:0.95);
+    el.select('.node-label').attr('opacity',labelOpacityFor(d,ctx,active,isQ));
   });
-
-  linkSel
-    .attr('stroke', d => {
-      if (!ST.selected) return REL_COL[d.type] || '#fff';
-      const connected = d.source.id === ST.selected || d.target.id === ST.selected;
-      return connected ? (REL_COL[d.type] || '#fff') : 'rgba(255,255,255,.14)';
-    })
-    .attr('stroke-opacity', d => {
-      if (!ST.selected) return 0.16;
-      const connected = d.source.id === ST.selected || d.target.id === ST.selected;
-      return connected ? 0.94 : 0.028;
-    })
-    .attr('stroke-width', d => {
-      if (!ST.selected) return 1;
-      return (d.source.id === ST.selected || d.target.id === ST.selected) ? 2.5 : 1;
-    })
-    .attr('stroke-dasharray', d => {
-      if (!ST.selected) return d.type === 'invest' ? '4,3' : null;
-      const connected = d.source.id === ST.selected || d.target.id === ST.selected;
-      if (!connected) return d.type === 'invest' ? '3,4' : null;
-      return d.type === 'invest' ? '6,4' : null;
-    });
-
-  LAYER_DEFS.forEach(l => {
-    const active = !ST.layerFilter || ST.layerFilter === l.id;
-    const cfg = getLayoutCfg(l.id);
-    const selectedInLayer = selectedNode && selectedNode.layer === l.id;
-    d3.select(`.zone-${l.id}`)
-      .attr('fill-opacity', active ? (selectedInLayer ? 0.078 : 0.058) : 0.02)
-      .attr('stroke-opacity', active ? (selectedInLayer ? 0.3 : 0.22) : 0.07);
-    d3.select(`.zone-label-${l.id}`).attr('opacity', active ? 0.92 : 0.22);
-    d3.select(`.zone-count-${l.id}`).attr('opacity', active ? 0.52 : 0.16);
-    d3.selectAll(`.subpill-${l.id}`).attr('opacity', active ? cfg.pillOpacity : Math.max(0.12, cfg.pillOpacity * 0.22));
-  });
-
-  updateNodeOrder(ctx);
-  if (subpillRoot) subpillRoot.raise();
-  scheduleRender();
+  linkSel.attr('stroke',d=>{if(!ST.selected)return REL_COL[d.type]||'#fff';const c=d.source.id===ST.selected||d.target.id===ST.selected;return c?(REL_COL[d.type]||'#fff'):'rgba(255,255,255,.14)';}).attr('stroke-opacity',d=>{if(!ST.selected)return 0.16;const c=d.source.id===ST.selected||d.target.id===ST.selected;return c?0.94:0.028;}).attr('stroke-width',d=>{if(!ST.selected)return 1;return(d.source.id===ST.selected||d.target.id===ST.selected)?2.5:1;}).attr('stroke-dasharray',d=>{if(!ST.selected)return d.type==='invest'?'4,3':null;const c=d.source.id===ST.selected||d.target.id===ST.selected;if(!c)return d.type==='invest'?'3,4':null;return d.type==='invest'?'6,4':null;});
+  LAYER_DEFS.forEach(l=>{const active=!ST.layerFilter||ST.layerFilter===l.id;const cfg=getLayoutCfg(l.id);const sil=selectedNode&&selectedNode.layer===l.id;d3.select(`.zone-${l.id}`).attr('fill-opacity',active?(sil?0.078:0.058):0.02).attr('stroke-opacity',active?(sil?0.3:0.22):0.07);d3.select(`.zone-label-${l.id}`).attr('opacity',active?0.92:0.22);d3.select(`.zone-count-${l.id}`).attr('opacity',active?0.52:0.16);d3.selectAll(`.subpill-${l.id}`).attr('opacity',active?cfg.pillOpacity:Math.max(0.12,cfg.pillOpacity*0.22));});
+  updateNodeOrder(ctx);if(subpillRoot)subpillRoot.raise();scheduleRender();updateSearchFeedback();
 }
 
-function updateDetail() {
-  const panel = document.getElementById('detail-panel');
-  if (!ST.selected) { panel.classList.remove('visible'); return; }
-  const d = nodes.find(n => n.id === ST.selected); if (!d) return;
+/* ─── UX: Detail panel with clickable related items ─── */
+function updateDetail(){
+  const panel=document.getElementById('detail-panel');
+  if(!ST.selected){panel.classList.remove('visible');return;}
+  const d=nodes.find(n=>n.id===ST.selected);if(!d)return;
+  const ctx=getSelectionContext(d.id);
+  const connected=(adjacency.get(d.id)||[]).map(meta=>({...nodes.find(n=>n.id===meta.id),relMeta:meta})).filter(Boolean).sort((a,b)=>d3.ascending(a.id,b.id)).slice(0,6);
+  const baseSet=new Set(d.tags||[]);
+  const similar=nodes.filter(n=>n.id!==d.id&&!ctx.connected.has(n.id)&&(n.sub===d.sub||n.tags.some(t=>baseSet.has(t)))).map(n=>{const shared=n.tags.filter(t=>baseSet.has(t));return{...n,score:(n.sub===d.sub?12:0)+shared.length*5};}).sort((a,b)=>b.score-a.score).slice(0,6);
 
-  const ctx = getSelectionContext(d.id);
-  const connected = (adjacency.get(d.id) || [])
-    .map(meta => ({ ...nodes.find(n => n.id === meta.id), relMeta: meta }))
-    .filter(Boolean)
-    .sort((a, b) => d3.ascending(a.id, b.id))
-    .slice(0, 6);
+  document.getElementById('d-layer').textContent=d.layerName;document.getElementById('d-layer').style.color=d.accent;
+  document.getElementById('d-name').textContent=d.id;document.getElementById('d-subcat').textContent=d.subName||'';
+  document.getElementById('d-focus').textContent=d.focus||'';
+  document.getElementById('d-size').textContent=d.sizeName;document.getElementById('d-size').style.borderColor=d.sizeColor;document.getElementById('d-size').style.color=d.sizeColor;document.getElementById('d-size').style.background=d.sizeColor+'1A';
+  document.getElementById('d-summary').textContent=d.summary||'';
+  document.getElementById('d-tags').innerHTML=(d.tags||[]).map(t=>`<span class="detail-tag" data-tag="${t}">${t}</span>`).join('');
 
-  const baseSet = new Set(d.tags || []);
-  const similar = nodes
-    .filter(n => n.id !== d.id && !ctx.connected.has(n.id) && (n.sub === d.sub || n.tags.some(t => baseSet.has(t))))
-    .map(n => {
-      const shared = n.tags.filter(t => baseSet.has(t));
-      return { ...n, score: (n.sub === d.sub ? 12 : 0) + shared.length * 5 };
-    })
-    .sort((a,b) => b.score - a.score)
-    .slice(0, 6);
+  // UX: clickable tags → search
+  document.querySelectorAll('.detail-tag').forEach(tag=>{tag.addEventListener('click',()=>{document.getElementById('search-input').value=tag.dataset.tag;ST.query=tag.dataset.tag;ST.selected=null;applyVisual();updateDetail();});});
 
-  document.getElementById('d-layer').textContent = d.layerName;
-  document.getElementById('d-layer').style.color = d.accent;
-  document.getElementById('d-name').textContent = d.id;
-  document.getElementById('d-subcat').textContent = d.subName || '';
-  document.getElementById('d-focus').textContent = d.focus || '';
-  document.getElementById('d-size').textContent = d.sizeName;
-  document.getElementById('d-size').style.borderColor = d.sizeColor;
-  document.getElementById('d-size').style.color = d.sizeColor;
-  document.getElementById('d-size').style.background = d.sizeColor + '1A';
-  document.getElementById('d-summary').textContent = d.summary || '';
-  document.getElementById('d-tags').innerHTML = (d.tags || []).map(t => `<span class="detail-tag">${t}</span>`).join('');
+  const directHtml=connected.length?`<div class="related-group-label">직접 연결</div>${connected.map(r=>{const relColor=relationColorFor(r.relMeta,r.accent);const relText=(r.relMeta.types||[]).map(t=>REL_LABELS[t]||t).join(' · ');return`<div class="related-item related-direct" data-id="${r.id}"><div class="related-dot" style="background:${relColor}"></div><div class="related-name">${r.id}</div><div class="related-layer" style="color:${relColor}">${relText}</div></div>`;}).join('')}`:'';
+  const similarHtml=similar.length?`<div class="related-group-label">유사 기업</div>${similar.map(r=>`<div class="related-item" data-id="${r.id}"><div class="related-dot" style="background:${r.accent}"></div><div class="related-name">${r.id}</div><div class="related-layer" style="color:${r.accent}">${r.subName}</div></div>`).join('')}`:'';
+  document.getElementById('d-related').innerHTML=(directHtml+similarHtml)||'<div style="font-size:11px;color:var(--text-faint)">관련 플레이어 없음</div>';
 
-  const directHtml = connected.length ? `
-    <div class="related-group-label">직접 연결</div>
-    ${connected.map(r => {
-      const relColor = relationColorFor(r.relMeta, r.accent);
-      const relText = (r.relMeta.types || []).map(t => REL_LABELS[t] || t).join(' · ');
-      return `
-      <div class="related-item related-direct">
-        <div class="related-dot" style="background:${relColor}"></div>
-        <div class="related-name">${r.id}</div>
-        <div class="related-layer" style="color:${relColor}">${relText}</div>
-      </div>`;
-    }).join('')}` : '';
-
-  const similarHtml = similar.length ? `
-    <div class="related-group-label">유사 기업</div>
-    ${similar.map(r => `
-      <div class="related-item">
-        <div class="related-dot" style="background:${r.accent}"></div>
-        <div class="related-name">${r.id}</div>
-        <div class="related-layer" style="color:${r.accent}">${r.subName}</div>
-      </div>`).join('')}` : '';
-
-  document.getElementById('d-related').innerHTML = (directHtml + similarHtml) || '<div style="font-size:11px;color:rgba(255,255,255,.24)">관련 플레이어 없음</div>';
+  // UX: Click related items to navigate
+  document.querySelectorAll('.related-item[data-id]').forEach(el=>{el.addEventListener('click',()=>{ST.selected=el.dataset.id;applyVisual();updateDetail();});});
 
   panel.classList.add('visible');
 }
 
-const tooltip = document.getElementById('node-tooltip');
-const ttName  = document.getElementById('tt-name');
-const ttSub   = document.getElementById('tt-sub');
+/* ─── UX: Enhanced tooltip with tags ─── */
+const tooltip=document.getElementById('node-tooltip');
+const ttName=document.getElementById('tt-name');
+const ttSub=document.getElementById('tt-sub');
+const ttTags=document.getElementById('tt-tags');
 
-nodeGSel.on('click', (ev, d) => {
-  ev.stopPropagation();
-  ST.selected = ST.selected === d.id ? null : d.id;
-  applyVisual();
-  updateDetail();
-});
+nodeGSel.on('click',(ev,d)=>{ev.stopPropagation();ST.selected=ST.selected===d.id?null:d.id;applyVisual();updateDetail();hideOnboardHint();});
+nodeGSel.on('mouseover',(ev,d)=>{
+  ttName.textContent=d.id;
+  ttSub.textContent=`${d.layerName} · ${d.subName} · ${d.sizeName}\n${d.focus}`;
+  ttTags.innerHTML=(d.tags||[]).slice(0,4).map(t=>`<span>${t}</span>`).join('');
+  tooltip.classList.add('visible');
+}).on('mousemove',ev=>{
+  const pad=16;let x=ev.clientX+pad,y=ev.clientY-8;
+  if(x+240>window.innerWidth)x=ev.clientX-240-pad;
+  if(y+100>window.innerHeight)y=window.innerHeight-110;
+  tooltip.style.left=x+'px';tooltip.style.top=y+'px';
+}).on('mouseleave',()=>tooltip.classList.remove('visible'));
 
-nodeGSel
-  .on('mouseover', (ev, d) => {
-    ttName.textContent = d.id;
-    ttSub.textContent  = `${d.layerName} · ${d.subName} · ${d.sizeName}\n${d.focus}`;
-    tooltip.classList.add('visible');
-  })
-  .on('mousemove', ev => {
-    tooltip.style.left = (ev.clientX + 16) + 'px';
-    tooltip.style.top  = (ev.clientY - 8) + 'px';
-  })
-  .on('mouseleave', () => tooltip.classList.remove('visible'));
+svg.on('click',()=>{ST.selected=null;applyVisual();updateDetail();});
 
-svg.on('click', () => {
-  ST.selected = null;
-  applyVisual();
-  updateDetail();
-});
+/* ─── UX: Filter pills with counts ─── */
+const filterRow=document.getElementById('filter-row');
+filterRow.innerHTML=`<span class="row-label">축</span><button class="f-pill active" data-layer="" role="tab" aria-selected="true">전체 <span class="pill-count">${nodes.length}</span></button>`+LAYER_DEFS.map(l=>`<button class="f-pill" data-layer="${l.id}" role="tab" aria-selected="false">${l.name} <span class="pill-count">${layerCounts.get(l.id)||0}</span></button>`).join('');
+filterRow.querySelectorAll('.f-pill').forEach(btn=>{btn.addEventListener('click',()=>{filterRow.querySelectorAll('.f-pill').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});btn.classList.add('active');btn.setAttribute('aria-selected','true');ST.layerFilter=btn.dataset.layer||null;maybeUpdateLayout();applyVisual();});});
 
-const filterRow = document.getElementById('filter-row');
-filterRow.innerHTML = `<span class="row-label">축</span><button class="f-pill active" data-layer="">전체</button>` +
-  LAYER_DEFS.map(l => `<button class="f-pill" data-layer="${l.id}">${l.name}</button>`).join('');
-filterRow.querySelectorAll('.f-pill').forEach(btn => {
-  btn.addEventListener('click', () => {
-    filterRow.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    ST.layerFilter = btn.dataset.layer || null;
-    maybeUpdateLayout();
-    applyVisual();
-  });
-});
+document.querySelectorAll('#theme-row .theme-pill').forEach(btn=>{btn.addEventListener('click',()=>{applyTheme(btn.dataset.themeMode);applyVisual();updateDetail();});});
 
-document.querySelectorAll('#theme-row .theme-pill').forEach(btn => {
-  btn.addEventListener('click', () => {
-    applyTheme(btn.dataset.themeMode);
-    applyVisual();
-    updateDetail();
-  });
-});
+/* ─── UX: Search with clear button & keyboard shortcut ─── */
+const searchInput=document.getElementById('search-input');
+searchInput.addEventListener('input',e=>{ST.query=e.target.value;applyVisual();});
+document.getElementById('search-clear').addEventListener('click',()=>{searchInput.value='';ST.query='';applyVisual();searchInput.focus();});
 
-document.getElementById('search-input').addEventListener('input', e => {
-  ST.query = e.target.value;
-  applyVisual();
-});
+document.getElementById('close-detail').addEventListener('click',ev=>{ev.stopPropagation();ST.selected=null;applyVisual();updateDetail();});
 
-document.getElementById('close-detail').addEventListener('click', ev => {
-  ev.stopPropagation();
-  ST.selected = null;
-  applyVisual();
-  updateDetail();
-});
-
-function fitZoom(duration = 700) {
-  const bounds = zoomG.node().getBBox();
-  const pad = 56;
-  const scale = Math.min((W - pad * 2) / bounds.width, (H - pad * 2) / bounds.height, 1.12);
-  const tx = W / 2 - scale * (bounds.x + bounds.width / 2);
-  const ty = H / 2 - scale * (bounds.y + bounds.height / 2);
-  svg.transition().duration(duration).call(
-    zoom.transform,
-    d3.zoomIdentity.translate(tx, ty).scale(scale)
-  );
+function fitZoom(duration=700){
+  const bounds=zoomG.node().getBBox();const pad=56;
+  const scale=Math.min((W-pad*2)/bounds.width,(H-pad*2)/bounds.height,1.12);
+  const tx=W/2-scale*(bounds.x+bounds.width/2);const ty=H/2-scale*(bounds.y+bounds.height/2);
+  svg.transition().duration(duration).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(scale));
 }
 
-document.getElementById('btn-zi').addEventListener('click', () => svg.transition().duration(250).call(zoom.scaleBy, 1.28));
-document.getElementById('btn-zo').addEventListener('click', () => svg.transition().duration(250).call(zoom.scaleBy, 0.78));
-document.getElementById('btn-fit').addEventListener('click', () => fitZoom(500));
+document.getElementById('btn-zi').addEventListener('click',()=>svg.transition().duration(250).call(zoom.scaleBy,1.28));
+document.getElementById('btn-zo').addEventListener('click',()=>svg.transition().duration(250).call(zoom.scaleBy,0.78));
+document.getElementById('btn-fit').addEventListener('click',()=>fitZoom(500));
 
-document.getElementById('legend').innerHTML = `
+/* ─── UX: Keyboard shortcuts ─── */
+document.addEventListener('keydown',e=>{
+  // Cmd/Ctrl+K → focus search
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();searchInput.focus();return;}
+  // Escape → deselect or blur search
+  if(e.key==='Escape'){
+    if(document.activeElement===searchInput){searchInput.blur();return;}
+    if(ST.selected){ST.selected=null;applyVisual();updateDetail();return;}
+  }
+  // 0 → fit zoom
+  if(e.key==='0'&&document.activeElement!==searchInput){fitZoom(500);}
+});
+
+/* ─── UX: Onboarding hint auto-dismiss ─── */
+let hintHidden=false;
+function hideOnboardHint(){if(hintHidden)return;hintHidden=true;document.getElementById('onboard-hint').classList.add('hidden');}
+setTimeout(()=>hideOnboardHint(),12000);
+
+/* ─── UX: Collapsible legend ─── */
+document.getElementById('legend-toggle').addEventListener('click',()=>{document.getElementById('legend').classList.toggle('collapsed');const btn=document.getElementById('legend-toggle');btn.textContent=document.getElementById('legend').classList.contains('collapsed')?'범례 ▸':'범례 ▾';});
+
+/* ─── Legend content ─── */
+document.getElementById('legend-content').innerHTML=`
   <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.large.color}"></div>대기업</div>
   <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.mid.color}"></div>중견·스케일업</div>
   <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.startup.color}"></div>스타트업</div>
   <div class="legend-div"></div>
-  ${Object.entries(REL_COL).map(([t,c]) => `<div class="legend-item"><div style="width:20px;height:2px;background:${c};border-radius:1px;${t==='invest'?'border-top:2px dashed '+c+';background:none':''}"></div>${({group:'그룹 계열사',tech:'기술협력',supply:'공급망',invest:'투자/파트너십'})[t]}</div>`).join('')}
-`;
+  ${Object.entries(REL_COL).map(([t,c])=>`<div class="legend-item"><div style="width:20px;height:2px;background:${c};border-radius:1px;${t==='invest'?'border-top:2px dashed '+c+';background:none':''}"></div>${({group:'그룹 계열사',tech:'기술협력',supply:'공급망',invest:'투자/파트너십'})[t]}</div>`).join('')}`;
 
-document.getElementById('stats-bar').innerHTML = [
-  { val: nodes.length, lbl:'총 기업' },
-  ...LAYER_DEFS.map(l => ({ val: layerCounts.get(l.id) || 0, lbl: l.name, col: l.accent }))
-].map(s => `<div class="stat-item"><div class="stat-val" ${s.col ? `style="color:${s.col}"` : ''}>${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+/* ─── Stats bar ─── */
+document.getElementById('stats-bar').innerHTML=[
+  {val:nodes.length,lbl:'총 기업'},
+  ...LAYER_DEFS.map(l=>({val:layerCounts.get(l.id)||0,lbl:l.name,col:l.accent}))
+].map(s=>`<div class="stat-item"><div class="stat-val" ${s.col?`style="color:${s.col}"`:''}">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
 
+/* ─── UX: Debounced resize ─── */
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{W=window.innerWidth;H=window.innerHeight;svg.attr('width',W).attr('height',H);drawBgGrid();},150);});
+
+/* ─── Init ─── */
 applyTheme(ST.theme);
 applyVisual();
 updateLabelVisibility();
 renderScene();
 maybeUpdateLayout(true);
-
-setTimeout(() => fitZoom(850), 1200);
-window.addEventListener('resize', drawBgGrid);
+setTimeout(()=>fitZoom(850),1200);
 </script>
 </body>
 </html>
