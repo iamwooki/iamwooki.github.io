@@ -1,0 +1,2022 @@
+
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>대한민국 AI 생태계 조감도 · 듀얼 모드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;
+  --bg-correlation:#0b1020;
+  --panel:rgba(12,16,28,.92);
+  --panel-light:rgba(255,255,255,.94);
+  --panel-border:rgba(255,255,255,.12);
+  --panel-border-light:rgba(15,23,42,.14);
+  --surface-1:rgba(255,255,255,.06);
+  --surface-2:rgba(255,255,255,.04);
+  --surface-3:rgba(255,255,255,.08);
+  --text-main:#e2e8f0;
+  --text-soft:rgba(255,255,255,.72);
+  --text-muted:rgba(255,255,255,.54);
+  --text-faint:rgba(255,255,255,.34);
+  --shadow-stroke:rgba(7,9,15,.94);
+  --grid-color:rgba(255,255,255,.03);
+  --accent-blue:#3b82f6;
+  --corr-edge:#94a3b8;
+  --corr-edge-muted:rgba(148,163,184,.26);
+}
+html[data-theme="light"]{
+  --bg:#f8fafc;
+  --bg-correlation:#edf1f5;
+  --panel:rgba(255,255,255,.94);
+  --panel-light:rgba(255,255,255,.97);
+  --panel-border:rgba(15,23,42,.12);
+  --panel-border-light:rgba(15,23,42,.12);
+  --surface-1:rgba(15,23,42,.05);
+  --surface-2:rgba(15,23,42,.04);
+  --surface-3:rgba(15,23,42,.08);
+  --text-main:#0f172a;
+  --text-soft:rgba(15,23,42,.72);
+  --text-muted:rgba(15,23,42,.58);
+  --text-faint:rgba(15,23,42,.40);
+  --shadow-stroke:rgba(255,255,255,.98);
+  --grid-color:rgba(15,23,42,.055);
+  --corr-edge:#64748b;
+  --corr-edge-muted:rgba(100,116,139,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:var(--bg);
+  color:var(--text-main);
+  transition:background .25s ease,color .25s ease;
+}
+body[data-mode="correlation"]{
+  background:var(--bg-correlation);
+}
+html[data-theme="light"] body[data-mode="correlation"]{
+  --text-main:#0f172a;
+  --text-soft:rgba(15,23,42,.72);
+  --text-muted:rgba(15,23,42,.58);
+  --text-faint:rgba(15,23,42,.42);
+  --panel:rgba(255,255,255,.95);
+  --panel-light:rgba(255,255,255,.97);
+  --panel-border:rgba(15,23,42,.12);
+  --panel-border-light:rgba(15,23,42,.12);
+  --surface-1:rgba(15,23,42,.05);
+  --surface-2:rgba(15,23,42,.04);
+  --surface-3:rgba(15,23,42,.08);
+  --shadow-stroke:rgba(255,255,255,.98);
+  --corr-edge:#64748b;
+  --corr-edge-muted:rgba(100,116,139,.28);
+}
+html[data-theme="dark"] body[data-mode="correlation"]{
+  --text-main:#e2e8f0;
+  --text-soft:rgba(226,232,240,.78);
+  --text-muted:rgba(226,232,240,.58);
+  --text-faint:rgba(226,232,240,.36);
+  --panel:rgba(11,16,30,.92);
+  --panel-light:rgba(11,16,30,.95);
+  --panel-border:rgba(255,255,255,.10);
+  --panel-border-light:rgba(255,255,255,.10);
+  --surface-1:rgba(255,255,255,.06);
+  --surface-2:rgba(255,255,255,.04);
+  --surface-3:rgba(255,255,255,.08);
+  --shadow-stroke:rgba(5,8,15,.96);
+  --corr-edge:#8ea4c5;
+  --corr-edge-muted:rgba(142,164,197,.24);
+}
+#bg-canvas{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+body[data-mode="correlation"] #bg-canvas{display:none}
+#graph-svg{
+  position:fixed; inset:0; z-index:1;
+}
+.top-bar{
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; gap:14px; align-items:flex-start;
+  padding:14px 22px 18px;
+  background:linear-gradient(180deg,rgba(7,9,15,.96) 72%, transparent);
+  pointer-events:none;
+}
+html[data-theme="light"] .top-bar{
+  background:linear-gradient(180deg,rgba(248,250,252,.98) 72%, rgba(248,250,252,0));
+}
+html[data-theme="light"] body[data-mode="correlation"] .top-bar{
+  background:linear-gradient(180deg,rgba(239,243,247,.97) 70%, rgba(239,243,247,0));
+}
+html[data-theme="dark"] body[data-mode="correlation"] .top-bar{
+  background:linear-gradient(180deg,rgba(8,12,24,.97) 72%, rgba(8,12,24,0));
+}
+.top-bar>*{pointer-events:auto}
+.logo{
+  min-width:170px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.logo-title{font-size:16px;font-weight:900;letter-spacing:-.4px}
+.logo-sub{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+.logo-note{
+  font-size:11px;
+  color:var(--text-muted);
+  line-height:1.45;
+  max-width:220px;
+}
+.bar-main{
+  display:flex; flex-direction:column; gap:8px; flex:1; min-width:0;
+}
+.top-row{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.mode-switch{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px;
+  border-radius:999px;
+  background:var(--surface-1);
+  border:1px solid var(--panel-border);
+  backdrop-filter:blur(10px);
+}
+.mode-pill{
+  border:0;
+  border-radius:999px;
+  padding:7px 12px;
+  background:transparent;
+  color:var(--text-muted);
+  cursor:pointer;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.3px;
+  transition:.18s ease;
+  white-space:nowrap;
+}
+.mode-pill:hover{color:var(--text-main)}
+.mode-pill.active{
+  background:rgba(255,255,255,.14);
+  color:var(--text-main);
+}
+html[data-theme="light"] .mode-pill.active{
+  background:rgba(15,23,42,.08);
+}
+body[data-mode="correlation"] .mode-pill[data-mode="correlation"].active{
+  background:rgba(59,130,246,.16);
+  color:#1d4ed8;
+}
+html[data-theme="dark"] body[data-mode="correlation"] .mode-pill[data-mode="correlation"].active{
+  background:rgba(96,165,250,.20);
+  color:#bfdbfe;
+}
+.search-box{
+  display:flex; align-items:center; gap:8px;
+  min-width:280px; max-width:100%;
+  width:320px;
+  padding:8px 12px;
+  border-radius:10px;
+  background:var(--surface-1);
+  border:1px solid var(--panel-border);
+  transition:border-color .2s, box-shadow .2s;
+}
+body[data-mode="correlation"] .search-box,
+body[data-mode="correlation"] .range-wrap,
+body[data-mode="correlation"] .ctrl-btn,
+body[data-mode="correlation"] .legend,
+body[data-mode="correlation"] .detail-panel,
+body[data-mode="correlation"] .stats-bar,
+body[data-mode="correlation"] .node-tooltip,
+body[data-mode="correlation"] .onboard-hint{
+  background:var(--panel-light);
+  border-color:var(--panel-border-light);
+}
+.search-box:focus-within{
+  border-color:var(--accent-blue);
+  box-shadow:0 0 0 3px rgba(59,130,246,.14);
+}
+.search-box input{
+  flex:1; min-width:0;
+  background:transparent; border:0; outline:0;
+  color:var(--text-main);
+  font-size:12px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.search-box input::placeholder{color:var(--text-faint)}
+.search-icon{color:var(--text-faint);flex-shrink:0}
+.search-kbd{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text-faint);
+  padding:2px 5px;
+  border-radius:4px;
+  background:var(--surface-2);
+  border:1px solid var(--panel-border);
+  white-space:nowrap;
+}
+.search-count{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text-faint);
+  min-width:34px;
+  text-align:right;
+}
+.search-clear{
+  display:none;
+  width:18px;height:18px;
+  border:0;border-radius:50%;
+  align-items:center;justify-content:center;
+  cursor:pointer;
+  background:var(--surface-3);
+  color:var(--text-muted);
+  font-size:10px;
+}
+.search-clear.visible{display:flex}
+.search-clear:hover{background:rgba(239,68,68,.14);color:#ef4444}
+.filter-wrap{display:flex;flex-direction:column;gap:6px}
+.filter-row{
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+}
+.row-label{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-right:4px;
+}
+.f-pill{
+  border:1px solid var(--panel-border);
+  background:var(--surface-2);
+  color:var(--text-muted);
+  border-radius:999px;
+  padding:5px 10px;
+  font-size:10px;
+  font-family:'DM Mono',monospace;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:.18s ease;
+}
+.f-pill:hover{color:var(--text-main);border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
+html[data-theme="light"] .f-pill:hover{border-color:rgba(15,23,42,.22)}
+.f-pill.active{background:rgba(255,255,255,.14);color:var(--text-main)}
+html[data-theme="light"] .f-pill.active{background:rgba(15,23,42,.08)}
+.f-pill .pill-count{
+  display:inline-block;
+  font-size:8px;
+  padding:1px 5px;
+  margin-left:4px;
+  border-radius:999px;
+  background:rgba(255,255,255,.1);
+}
+html[data-theme="light"] .f-pill .pill-count{background:rgba(15,23,42,.08)}
+.range-wrap{
+  display:flex; align-items:center; gap:8px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:var(--surface-1);
+  border:1px solid var(--panel-border);
+}
+.range-wrap input[type="range"]{width:130px;accent-color:var(--accent-blue)}
+.range-val{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text-muted);
+  min-width:42px;
+  text-align:right;
+}
+.corr-controls{display:none}
+body[data-mode="correlation"] .corr-controls{display:flex}
+.ctrl-panel{
+  position:fixed; right:16px; top:50%; transform:translateY(-50%);
+  z-index:30;
+  display:flex; flex-direction:column; gap:6px;
+}
+.ctrl-btn{
+  width:36px;height:36px;
+  border-radius:10px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  color:var(--text-muted);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+  transition:.18s ease;
+}
+.ctrl-btn:hover{color:var(--text-main);transform:scale(1.06)}
+.ctrl-btn[data-tooltip]{position:relative}
+.ctrl-btn[data-tooltip]:hover::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  right:calc(100% + 8px);
+  top:50%;
+  transform:translateY(-50%);
+  white-space:nowrap;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:6px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  color:var(--text-soft);
+}
+body[data-mode="correlation"] .ctrl-btn[data-tooltip]:hover::after{
+  background:var(--panel-light);
+  border-color:var(--panel-border-light);
+}
+.legend{
+  position:fixed; left:24px; bottom:24px; z-index:30;
+  max-width:285px;
+  padding:14px 16px;
+  border-radius:14px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  backdrop-filter:blur(14px);
+}
+.legend-title{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:8px;
+}
+.legend-content{display:flex;flex-direction:column;gap:6px}
+.legend-item{
+  display:flex; align-items:center; gap:8px;
+  font-size:11px; color:var(--text-soft);
+}
+.legend-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.legend-line{width:22px;height:2px;border-radius:1px;flex-shrink:0}
+.stats-bar{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  z-index:30;
+  display:flex;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  backdrop-filter:blur(14px);
+}
+.stat-item{
+  padding:10px 14px;
+  border-right:1px solid rgba(255,255,255,.06);
+  display:flex; flex-direction:column; gap:2px;
+}
+.stat-item:last-child{border-right:0}
+html[data-theme="light"] .stat-item{border-right-color:rgba(15,23,42,.06)}
+.stat-val{font-size:16px;font-weight:800;line-height:1}
+.stat-lbl{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+.detail-panel{
+  position:fixed; right:24px; bottom:24px; z-index:30;
+  width:360px; max-height:calc(100vh - 110px);
+  overflow-y:auto; overscroll-behavior:contain;
+  padding:20px;
+  border-radius:18px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  backdrop-filter:blur(18px);
+  opacity:0; transform:translateY(12px) scale(.98); pointer-events:none;
+  transition:opacity .24s ease, transform .24s ease;
+}
+.detail-panel.visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.detail-panel::-webkit-scrollbar{width:4px}
+.detail-panel::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:2px}
+.close-btn{
+  position:absolute; top:14px; right:14px;
+  width:28px;height:28px;
+  border-radius:8px;
+  border:1px solid var(--panel-border);
+  background:var(--surface-1);
+  color:var(--text-faint);
+  cursor:pointer;
+}
+.close-btn:hover{background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.28)}
+.detail-layer{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+  opacity:.8;
+}
+.detail-name{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.15;margin-bottom:4px}
+.detail-subcat{font-size:12px;color:var(--text-muted);margin-bottom:10px}
+.detail-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.detail-pill{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  padding:4px 9px;
+  border-radius:8px;
+  border:1px solid var(--panel-border);
+  background:var(--surface-1);
+  color:var(--text-soft);
+}
+.detail-summary{font-size:12px;line-height:1.72;color:var(--text-soft);margin-bottom:12px}
+.detail-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.detail-tag{
+  font-size:10px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--panel-border);
+  background:var(--surface-1);
+  color:var(--text-muted);
+  cursor:pointer;
+}
+.detail-tag:hover{color:var(--accent-blue);border-color:rgba(59,130,246,.28);background:rgba(59,130,246,.10)}
+.detail-related-title{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:8px;
+}
+.related-list{display:flex;flex-direction:column;gap:4px}
+.related-group-label{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-top:8px;
+  margin-bottom:4px;
+}
+.related-item{
+  display:flex; gap:8px; align-items:flex-start;
+  padding:7px 8px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.15s ease;
+}
+.related-item:hover{background:var(--surface-1)}
+.related-dot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.related-main{flex:1;min-width:0}
+.related-name{font-size:11px;font-weight:700;color:var(--text-soft)}
+.related-sub{font-size:10px;color:var(--text-muted);line-height:1.45;margin-top:2px}
+.related-score{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text-faint);
+  flex-shrink:0;
+}
+.node-tooltip{
+  position:fixed;
+  z-index:50;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .12s ease;
+  max-width:260px;
+  padding:10px 13px;
+  border-radius:10px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.node-tooltip.visible{opacity:1}
+body[data-mode="correlation"] .node-tooltip{
+  background:var(--panel-light);
+  border-color:var(--panel-border-light);
+}
+.node-tooltip-name{font-weight:700;color:var(--text-main);margin-bottom:3px}
+.node-tooltip-sub{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text-muted);
+  line-height:1.55;
+  white-space:pre-line;
+}
+.node-tooltip-tags{
+  display:flex; gap:4px; flex-wrap:wrap; margin-top:6px;
+}
+.node-tooltip-tags span{
+  font-size:8px; padding:2px 5px;
+  border-radius:999px;
+  background:var(--surface-1);
+  border:1px solid var(--panel-border);
+  color:var(--text-faint);
+}
+.onboard-hint{
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%);
+  z-index:35;
+  padding:8px 16px;
+  border-radius:10px;
+  border:1px solid var(--panel-border);
+  background:var(--panel);
+  color:var(--text-faint);
+  font-size:11px;
+  white-space:nowrap;
+  transition:opacity .5s ease;
+}
+.onboard-hint.hidden{opacity:0}
+.search-empty{
+  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+  z-index:25;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.search-empty.visible{opacity:1}
+.search-empty-icon{font-size:30px;opacity:.28;margin-bottom:6px}
+.search-empty-text{font-size:13px;color:var(--text-muted)}
+.search-empty-hint{font-size:11px;color:var(--text-faint);margin-top:4px}
+.zone-label,.zone-count,.subpill text,.community-label,.community-count,.node-label-out,.node-label-in{
+  pointer-events:none;
+  paint-order:stroke;
+  stroke:var(--shadow-stroke);
+  stroke-linejoin:round;
+}
+.zone-label{font-weight:800;letter-spacing:-.2px}
+.zone-count,.subpill text,.community-count{
+  font-family:'DM Mono',monospace;
+}
+.subpill text{
+  font-size:10px;
+  font-weight:700;
+  fill:var(--text-soft);
+  stroke-width:3px;
+}
+.subpill rect{
+  rx:10; ry:10;
+  fill-opacity:.14;
+  stroke-width:1.1px;
+}
+.community-label{
+  font-size:12px;
+  font-weight:800;
+  fill:var(--text-soft);
+  stroke-width:6px;
+}
+.community-count{
+  font-size:10px;
+  fill:var(--text-muted);
+  stroke-width:5px;
+}
+.node-link{
+  fill:none;
+  stroke-linecap:round;
+}
+.node-label-out{
+  fill:var(--text-main);
+  font-size:10px;
+  stroke-width:3px;
+}
+.node-label-in{
+  fill:#101828;
+  font-weight:800;
+  stroke:rgba(255,255,255,.96);
+  stroke-width:4px;
+}
+html[data-theme="light"] body[data-mode="correlation"] .node-label-in{
+  fill:#111827;
+  stroke:rgba(255,255,255,.96);
+}
+html[data-theme="dark"] body[data-mode="correlation"] .node-label-in{
+  fill:#f8fafc;
+  stroke:rgba(5,8,15,.96);
+}
+.node-size-dot{stroke:#fff;stroke-width:1.1px}
+.community-bg{
+  fill-opacity:.08;
+  stroke-opacity:.18;
+}
+@media (max-width: 980px){
+  .top-bar{padding:10px 14px 14px;flex-wrap:wrap}
+  .logo-note{display:none}
+  .search-box{width:100%;min-width:0}
+  .search-kbd{display:none}
+  .detail-panel{right:16px;bottom:16px;width:calc(100vw - 32px);max-height:50vh}
+  .legend{left:16px;bottom:16px;max-width:220px}
+  .stats-bar{bottom:16px}
+  .ctrl-panel{right:10px}
+}
+@media (max-width: 700px){
+  .legend,.stats-bar{display:none}
+  .range-wrap input[type="range"]{width:90px}
+  .mode-pill{padding:6px 9px}
+  .f-pill .pill-count{display:none}
+}
+</style>
+</head>
+<body data-mode="ecosystem">
+<canvas id="bg-canvas"></canvas>
+<svg id="graph-svg"></svg>
+
+<div class="top-bar">
+  <div class="logo">
+    <div class="logo-title">대한민국 AI 생태계</div>
+    <div class="logo-sub">Ecosystem Overview · Dual Analysis</div>
+    <div class="logo-note">생태계 배치와 상관 네트워크를 같은 데이터셋으로 오가며 분석할 수 있는 듀얼 모드</div>
+  </div>
+  <div class="bar-main">
+    <div class="top-row">
+      <div class="mode-switch" id="mode-switch" aria-label="시각화 모드">
+        <button class="mode-pill active" data-mode="ecosystem">생태계 배치</button>
+        <button class="mode-pill" data-mode="correlation">상관 네트워크</button>
+      </div>
+      <div class="search-box" role="search">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input id="search-input" type="text" placeholder="기업명·세부구분·태그 검색…" autocomplete="off" aria-label="기업 검색"/>
+        <span class="search-count" id="search-count"></span>
+        <button class="search-clear" id="search-clear" aria-label="검색어 지우기">✕</button>
+        <span class="search-kbd">⌘K</span>
+      </div>
+    </div>
+    <div class="filter-wrap">
+      <div class="filter-row" id="filter-row"></div>
+      <div class="filter-row">
+        <span class="row-label">상관</span>
+        <div class="range-wrap corr-controls" id="corr-controls">
+          <span class="row-label" style="margin-right:0">강도</span>
+          <input id="corr-threshold" type="range" min="2.0" max="5.0" step="0.1" value="2.6"/>
+          <span class="range-val" id="corr-threshold-val">2.6+</span>
+          <button class="f-pill" id="btn-rebuild">재계산</button>
+        </div>
+        <span class="row-label">테마</span>
+        <button class="f-pill theme-pill" data-theme-mode="light">☀ 라이트</button>
+        <button class="f-pill theme-pill" data-theme-mode="dark">☾ 다크</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ctrl-panel">
+  <button class="ctrl-btn" id="btn-zi" data-tooltip="확대 (⌘+)">+</button>
+  <button class="ctrl-btn" id="btn-zo" data-tooltip="축소 (⌘−)">−</button>
+  <button class="ctrl-btn" id="btn-fit" data-tooltip="전체보기 (0)" style="font-size:12px">⊞</button>
+</div>
+
+<div class="legend" id="legend">
+  <div class="legend-title" id="legend-title">범례</div>
+  <div class="legend-content" id="legend-content"></div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="detail-panel" id="detail-panel">
+  <button class="close-btn" id="close-detail">✕</button>
+  <div class="detail-layer" id="d-layer"></div>
+  <div class="detail-name" id="d-name"></div>
+  <div class="detail-subcat" id="d-subcat"></div>
+  <div class="detail-meta">
+    <div class="detail-pill" id="d-focus"></div>
+    <div class="detail-pill" id="d-size"></div>
+    <div class="detail-pill" id="d-extra"></div>
+  </div>
+  <div class="detail-summary" id="d-summary"></div>
+  <div class="detail-tags" id="d-tags"></div>
+  <div class="detail-related-title" id="d-related-title">연결·유사 플레이어</div>
+  <div class="related-list" id="d-related"></div>
+</div>
+
+<div class="node-tooltip" id="node-tooltip">
+  <div class="node-tooltip-name" id="tt-name"></div>
+  <div class="node-tooltip-sub" id="tt-sub"></div>
+  <div class="node-tooltip-tags" id="tt-tags"></div>
+</div>
+
+<div class="onboard-hint" id="onboard-hint">🖱 클릭하면 상세정보 · 1/2 키로 모드 전환 · 스크롤로 확대/축소</div>
+
+<div class="search-empty" id="search-empty">
+  <div class="search-empty-icon">🔍</div>
+  <div class="search-empty-text">검색 결과가 없습니다</div>
+  <div class="search-empty-hint">다른 키워드나 레이어로 다시 찾아보세요</div>
+</div>
+
+<script>
+'use strict';
+
+const LAYER_DEFS = [{"id":"service","name":"AI 서비스","accent":"#f59e0b","cx_pct":0.12,"cy_pct":0.42},{"id":"model","name":"AI 모델","accent":"#8b5cf6","cx_pct":0.37,"cy_pct":0.2},{"id":"data","name":"데이터","accent":"#06b6d4","cx_pct":0.69,"cy_pct":0.28},{"id":"cloud","name":"클라우드·인프라","accent":"#10b981","cx_pct":0.37,"cy_pct":0.74},{"id":"chip","name":"AI 반도체","accent":"#ef4444","cx_pct":0.82,"cy_pct":0.68}];
+const SUBCAT_DEFS = {"service":[{"id":"agent","name":"검색·에이전트","dx":-0.46,"dy":-0.24},{"id":"edu_fin","name":"교육·금융·리걸","dx":-0.42,"dy":0.34},{"id":"health","name":"헬스케어·바이오","dx":0.04,"dy":-0.38},{"id":"multimodal","name":"멀티모달·음성","dx":0.42,"dy":-0.04},{"id":"mobility","name":"비전·로보틱스·산업","dx":0.16,"dy":0.36}],"model":[{"id":"foundation","name":"파운데이션 LLM","dx":-0.38,"dy":-0.24},{"id":"domain","name":"도메인 언어모델","dx":0.36,"dy":-0.18},{"id":"vision","name":"비전·멀티모달 모델","dx":-0.2,"dy":0.32},{"id":"inference","name":"추론·플랫폼 SW","dx":0.34,"dy":0.34}],"data":[{"id":"labeling","name":"라벨링·수집","dx":-0.42,"dy":-0.18},{"id":"mlops","name":"MLOps·평가","dx":0.38,"dy":-0.24},{"id":"analytics","name":"분석·컨설팅","dx":-0.18,"dy":0.34},{"id":"platform","name":"데이터 플랫폼","dx":0.36,"dy":0.3}],"cloud":[{"id":"cloud","name":"국산·퍼블릭 클라우드","dx":-0.36,"dy":-0.22},{"id":"msp","name":"MSP·SI","dx":0.36,"dy":-0.14},{"id":"compute","name":"AI 컴퓨트·GPU Ops","dx":-0.18,"dy":0.34},{"id":"edge","name":"데이터센터·엣지","dx":0.34,"dy":0.34}],"chip":[{"id":"memory","name":"HBM·메모리","dx":-0.36,"dy":-0.22},{"id":"accelerator","name":"NPU·가속기","dx":0.36,"dy":-0.18},{"id":"ondevice","name":"온디바이스·IP","dx":-0.2,"dy":0.34},{"id":"supplychain","name":"제조·장비·패키징","dx":0.34,"dy":0.34}]};
+const SIZE_DEFS = {"large":{"name":"대기업","color":"#fb7185","r":21},"mid":{"name":"중견·스케일업","color":"#22c55e","r":17},"startup":{"name":"스타트업","color":"#38bdf8","r":13}};
+const RAW = [{"id":"라이너","layer":"service","sub":"agent","size":"startup","focus":"AI Search","summary":"AI 검색·리서치 에이전트 인터페이스","tags":["검색/생산성","에이전트","LLM/모델"]},{"id":"뤼튼테크놀로지스","layer":"service","sub":"agent","size":"startup","focus":"AI Agent","summary":"대중형 AI 에이전트·LLM 멀티플렉서 앱","tags":["에이전트","검색/생산성","LLM/모델"]},{"id":"스캐터랩","layer":"service","sub":"multimodal","size":"mid","focus":"Conversational","summary":"대화형 AI 서비스·이루다","tags":["대화형AI","소비자","LLM/모델"]},{"id":"올거나이즈","layer":"service","sub":"agent","size":"mid","focus":"Alli","summary":"엔터프라이즈 AI 에이전트·문서 자동화","tags":["에이전트","엔터프라이즈","문서AI"]},{"id":"뤼이드","layer":"service","sub":"edu_fin","size":"mid","focus":"Edu AI","summary":"AI 튜터·개인화 학습 에듀테크","tags":["교육","적응형학습","서비스"]},{"id":"매스프레소","layer":"service","sub":"edu_fin","size":"mid","focus":"QANDA","summary":"QANDA 기반 학습 AI 플랫폼","tags":["교육","모바일","서비스"]},{"id":"클래스팅","layer":"service","sub":"edu_fin","size":"mid","focus":"Classing AI","summary":"AI 기반 학습관리·맞춤학습","tags":["교육","플랫폼","공공AI"]},{"id":"포티투마루","layer":"service","sub":"agent","size":"mid","focus":"42Maru","summary":"QA·도메인 특화 언어 AI 서비스","tags":["질의응답","엔터프라이즈","자연어처리"]},{"id":"코난테크놀로지","layer":"service","sub":"agent","size":"mid","focus":"NLP Solution","summary":"NLP·검색 기반 기업 AI 솔루션","tags":["자연어처리","검색","엔터프라이즈"]},{"id":"솔트룩스","layer":"service","sub":"agent","size":"mid","focus":"Agentic AI","summary":"LLM·에이전트·지식 서비스 플랫폼","tags":["에이전트","지식서비스","엔터프라이즈"]},{"id":"루닛","layer":"service","sub":"health","size":"mid","focus":"Imaging AI","summary":"암 진단·영상 분석 AI","tags":["의료AI","비전","상장"]},{"id":"뷰노","layer":"service","sub":"health","size":"mid","focus":"Clinical AI","summary":"생체신호·영상 의료 AI","tags":["의료AI","예측","상장"]},{"id":"딥노이드","layer":"service","sub":"health","size":"mid","focus":"Deep:NEURO","summary":"의료 영상·판독 AI","tags":["의료AI","영상판독","상장"]},{"id":"JLK","layer":"service","sub":"health","size":"mid","focus":"Stroke AI","summary":"뇌졸중 중심 의료 영상 AI","tags":["의료AI","영상판독","상장"]},{"id":"딥바이오","layer":"service","sub":"health","size":"startup","focus":"Pathology","summary":"AI 기반 병리 이미지 진단","tags":["의료AI","병리","글로벌"]},{"id":"메디웨일","layer":"service","sub":"health","size":"startup","focus":"Retinal AI","summary":"안저 기반 질환 예측 AI","tags":["의료AI","예측","헬스케어"]},{"id":"코어라인소프트","layer":"service","sub":"health","size":"mid","focus":"Thoracic AI","summary":"흉부 영상·폐질환 AI 분석","tags":["의료AI","영상판독","상장"]},{"id":"에이아이트릭스","layer":"service","sub":"health","size":"startup","focus":"Vitals AI","summary":"중환자·임상 예측 AI","tags":["의료AI","예측","병원"]},{"id":"트웰브랩스","layer":"service","sub":"multimodal","size":"startup","focus":"Video AI","summary":"비디오 이해·멀티모달 AI","tags":["멀티모달","비전","글로벌"]},{"id":"딥브레인AI","layer":"service","sub":"multimodal","size":"mid","focus":"AI Human","summary":"AI 휴먼·영상 생성 서비스","tags":["멀티모달","영상","아바타"]},{"id":"클레온","layer":"service","sub":"multimodal","size":"startup","focus":"Avatar","summary":"디지털 휴먼·더빙 플랫폼","tags":["멀티모달","아바타","음성"]},{"id":"네오사피엔스","layer":"service","sub":"multimodal","size":"startup","focus":"Typecast","summary":"AI 음성·TTS·보이스 클로닝","tags":["음성","TTS","글로벌"]},{"id":"펄스나인","layer":"service","sub":"multimodal","size":"startup","focus":"Virtual Human","summary":"버추얼 휴먼·K팝 IP 콘텐츠","tags":["아바타","엔터테인먼트","콘텐츠"]},{"id":"마인드로직","layer":"service","sub":"multimodal","size":"startup","focus":"Character AI","summary":"AI 캐릭터·인터랙션 플랫폼","tags":["캐릭터AI","소비자","대화형AI"]},{"id":"포티투닷","layer":"service","sub":"mobility","size":"large","focus":"42dot","summary":"현대차 계열 SDV·모빌리티 AI","tags":["모빌리티","플랫폼","자율주행"]},{"id":"서울로보틱스","layer":"service","sub":"mobility","size":"startup","focus":"3D Percep.","summary":"3D 인식 AI·산업 자율화","tags":["로보틱스","비전","모빌리티"]},{"id":"모빌테크","layer":"service","sub":"mobility","size":"startup","focus":"HD Map","summary":"HD맵·자율주행 공간 데이터","tags":["모빌리티","공간정보","자율주행"]},{"id":"라이드플럭스","layer":"service","sub":"mobility","size":"startup","focus":"Autonomy","summary":"자율주행 플랫폼 소프트웨어","tags":["모빌리티","자율주행","서비스"]},{"id":"스트라드비젼","layer":"service","sub":"mobility","size":"mid","focus":"Perception","summary":"ADAS 비전 인식 소프트웨어","tags":["모빌리티","비전","온디바이스"]},{"id":"베어로보틱스","layer":"service","sub":"mobility","size":"startup","focus":"Servi","summary":"서비스 로봇·식당 배달 자율주행","tags":["로봇","서비스","자율주행"]},{"id":"S2W","layer":"service","sub":"agent","size":"mid","focus":"Data Intel.","summary":"AI 사이버 위협 인텔리전스","tags":["보안","지식그래프","엔터프라이즈"]},{"id":"마키나락스","layer":"service","sub":"mobility","size":"startup","focus":"Industrial","summary":"산업 특화 AI·공장 운영 최적화","tags":["산업AI","최적화","엔터프라이즈"]},{"id":"네이버","layer":"model","sub":"foundation","size":"large","focus":"HyperCLOVA X","summary":"HyperCLOVA X 계열 파운데이션 모델","tags":["LLM/모델","플랫폼","검색"]},{"id":"LG AI Research","layer":"model","sub":"foundation","size":"large","focus":"EXAONE","summary":"EXAONE 오픈소스 LLM·멀티모달 연구","tags":["LLM/모델","연구","플랫폼"]},{"id":"카카오","layer":"model","sub":"foundation","size":"large","focus":"GenAI","summary":"생성형 AI 연구·Kakao 계열 모델","tags":["LLM/모델","플랫폼","검색"]},{"id":"SK텔레콤","layer":"model","sub":"foundation","size":"large","focus":"A.X","summary":"A.X 기반 AI 서비스·통신 AI","tags":["LLM/모델","통신","플랫폼"]},{"id":"KT","layer":"model","sub":"foundation","size":"large","focus":"Mi:dm","summary":"Mi:dm LLM·공공·금융 B2B","tags":["LLM/모델","통신","엔터프라이즈"]},{"id":"삼성SDS","layer":"model","sub":"inference","size":"large","focus":"Brity LLM","summary":"Brity LLM·엔터프라이즈 AI 플랫폼","tags":["LLM/모델","엔터프라이즈","클라우드"]},{"id":"업스테이지","layer":"model","sub":"foundation","size":"mid","focus":"Solar","summary":"Solar LLM·문서 AI·Document AI API","tags":["LLM/모델","문서AI","엔터프라이즈"]},{"id":"모레","layer":"model","sub":"inference","size":"startup","focus":"MoAI","summary":"AI 컴퓨팅 최적화·AI 인프라 SW","tags":["AI인프라","컴퓨트","모델학습"]},{"id":"Motif Technologies","layer":"model","sub":"inference","size":"startup","focus":"Motif","summary":"소버린 AI·멀티에이전트 플랫폼","tags":["에이전트","플랫폼","LLM/모델"]},{"id":"FriendliAI","layer":"model","sub":"inference","size":"startup","focus":"Inference","summary":"LLM 추론·서빙 인프라 플랫폼","tags":["서빙","추론","인프라"]},{"id":"튜닙","layer":"model","sub":"domain","size":"startup","focus":"TuNIB","summary":"감성 대화·소형 특화 언어 모델","tags":["LLM/모델","대화형AI","연구"]},{"id":"알체라","layer":"model","sub":"vision","size":"mid","focus":"Face/Vision","summary":"얼굴·생체인식 비전 AI 모델","tags":["비전모델","생체인식","엔터프라이즈"]},{"id":"NC AI","layer":"model","sub":"vision","size":"mid","focus":"VARCO","summary":"게임·멀티모달 콘텐츠 생성 AI","tags":["멀티모달","게임","생성형AI"]},{"id":"크라우드웍스","layer":"data","sub":"labeling","size":"mid","focus":"DataOps","summary":"데이터 라벨링·AI 데이터 운영 플랫폼","tags":["데이터가공","라벨링","플랫폼"]},{"id":"슈퍼브에이아이","layer":"data","sub":"mlops","size":"mid","focus":"Vision AI","summary":"비전 데이터 파이프라인·MLOps","tags":["비전","MLOps","데이터"]},{"id":"마인즈앤컴퍼니","layer":"data","sub":"analytics","size":"mid","focus":"Consulting","summary":"기업 AI 도입·MLOps 컨설팅","tags":["컨설팅","MLOps","엔터프라이즈"]},{"id":"스케일업랩스","layer":"data","sub":"labeling","size":"startup","focus":"Scale-up","summary":"AI 데이터 구축·스케일 운영","tags":["데이터가공","라벨링","운영"]},{"id":"셀렉트스타","layer":"data","sub":"mlops","size":"startup","focus":"Evaluation","summary":"데이터 검증·평가·RLHF 파이프라인","tags":["평가","정렬","데이터"]},{"id":"에이모","layer":"data","sub":"labeling","size":"startup","focus":"AIMMO","summary":"자율주행·산업용 데이터 플랫폼","tags":["자율주행","데이터","플랫폼"]},{"id":"테스트웍스","layer":"data","sub":"labeling","size":"startup","focus":"Data QA","summary":"AI 데이터 구축·검증 서비스","tags":["데이터가공","검증","플랫폼"]},{"id":"아크릴","layer":"data","sub":"platform","size":"startup","focus":"Graph AI","summary":"지식그래프·분석형 AI 플랫폼","tags":["지식그래프","데이터","엔터프라이즈"]},{"id":"VESSL AI","layer":"data","sub":"mlops","size":"startup","focus":"GPU Ops","summary":"GPU 클라우드·MLOps 운영 플랫폼","tags":["GPU","MLOps","클라우드"]},{"id":"노타AI","layer":"data","sub":"mlops","size":"startup","focus":"Optimization","summary":"온디바이스 AI 경량화·최적화","tags":["온디바이스","최적화","비전"]},{"id":"씨이랩","layer":"data","sub":"platform","size":"startup","focus":"Video AI","summary":"비디오 분석·AI 인프라 솔루션","tags":["비디오","인프라","엔터프라이즈"]},{"id":"네이버클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"Ncloud","summary":"국산 AI 클라우드·HyperCLOVA API","tags":["클라우드","플랫폼","공공AI"]},{"id":"KT클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"KT Cloud","summary":"AI·공공·금융 버티컬 클라우드","tags":["클라우드","플랫폼","통신"]},{"id":"NHN클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"NHN Cloud","summary":"클라우드·AI 서비스 인프라","tags":["클라우드","플랫폼","엔터프라이즈"]},{"id":"카카오클라우드","layer":"cloud","sub":"cloud","size":"large","focus":"Kakao Cloud","summary":"카카오 계열 퍼블릭 클라우드","tags":["클라우드","플랫폼","엔터프라이즈"]},{"id":"LG CNS","layer":"cloud","sub":"msp","size":"large","focus":"AX","summary":"AX 전환·기업 클라우드·SI 서비스","tags":["클라우드","엔터프라이즈","SI"]},{"id":"SK C&C","layer":"cloud","sub":"msp","size":"large","focus":"AIX","summary":"AIX·클라우드·IT서비스 전환","tags":["클라우드","엔터프라이즈","SI"]},{"id":"메가존클라우드","layer":"cloud","sub":"msp","size":"mid","focus":"MSP","summary":"AWS·Azure 기반 클라우드 MSP·AI 구축","tags":["클라우드","MSP","엔터프라이즈"]},{"id":"베스핀글로벌","layer":"cloud","sub":"msp","size":"mid","focus":"Bespin","summary":"멀티클라우드·AI 운영·FinOps","tags":["클라우드","MSP","FinOps"]},{"id":"케이아이엔엑스","layer":"cloud","sub":"edge","size":"mid","focus":"KINX","summary":"데이터센터·인터넷 교환 인프라","tags":["데이터센터","인프라","네트워크"]},{"id":"그리드원","layer":"cloud","sub":"edge","size":"startup","focus":"Edge Infra","summary":"엣지 컴퓨팅·분산 AI 인프라","tags":["엣지","인프라","온디바이스"]},{"id":"삼성전자","layer":"chip","sub":"memory","size":"large","focus":"Samsung","summary":"HBM·파운드리·시스템 반도체 종합","tags":["반도체","HBM","대기업"]},{"id":"SK하이닉스","layer":"chip","sub":"memory","size":"large","focus":"SK hynix","summary":"HBM3E·메모리 중심 AI 반도체","tags":["반도체","HBM","대기업"]},{"id":"리벨리온","layer":"chip","sub":"accelerator","size":"startup","focus":"Rebellions","summary":"데이터센터용 ATOM·REBEL AI 칩","tags":["반도체","NPU","데이터센터"]},{"id":"퓨리오사AI","layer":"chip","sub":"accelerator","size":"startup","focus":"FuriosaAI","summary":"AI 추론 가속기 WARBOY·RNGD","tags":["반도체","NPU","데이터센터"]},{"id":"딥엑스","layer":"chip","sub":"ondevice","size":"startup","focus":"DEEPX","summary":"온디바이스·엣지 AI NPU","tags":["반도체","온디바이스","엣지"]},{"id":"HyperAccel","layer":"chip","sub":"accelerator","size":"startup","focus":"LPU","summary":"LLM 추론 특화 가속 칩 LPU","tags":["반도체","추론","LLM/모델"]},{"id":"사피온","layer":"chip","sub":"accelerator","size":"startup","focus":"SAPEON","summary":"AI 가속칩 X220","tags":["반도체","NPU","데이터센터"]},{"id":"오픈엣지테크놀로지","layer":"chip","sub":"ondevice","size":"startup","focus":"OPENEDGES","summary":"NPU·메모리 시스템 반도체 IP","tags":["반도체","IP","온디바이스"]},{"id":"Mobilint","layer":"chip","sub":"ondevice","size":"startup","focus":"Mobilint","summary":"온프레미스·온디바이스 추론 NPU","tags":["반도체","NPU","온디바이스"]},{"id":"네패스","layer":"chip","sub":"supplychain","size":"mid","focus":"Packaging","summary":"AI 반도체 패키징·후공정 전문","tags":["반도체","패키징","중견"]},{"id":"심심이","layer":"service","sub":"agent","size":"mid","focus":"Chatbot","summary":"자연어 처리·문서 AI 서비스","tags":["대화형AI","글로벌","자연어처리"]},{"id":"에버트란","layer":"service","sub":"agent","size":"mid","focus":"MTPE","summary":"자연어 처리·문서 AI 서비스","tags":["번역","언어AI","서비스"]},{"id":"로민","layer":"service","sub":"agent","size":"startup","focus":"OCR","summary":"AI OCR·문서인식 서비스","tags":["OCR","문서AI","비전"]},{"id":"에듀템","layer":"service","sub":"edu_fin","size":"startup","focus":"EdTech","summary":"교육·외국어학습 AI 서비스","tags":["교육","외국어학습","서비스"]},{"id":"위고","layer":"service","sub":"edu_fin","size":"mid","focus":"CRM/VOC AI","summary":"금융 VOC 분석 AI 서비스","tags":["금융AI","VOC","서비스"]},{"id":"잡쇼퍼","layer":"service","sub":"edu_fin","size":"startup","focus":"학쫑","summary":"교육 추천 AI 서비스","tags":["교육","추천","서비스"]},{"id":"히어로웍스","layer":"service","sub":"edu_fin","size":"startup","focus":"Revenue AI","summary":"관광·수요예측 AI 서비스","tags":["관광","수요예측","버티컬AI"]},{"id":"로앤컴퍼니","layer":"service","sub":"edu_fin","size":"mid","focus":"리걸테크","summary":"리걸테크·판례검색 서비스","tags":["리걸테크","판례검색","서비스"]},{"id":"아이지넷","layer":"service","sub":"edu_fin","size":"startup","focus":"보닥","summary":"보험 추천 AI 서비스","tags":["보험AI","추천","핀테크"]},{"id":"컴트루테크놀로지","layer":"service","sub":"edu_fin","size":"mid","focus":"eKYC/aiSee","summary":"eKYC·비전 핀테크 서비스","tags":["eKYC","비전","핀테크"]},{"id":"탱커","layer":"service","sub":"edu_fin","size":"startup","focus":"PropTech","summary":"부동산 AI 서비스","tags":["프롭테크","부동산AI","서비스"]},{"id":"텐스페이스","layer":"service","sub":"edu_fin","size":"startup","focus":"ASTER","summary":"핀테크 신용평가 서비스","tags":["핀테크","신용평가","서비스"]},{"id":"블루바이저시스템즈","layer":"service","sub":"edu_fin","size":"startup","focus":"HighBuff","summary":"면접·재테크 AI 서비스","tags":["면접AI","재테크AI","서비스"]},{"id":"빅트리","layer":"service","sub":"edu_fin","size":"startup","focus":"BIGBOT","summary":"로보어드바이저 서비스","tags":["로보어드바이저","금융AI","서비스"]},{"id":"콰라소프트","layer":"service","sub":"edu_fin","size":"startup","focus":"KOSHO","summary":"금융 투자가이드 AI 서비스","tags":["금융AI","투자가이드","서비스"]},{"id":"크래프트테크놀로지스","layer":"service","sub":"edu_fin","size":"startup","focus":"Electronic Trading","summary":"금융 트레이딩 AI 서비스","tags":["금융AI","트레이딩","서비스"]},{"id":"닥터송","layer":"service","sub":"health","size":"startup","focus":"의료상담/DTx","summary":"의료상담 디지털치료제 AI","tags":["의료AI","챗봇","디지털치료제"]},{"id":"메디아이플러스","layer":"service","sub":"health","size":"startup","focus":"MediC","summary":"임상시험 데이터 헬스케어 AI","tags":["임상시험","데이터","헬스케어"]},{"id":"에이아이플랫폼","layer":"service","sub":"health","size":"startup","focus":"의료 마이데이터","summary":"의료 마이데이터 헬스케어 AI","tags":["의료AI","마이데이터","헬스케어"]},{"id":"카이팜","layer":"service","sub":"health","size":"startup","focus":"Drug Discovery","summary":"신약개발 AI","tags":["신약개발","오믹스","헬스케어"]},{"id":"피디젠","layer":"service","sub":"health","size":"startup","focus":"Digital Medicine","summary":"진단예측 바이오 AI","tags":["진단예측","바이오","헬스케어"]},{"id":"뉴로핏","layer":"service","sub":"health","size":"mid","focus":"Neuro AI","summary":"뇌·신경계 중심 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"메디컬아이피","layer":"service","sub":"health","size":"mid","focus":"Medical 3D","summary":"의료영상·디지털트윈 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"노을","layer":"service","sub":"health","size":"mid","focus":"Digital Pathology","summary":"디지털 병리·진단 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"아이도트","layer":"service","sub":"health","size":"mid","focus":"Women Health","summary":"여성·검진 중심 헬스케어 AI","tags":["의료AI","헬스케어","바이오"]},{"id":"빈드컴퍼니","layer":"service","sub":"multimodal","size":"startup","focus":"Music Gen","summary":"AI 음악 생성 콘텐츠","tags":["생성형AI","음악","콘텐츠"]},{"id":"오투오","layer":"service","sub":"multimodal","size":"startup","focus":"MetaData/Recomm.","summary":"추천·리뷰필터링 AI","tags":["추천","리뷰필터링","서비스"]},{"id":"세미콘네트웍스","layer":"service","sub":"multimodal","size":"mid","focus":"문서분류/감정인식","summary":"문서분류·감정인식 AI","tags":["음성","감정인식","서비스"]},{"id":"솔루게이트","layer":"service","sub":"multimodal","size":"mid","focus":"음성인식","summary":"음성인식 컨택센터 AI","tags":["음성인식","컨택센터","서비스"]},{"id":"데브언리밋","layer":"service","sub":"multimodal","size":"startup","focus":"Sparky","summary":"피트니스 비전 AI","tags":["피트니스AI","비전","서비스"]},{"id":"록스","layer":"service","sub":"multimodal","size":"startup","focus":"Region TTS","summary":"음성합성 TTS AI","tags":["음성합성","TTS","서비스"]},{"id":"딥픽셀","layer":"service","sub":"multimodal","size":"startup","focus":"StyleAR","summary":"AR 커머스 비전AI","tags":["AR","커머스","비전AI"]},{"id":"블루프린트랩","layer":"service","sub":"multimodal","size":"startup","focus":"SpectacleAR","summary":"AR 커머스 비전AI","tags":["AR","커머스","비전AI"]},{"id":"마음AI","layer":"service","sub":"multimodal","size":"mid","focus":"Embodied AI","summary":"Embodied AI·인공인간 서비스","tags":["Embodied AI","AI Human","서비스"]},{"id":"비트플로","layer":"service","sub":"mobility","size":"startup","focus":"Rail/Smart City","summary":"스마트시티·비전 공공 AI","tags":["스마트시티","비전","공공AI"]},{"id":"코액터스","layer":"service","sub":"mobility","size":"startup","focus":"고요한M","summary":"유니버설디자인 모빌리티 AI","tags":["모빌리티","유니버설디자인","서비스"]},{"id":"인트플로우","layer":"service","sub":"mobility","size":"startup","focus":"Edge Farm","summary":"에너지·스마트팜 비전 AI","tags":["에너지/환경","스마트팜","비전"]},{"id":"넥스트랩","layer":"service","sub":"mobility","size":"mid","focus":"Beyond AI","summary":"머신비전·품질검사 산업 AI","tags":["머신비전","품질검사","산업AI"]},{"id":"델타엑스","layer":"service","sub":"mobility","size":"startup","focus":"X-Pilot","summary":"비전 자율주행 모빌리티 AI","tags":["모빌리티","비전","자율주행"]},{"id":"드로미","layer":"service","sub":"mobility","size":"startup","focus":"GeoAI","summary":"드론·공간정보 비전 AI","tags":["드론","공간정보","비전"]},{"id":"라온피플","layer":"service","sub":"mobility","size":"mid","focus":"NAVIAI","summary":"머신비전·스마트팩토리 AI","tags":["머신비전","스마트팩토리","상장"]},{"id":"카이어","layer":"service","sub":"mobility","size":"startup","focus":"Kaier Vision","summary":"머신비전·이상탐지 산업 AI","tags":["머신비전","산업AI","이상탐지"]},{"id":"핀텔","layer":"service","sub":"mobility","size":"mid","focus":"교통/보안 AI","summary":"교통·보안 비전 AI","tags":["교통AI","비전","상장"]},{"id":"하이브비전","layer":"service","sub":"mobility","size":"mid","focus":"DeepCulus","summary":"머신비전·제조 산업 AI","tags":["머신비전","제조AI","산업AI"]},{"id":"와이즈레이크","layer":"service","sub":"mobility","size":"startup","focus":"Agri AI","summary":"스마트팜·비전 애그테크 AI","tags":["애그테크","스마트팜","비전"]},{"id":"코코넛사일로","layer":"service","sub":"mobility","size":"startup","focus":"COCOTRUCK","summary":"물류·공급망 AI","tags":["물류AI","공급망","버티컬AI"]},{"id":"모라이","layer":"service","sub":"mobility","size":"startup","focus":"Simulation","summary":"자율주행 시뮬레이션 AI","tags":["자율주행","시뮬레이션","모빌리티"]},{"id":"니어스랩","layer":"service","sub":"mobility","size":"startup","focus":"Drone AI","summary":"드론 비전 산업 AI","tags":["드론","비전","산업AI"]},{"id":"트위니","layer":"service","sub":"mobility","size":"startup","focus":"자율주행 로봇","summary":"물류 자율주행 로봇 AI","tags":["로봇","물류","모빌리티"]},{"id":"블루시그널","layer":"service","sub":"mobility","size":"startup","focus":"Traffic AI","summary":"교통 예측 스마트시티 AI","tags":["교통AI","예측","스마트시티"]},{"id":"마인즈랩","layer":"model","sub":"domain","size":"mid","focus":"Voice/AI Human","summary":"도메인 음성·AI Human 모델","tags":["음성AI","AI Human","플랫폼"]},{"id":"셀바스AI","layer":"model","sub":"domain","size":"mid","focus":"Speech AI","summary":"음성·의료 도메인 AI 모델","tags":["음성AI","의료AI","상장"]},{"id":"스켈터랩스","layer":"model","sub":"domain","size":"startup","focus":"Conversational LLM","summary":"대화형 도메인 LLM 모델","tags":["대화형AI","모델","엔터프라이즈"]},{"id":"TmaxAI","layer":"model","sub":"domain","size":"mid","focus":"Enterprise AI","summary":"엔터프라이즈 도메인 AI 모델","tags":["엔터프라이즈","LLM/모델","플랫폼"]},{"id":"뉴럴웍스랩","layer":"model","sub":"domain","size":"startup","focus":"Speech/NLP","summary":"음성·NLP 도메인 모델","tags":["음성AI","언어모델","서비스"]},{"id":"마인드에이아이","layer":"model","sub":"domain","size":"startup","focus":"Conversational AI","summary":"대화형 도메인 AI 모델","tags":["대화형AI","모델","서비스"]},{"id":"디에스랩글로벌","layer":"data","sub":"labeling","size":"startup","focus":"CLICK AI","summary":"오토라벨링 데이터가공 플랫폼","tags":["오토라벨링","데이터가공","플랫폼"]},{"id":"인피닉","layer":"data","sub":"labeling","size":"mid","focus":"DataStudio","summary":"데이터가공 플랫폼","tags":["데이터가공","플랫폼","중견"]},{"id":"데이터메이커","layer":"data","sub":"labeling","size":"startup","focus":"Synapse","summary":"라벨링·3D LiDAR 플랫폼","tags":["라벨링","3D LiDAR","플랫폼"]},{"id":"어노테이션에이아이","layer":"data","sub":"labeling","size":"startup","focus":"Annotation AI","summary":"라벨링·데이터가공 플랫폼","tags":["라벨링","데이터가공","플랫폼"]},{"id":"젠데이터","layer":"data","sub":"labeling","size":"startup","focus":"Data Ops","summary":"데이터가공 플랫폼","tags":["데이터가공","플랫폼","라벨링"]},{"id":"바이트브릿지","layer":"data","sub":"labeling","size":"startup","focus":"자율주행 데이터","summary":"자율주행 데이터가공 라벨링","tags":["자율주행","데이터가공","라벨링"]},{"id":"브레인컨테이너","layer":"data","sub":"labeling","size":"startup","focus":"LiDAR Seg.","summary":"LiDAR 데이터가공 라벨링","tags":["LiDAR","데이터가공","라벨링"]},{"id":"몬드리안에이아이","layer":"data","sub":"mlops","size":"startup","focus":"Yennefer","summary":"AI-PaaS MLOps 플랫폼","tags":["AI-PaaS","MLOps","플랫폼"]},{"id":"데이콘","layer":"data","sub":"mlops","size":"startup","focus":"AI Hackathon","summary":"해커톤·평가·교육 데이터 플랫폼","tags":["해커톤","평가","교육"]},{"id":"인공지능팩토리","layer":"data","sub":"mlops","size":"startup","focus":"AI Competition","summary":"MLOps 평가 플랫폼","tags":["MLOps","평가","플랫폼"]},{"id":"KSTEC","layer":"data","sub":"analytics","size":"mid","focus":"SyncPlan/Dataiku","summary":"최적화·RPA 컨설팅","tags":["최적화","RPA","컨설팅"]},{"id":"TG360 테크놀로지스","layer":"data","sub":"analytics","size":"mid","focus":"Molecule","summary":"비식별데이터 DMP 플랫폼","tags":["비식별데이터","DMP","플랫폼"]},{"id":"누리꿈소프트","layer":"data","sub":"analytics","size":"mid","focus":"Smart-Eye","summary":"분석·예측 플랫폼","tags":["분석","예측","플랫폼"]},{"id":"더블유에이아이","layer":"data","sub":"analytics","size":"startup","focus":"Quant Athena","summary":"금융시계열 분석 서비스","tags":["금융시계열","분석","서비스"]},{"id":"데이터에듀","layer":"data","sub":"analytics","size":"startup","focus":"두런","summary":"AI교육 컨설팅 분석","tags":["AI교육","컨설팅","분석"]},{"id":"리서치림","layer":"data","sub":"analytics","size":"startup","focus":"Insight","summary":"리서치 분석 데이터","tags":["리서치","분석","데이터"]},{"id":"리스트","layer":"data","sub":"analytics","size":"startup","focus":"Commerce Data","summary":"데이터 추천 분석","tags":["데이터","추천","분석"]},{"id":"마켓링크","layer":"data","sub":"analytics","size":"startup","focus":"Marketing Data","summary":"마케팅 분석 데이터","tags":["마케팅","분석","데이터"]},{"id":"메트릭스","layer":"data","sub":"analytics","size":"startup","focus":"Metrics","summary":"마케팅 분석 데이터","tags":["마케팅","분석","데이터"]},{"id":"비즈스프링","layer":"data","sub":"analytics","size":"mid","focus":"BizSpring","summary":"마케팅 분석 SaaS","tags":["마케팅","분석","SaaS"]},{"id":"애자일소다","layer":"data","sub":"analytics","size":"startup","focus":"Decision AI","summary":"AutoML 분석 엔터프라이즈","tags":["AutoML","분석","엔터프라이즈"]},{"id":"웨슬리퀘스트","layer":"data","sub":"analytics","size":"mid","focus":"Analytics","summary":"컨설팅 분석 엔터프라이즈","tags":["컨설팅","분석","엔터프라이즈"]},{"id":"유클리드소프트","layer":"data","sub":"analytics","size":"startup","focus":"Data Science","summary":"분석 컨설팅 데이터","tags":["분석","컨설팅","데이터"]},{"id":"인그래디언트","layer":"data","sub":"analytics","size":"startup","focus":"Analytics","summary":"데이터 최적화 AI","tags":["데이터","최적화","AI"]},{"id":"이트너스","layer":"data","sub":"platform","size":"mid","focus":"AI Portal/ESAI","summary":"AICC 업무자동화 플랫폼","tags":["AICC","플랫폼","업무자동화"]},{"id":"넥타르소프트","layer":"data","sub":"platform","size":"mid","focus":"AI Advisor","summary":"예측·음성/NLP 플랫폼","tags":["예측","음성/NLP","플랫폼"]},{"id":"디지털존 마포지점","layer":"data","sub":"platform","size":"mid","focus":"전자문서","summary":"전자문서·증명서 플랫폼","tags":["전자문서","증명서","플랫폼"]},{"id":"로아인텔리전스","layer":"data","sub":"platform","size":"startup","focus":"기업가치정보","summary":"기업정보 분석 플랫폼","tags":["기업정보","분석","플랫폼"]},{"id":"오브젠","layer":"data","sub":"platform","size":"mid","focus":"CRM AI","summary":"CRM 분석 플랫폼","tags":["CRM","분석","플랫폼"]},{"id":"엔에이치엔데이터","layer":"data","sub":"platform","size":"mid","focus":"Data Infra","summary":"데이터 인프라 플랫폼","tags":["데이터","인프라","플랫폼"]},{"id":"아임클라우드","layer":"data","sub":"platform","size":"mid","focus":"BigData/AI","summary":"클라우드 데이터 플랫폼","tags":["클라우드","데이터","플랫폼"]},{"id":"클루커스","layer":"cloud","sub":"msp","size":"mid","focus":"Cloud MSP","summary":"클라우드 전환·운영 MSP","tags":["클라우드","MSP","엔터프라이즈"]},{"id":"알세미","layer":"chip","sub":"supplychain","size":"startup","focus":"EDA/Modeling","summary":"반도체 EDA 설계자동화","tags":["반도체","EDA","설계자동화"]},{"id":"피에스디이","layer":"chip","sub":"supplychain","size":"mid","focus":"Semiconductor Equipment","summary":"반도체 장비·배관/모듈","tags":["반도체","장비","배관/모듈"]},{"id":"씨피에스","layer":"chip","sub":"supplychain","size":"mid","focus":"Semiconductor Process","summary":"반도체 장비·제조","tags":["반도체","장비","제조"]}];
+const RELATIONS = [["네이버","네이버클라우드","group"],["SK텔레콤","SK하이닉스","group"],["SK텔레콤","사피온","group"],["SK텔레콤","SK C&C","group"],["KT","KT클라우드","group"],["카카오","카카오클라우드","group"],["LG AI Research","LG CNS","group"],["삼성전자","삼성SDS","group"],["포티투닷","포티투마루","group"],["업스테이지","크라우드웍스","tech"],["업스테이지","슈퍼브에이아이","tech"],["업스테이지","셀렉트스타","tech"],["뤼튼테크놀로지스","업스테이지","tech"],["뤼튼테크놀로지스","네이버","tech"],["루닛","네이버클라우드","tech"],["뷰노","KT클라우드","tech"],["트웰브랩스","네이버클라우드","tech"],["모레","LG AI Research","tech"],["모레","업스테이지","tech"],["모레","KT클라우드","tech"],["라이너","업스테이지","tech"],["딥브레인AI","SK C&C","tech"],["네오사피엔스","네이버클라우드","tech"],["에이모","포티투닷","tech"],["HyperAccel","LG AI Research","tech"],["오픈엣지테크놀로지","삼성전자","tech"],["삼성전자","네이버","supply"],["삼성전자","LG AI Research","supply"],["SK하이닉스","네이버","supply"],["SK하이닉스","LG AI Research","supply"],["SK하이닉스","카카오","supply"],["리벨리온","KT","supply"],["리벨리온","KT클라우드","supply"],["퓨리오사AI","네이버클라우드","supply"],["딥엑스","NHN클라우드","supply"],["사피온","SK C&C","supply"],["네이버","트웰브랩스","invest"],["카카오","뤼튼테크놀로지스","invest"],["SK텔레콤","리벨리온","invest"],["삼성전자","퓨리오사AI","invest"],["KT","솔트룩스","invest"],["네이버클라우드","서울로보틱스","invest"]];
+const REL_COL = { group:"#f59e0b", tech:"#10b981", supply:"#a855f7", invest:"#ec4899" };
+const REL_LABELS = { group:"그룹", tech:"기술", supply:"공급망", invest:"투자" };
+
+const ST = {
+  mode: 'ecosystem',
+  theme: (localStorage.getItem('korea-ai-dual-theme') || 'dark'),
+  selected: null,
+  layerFilter: null,
+  query: '',
+  zoomK: 1,
+  threshold: 2.6
+};
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+const layerMap = Object.fromEntries(LAYER_DEFS.map(l => [l.id, l]));
+const subMap = {};
+Object.entries(SUBCAT_DEFS).forEach(([layer, subs]) => subs.forEach(s => subMap[`${layer}:${s.id}`] = s));
+
+const layerCounts = new Map();
+RAW.forEach(d => layerCounts.set(d.layer, (layerCounts.get(d.layer) || 0) + 1));
+const subCounts = new Map();
+RAW.forEach(d => subCounts.set(`${d.layer}:${d.sub}`, (subCounts.get(`${d.layer}:${d.sub}`) || 0) + 1));
+
+const SIZE_ORDER = { large:0, mid:1, startup:2 };
+const SCENE_PACK_X = 0.84;
+const SCENE_PACK_Y = 0.86;
+const SCENE_SHIFT_Y = -10;
+const CORR_COLORS = ['#1fb6ff','#84cc16','#d28cff','#f59e0b','#fb7185','#14b8a6','#7c83fd','#a3a3a3','#2dd4bf','#f97316'];
+const COMMUNITY_SLOTS = [
+  [0.40,0.50],[0.72,0.47],[0.52,0.73],[0.18,0.36],[0.47,0.18],
+  [0.68,0.78],[0.30,0.19],[0.86,0.67],[0.14,0.62],[0.83,0.23]
+];
+
+function pairKey(a,b){ return [a,b].sort().join('||'); }
+function edgeKey(d){
+  const s = typeof d.source === 'string' ? d.source : d.source.id;
+  const t = typeof d.target === 'string' ? d.target : d.target.id;
+  return d.key || [s,t].sort().join('||');
+}
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function tokenize(value){
+  return [...new Set(
+    String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9가-힣\s·/&-]/g, ' ')
+      .split(/[\s·/&()_-]+/)
+      .map(v => v.trim())
+      .filter(v => v.length > 1)
+  )];
+}
+function intersect(a,b){
+  const setB = new Set(b);
+  return a.filter(v => setB.has(v));
+}
+function hashNumber(str){
+  let h = 0;
+  for(let i=0;i<str.length;i+=1){
+    h = ((h<<5)-h) + str.charCodeAt(i);
+    h |= 0;
+  }
+  return h;
+}
+function hashSign(str){ return hashNumber(str) % 2 === 0 ? 1 : -1; }
+function oneLineLabel(name, max=10){
+  return name.length > max ? `${name.slice(0, max-1)}…` : name;
+}
+function fitLabelLines(name, radius){
+  const maxChars = radius >= 30 ? 10 : radius >= 24 ? 8 : radius >= 18 ? 7 : 6;
+  if(name.length <= maxChars) return [name];
+  if(name.length <= maxChars * 2){
+    const cut = Math.ceil(name.length / 2);
+    return [name.slice(0, cut), name.slice(cut)];
+  }
+  return [name.slice(0, maxChars), `${name.slice(maxChars, maxChars*2 - 1)}…`];
+}
+function getLayerCenter(layerOrId){
+  const layer = typeof layerOrId === 'string' ? layerMap[layerOrId] : layerOrId;
+  const rawX = layer.cx_pct * W;
+  const rawY = layer.cy_pct * H;
+  return {
+    x: W/2 + (rawX - W/2) * SCENE_PACK_X,
+    y: H/2 + (rawY - H/2) * SCENE_PACK_Y + SCENE_SHIFT_Y
+  };
+}
+function spiralOffset(idx, step){
+  if(idx === 0) return {x:0,y:0};
+  const a = idx * 2.399963229728653;
+  const r = Math.sqrt(idx) * step;
+  return {x:Math.cos(a)*r, y:Math.sin(a)*r};
+}
+function assignEcoOffsets(list){
+  const groups = d3.group(list, d => `${d.layer}:${d.sub}`);
+  groups.forEach(group => {
+    group.sort((a,b) => (SIZE_ORDER[a.size]-SIZE_ORDER[b.size]) || d3.ascending(a.id,b.id));
+    const step = Math.max(15, Math.min(34, 14 + Math.sqrt(group.length) * 3.2));
+    group.forEach((node, idx) => {
+      node.localBase = spiralOffset(idx, step + node.baseR * 0.6);
+    });
+  });
+}
+function tokenizeNode(d){
+  return {
+    tagsLower: (d.tags || []).map(t => String(t).toLowerCase()),
+    focusTokens: tokenize(`${d.focus || ''} ${d.summary || ''}`)
+  };
+}
+
+const nodes = RAW.map(d => {
+  const size = SIZE_DEFS[d.size];
+  const sub = subMap[`${d.layer}:${d.sub}`] || {};
+  const layer = layerMap[d.layer];
+  const tok = tokenizeNode(d);
+  const center = getLayerCenter(layer);
+  return {
+    ...d,
+    ...tok,
+    accent: layer.accent,
+    layerName: layer.name,
+    subName: sub.name || '',
+    sizeName: size.name,
+    sizeColor: size.color,
+    baseR: size.r,
+    ecoR: size.r,
+    corrR: size.r,
+    r: size.r,
+    localBase: {x:0,y:0},
+    corrBase: {x:0,y:0},
+    ecoTargetX: center.x,
+    ecoTargetY: center.y,
+    corrTargetX: W/2,
+    corrTargetY: H/2,
+    community: null,
+    communityColor: '#94a3b8',
+    weightedDegree: 0,
+    corrDegree: 0,
+    x: center.x + (Math.random()-0.5)*24,
+    y: center.y + (Math.random()-0.5)*24
+  };
+});
+assignEcoOffsets(nodes);
+const nodesById = new Map(nodes.map(n => [n.id, n]));
+
+const relationLinks = RELATIONS
+  .filter(([a,b]) => nodesById.has(a) && nodesById.has(b))
+  .map(([a,b,type]) => ({
+    source:a, target:b, type, key:`rel:${pairKey(a,b)}`
+  }));
+
+const relationAdjacency = new Map(nodes.map(n => [n.id, []]));
+relationLinks.forEach(link => {
+  relationAdjacency.get(link.source).push({id:link.target, type:link.type, link});
+  relationAdjacency.get(link.target).push({id:link.source, type:link.type, link});
+});
+
+const explicitMap = new Map();
+RELATIONS.forEach(([a,b,type]) => explicitMap.set(pairKey(a,b), type));
+
+let correlationLinks = [];
+let corrAdjacency = new Map(nodes.map(n => [n.id, []]));
+let communityMeta = new Map();
+let communityCenters = new Map();
+
+function scorePair(a,b){
+  let score = 0;
+  const reasons = [];
+  const explicitType = explicitMap.get(pairKey(a.id, b.id)) || null;
+  const sharedTags = intersect(a.tagsLower, b.tagsLower);
+  const sharedFocus = intersect(a.focusTokens, b.focusTokens);
+
+  if(a.layer === b.layer){
+    score += 0.6;
+    reasons.push('동일 레이어');
+  }
+  if(a.sub === b.sub){
+    score += 2.2;
+    reasons.push('동일 세부구분');
+  }
+  if(sharedTags.length){
+    const gain = Math.min(3.0, sharedTags.length * 1.05);
+    score += gain;
+    reasons.push(`공통 태그 ${sharedTags.slice(0,3).join(', ')}`);
+  }
+  if(sharedFocus.length){
+    const gain = Math.min(1.2, sharedFocus.length * 0.35);
+    score += gain;
+    reasons.push(`유사 포커스 ${sharedFocus.slice(0,2).join(', ')}`);
+  }
+  if(explicitType){
+    const explicitW = {group:5.2, tech:4.8, supply:4.6, invest:4.2}[explicitType] || 4.5;
+    score += explicitW;
+    reasons.unshift(`명시 관계 ${REL_LABELS[explicitType] || explicitType}`);
+  }
+  return {
+    score: +score.toFixed(2),
+    reasons,
+    explicitType,
+    sharedTags,
+    sharedFocus
+  };
+}
+
+function buildCorrelationGraph(){
+  const candidates = [];
+  for(let i=0;i<nodes.length;i+=1){
+    for(let j=i+1;j<nodes.length;j+=1){
+      const a = nodes[i];
+      const b = nodes[j];
+      const meta = scorePair(a,b);
+      if(meta.explicitType || meta.score >= ST.threshold - 0.7){
+        candidates.push({
+          source:a.id,
+          target:b.id,
+          key:`corr:${pairKey(a.id,b.id)}`,
+          weight:meta.score,
+          reasons:meta.reasons,
+          explicitType:meta.explicitType,
+          sharedTags:meta.sharedTags,
+          sharedFocus:meta.sharedFocus
+        });
+      }
+    }
+  }
+
+  const byNode = new Map(nodes.map(n => [n.id, []]));
+  candidates.forEach(e => {
+    byNode.get(e.source).push(e);
+    byNode.get(e.target).push(e);
+  });
+
+  const keep = new Set();
+  byNode.forEach(arr => {
+    arr
+      .sort((a,b) => b.weight - a.weight || d3.ascending(a.key, b.key))
+      .forEach((e, idx) => {
+        if(e.explicitType || idx < 7) keep.add(e.key);
+      });
+  });
+
+  correlationLinks = candidates.filter(e => (e.explicitType || e.weight >= ST.threshold) && keep.has(e.key));
+
+  if(correlationLinks.length < Math.min(RELATIONS.length, 30)){
+    const fallback = [...candidates].sort((a,b) => b.weight - a.weight).slice(0, 50);
+    const exist = new Set(correlationLinks.map(e => e.key));
+    fallback.forEach(e => {
+      if(!exist.has(e.key)) correlationLinks.push(e);
+    });
+  }
+
+  corrAdjacency = new Map(nodes.map(n => [n.id, []]));
+  correlationLinks.forEach(link => {
+    corrAdjacency.get(link.source).push({id:link.target, weight:link.weight, reasons:link.reasons, link});
+    corrAdjacency.get(link.target).push({id:link.source, weight:link.weight, reasons:link.reasons, link});
+  });
+
+  nodes.forEach(n => {
+    const adj = corrAdjacency.get(n.id) || [];
+    n.corrDegree = adj.length;
+    n.weightedDegree = d3.sum(adj, d => d.weight || 0);
+  });
+
+  detectCommunities();
+
+  const extent = d3.extent(nodes, d => d.weightedDegree);
+  const scale = d3.scaleSqrt().domain(extent[0] === extent[1] ? [0,1] : extent).range([0, 13]);
+  nodes.forEach(n => {
+    n.corrR = clamp(n.baseR + scale(n.weightedDegree), n.baseR, n.baseR + 13);
+  });
+
+  assignCommunityCenters();
+  assignCommunityOffsets();
+}
+
+function detectCommunities(){
+  const labels = new Map(nodes.map(n => [n.id, n.id]));
+  for(let iter=0; iter<18; iter+=1){
+    let changed = 0;
+    const order = d3.shuffle([...nodes]);
+    order.forEach(node => {
+      const neighbors = corrAdjacency.get(node.id) || [];
+      if(!neighbors.length) return;
+      const scoreByLabel = new Map();
+      neighbors.forEach(({id, weight}) => {
+        const lbl = labels.get(id);
+        scoreByLabel.set(lbl, (scoreByLabel.get(lbl) || 0) + weight);
+      });
+      const current = labels.get(node.id);
+      let bestLabel = current;
+      let bestScore = -Infinity;
+      [...scoreByLabel.entries()].forEach(([lbl, score]) => {
+        if(score > bestScore || (score === bestScore && lbl === current)){
+          bestLabel = lbl;
+          bestScore = score;
+        }
+      });
+      if(bestLabel !== current){
+        labels.set(node.id, bestLabel);
+        changed += 1;
+      }
+    });
+    if(!changed) break;
+  }
+
+  const groups = d3.groups(nodes, n => labels.get(n.id)).sort((a,b) => b[1].length - a[1].length);
+  communityMeta = new Map();
+  const nodeToComm = new Map();
+
+  groups.forEach(([_, group], idx) => {
+    const cid = `C${idx+1}`;
+    group.forEach(n => nodeToComm.set(n.id, cid));
+    const layerTop = d3.rollups(group, v => v.length, d => d.layer).sort((a,b) => b[1]-a[1])[0]?.[0] || group[0].layer;
+    const subTop = d3.rollups(group, v => v.length, d => d.subName).sort((a,b) => b[1]-a[1])[0]?.[0] || '';
+    communityMeta.set(cid, {
+      id: cid,
+      color: CORR_COLORS[idx % CORR_COLORS.length],
+      size: group.length,
+      label: group.length >= 4 ? `${layerMap[layerTop]?.name || layerTop} · ${subTop}` : `${layerMap[layerTop]?.name || layerTop}`
+    });
+  });
+
+  nodes.forEach(n => {
+    n.community = nodeToComm.get(n.id);
+    n.communityColor = communityMeta.get(n.community)?.color || '#94a3b8';
+  });
+}
+
+function assignCommunityCenters(){
+  communityCenters = new Map();
+  const ordered = [...communityMeta.values()].sort((a,b) => b.size - a.size);
+  ordered.forEach((meta, idx) => {
+    const slot = COMMUNITY_SLOTS[idx] || [0.5 + Math.cos(idx)*0.24, 0.5 + Math.sin(idx)*0.24];
+    communityCenters.set(meta.id, {x:W*slot[0], y:H*slot[1]});
+  });
+}
+
+function assignCommunityOffsets(){
+  const groups = d3.group(nodes, n => n.community);
+  groups.forEach(group => {
+    group.sort((a,b) => (b.weightedDegree - a.weightedDegree) || d3.ascending(a.id, b.id));
+    const step = Math.max(22, Math.min(54, 16 + Math.sqrt(group.length)*5));
+    group.forEach((node, idx) => {
+      node.corrBase = spiralOffset(idx, step + node.corrR*0.55);
+    });
+  });
+}
+
+buildCorrelationGraph();
+
+function ecoSpreadForLayer(layerId){
+  let spread = 1;
+  if(ST.layerFilter === layerId) spread += 0.18;
+  if(ST.selected){
+    const selectedNode = nodesById.get(ST.selected);
+    if(selectedNode && selectedNode.layer === layerId) spread += 0.12;
+  }
+  if(ST.zoomK > 1.55) spread += 0.06;
+  return spread;
+}
+function updateTargets(){
+  nodes.forEach(node => {
+    const layer = layerMap[node.layer];
+    const sub = subMap[`${node.layer}:${node.sub}`];
+    const center = getLayerCenter(layer);
+    const R = Math.max(Math.min(W,H) * 0.105, 92) + Math.sqrt(layerCounts.get(node.layer) || 0) * 5.9;
+    const spread = ecoSpreadForLayer(node.layer);
+    const subOffsetScale = 0.88 + spread * 0.08;
+    const localOffsetScale = 0.54 + spread * 0.18;
+    node.ecoTargetX = center.x + (sub ? sub.dx * R * subOffsetScale : 0) + node.localBase.x * localOffsetScale;
+    node.ecoTargetY = center.y + (sub ? sub.dy * R * subOffsetScale : 0) + node.localBase.y * localOffsetScale;
+
+    const commCenter = communityCenters.get(node.community) || {x:W/2, y:H/2};
+    node.corrTargetX = commCenter.x + node.corrBase.x;
+    node.corrTargetY = commCenter.y + node.corrBase.y;
+  });
+}
+updateTargets();
+
+function drawBgGrid(){
+  const cvs = document.getElementById('bg-canvas');
+  cvs.width = W;
+  cvs.height = H;
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  if(ST.mode === 'correlation') return;
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || 'rgba(255,255,255,.03)';
+  ctx.lineWidth = 1;
+  const gs = 48;
+  for(let x=0;x<W;x+=gs){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0;y<H;y+=gs){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+}
+
+const svg = d3.select('#graph-svg').attr('width', W).attr('height', H);
+const defs = svg.append('defs');
+
+const zoomRoot = svg.append('g').attr('id', 'zoom-root');
+const zoneG = zoomRoot.append('g').attr('id','zone-g');
+const subpillG = zoomRoot.append('g').attr('id','subpill-g');
+const communityG = zoomRoot.append('g').attr('id','community-g');
+const linkG = zoomRoot.append('g').attr('id','link-g');
+const nodeG = zoomRoot.append('g').attr('id','node-g');
+
+const selectedGlow = defs.append('filter')
+  .attr('id','selected-glow')
+  .attr('x','-70%').attr('y','-70%').attr('width','240%').attr('height','240%');
+selectedGlow.append('feGaussianBlur').attr('stdDeviation',5).attr('result','blur');
+const merge = selectedGlow.append('feMerge');
+merge.append('feMergeNode').attr('in','blur');
+merge.append('feMergeNode').attr('in','SourceGraphic');
+
+LAYER_DEFS.forEach(l => {
+  const center = getLayerCenter(l);
+  const R = Math.max(Math.min(W,H) * 0.105, 92) + Math.sqrt(layerCounts.get(l.id) || 0) * 5.9;
+  const g = zoneG.append('g').attr('class', `zone-group zone-${l.id}`);
+  g.append('circle')
+    .attr('class', 'zone-dash')
+    .attr('fill', 'none')
+    .attr('stroke', l.accent)
+    .attr('stroke-width', 1)
+    .attr('stroke-opacity', .08)
+    .attr('stroke-dasharray', '4 6')
+    .attr('r', R * 1.18)
+    .attr('cx', center.x)
+    .attr('cy', center.y);
+  g.append('circle')
+    .attr('class', 'zone-fill')
+    .attr('fill', l.accent)
+    .attr('fill-opacity', .05)
+    .attr('stroke', l.accent)
+    .attr('stroke-width', 1)
+    .attr('stroke-opacity', .18)
+    .attr('r', R)
+    .attr('cx', center.x)
+    .attr('cy', center.y);
+  g.append('text')
+    .attr('class', `zone-label zone-label-${l.id}`)
+    .attr('x', center.x)
+    .attr('y', center.y - R - 18)
+    .attr('text-anchor', 'middle')
+    .attr('fill', l.accent)
+    .attr('font-size', '14px')
+    .attr('stroke-width', 6)
+    .text(l.name);
+  g.append('text')
+    .attr('class', `zone-count zone-count-${l.id}`)
+    .attr('x', center.x)
+    .attr('y', center.y - R + 2)
+    .attr('text-anchor', 'middle')
+    .attr('fill', l.accent)
+    .attr('font-size', '10px')
+    .attr('stroke-width', 5)
+    .text(`${layerCounts.get(l.id) || 0}개`);
+});
+
+const subpillData = Object.entries(SUBCAT_DEFS).flatMap(([layer, subs]) =>
+  subs.map(s => ({
+    layer,
+    ...s,
+    count: subCounts.get(`${layer}:${s.id}`) || 0
+  }))
+);
+const subpillSel = subpillG.selectAll('g.subpill')
+  .data(subpillData)
+  .join('g')
+  .attr('class', d => `subpill subpill-${d.layer}`);
+subpillSel.each(function(d){
+  const g = d3.select(this);
+  const txt = g.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dominant-baseline', 'central')
+    .text(`${d.name} · ${d.count}`);
+  const bb = txt.node().getBBox();
+  g.insert('rect', 'text')
+    .attr('x', bb.x - 10)
+    .attr('y', bb.y - 5)
+    .attr('width', bb.width + 20)
+    .attr('height', bb.height + 10)
+    .attr('fill', layerMap[d.layer].accent)
+    .attr('stroke', layerMap[d.layer].accent)
+    .attr('stroke-opacity', .32);
+});
+
+function updateZones(){
+  zoneG.selectAll('.zone-group').each(function(d,i){
+    const layer = LAYER_DEFS[i];
+    const center = getLayerCenter(layer);
+    const R = Math.max(Math.min(W,H) * 0.105, 92) + Math.sqrt(layerCounts.get(layer.id) || 0) * 5.9;
+    const g = d3.select(this);
+    g.select('.zone-dash').attr('cx', center.x).attr('cy', center.y).attr('r', R * 1.18);
+    g.select('.zone-fill').attr('cx', center.x).attr('cy', center.y).attr('r', R);
+    g.select('.zone-label').attr('x', center.x).attr('y', center.y - R - 18);
+    g.select('.zone-count').attr('x', center.x).attr('y', center.y - R + 2);
+  });
+}
+function updateSubpills(){
+  updateZones();
+  subpillSel.each(function(d){
+    const center = getLayerCenter(d.layer);
+    const R = Math.max(Math.min(W,H) * 0.105, 92) + Math.sqrt(layerCounts.get(d.layer) || 0) * 5.9;
+    const spread = ecoSpreadForLayer(d.layer);
+    const subOffsetScale = 0.88 + spread * 0.08;
+    const x = center.x + d.dx * R * subOffsetScale;
+    const y = center.y + d.dy * R * subOffsetScale;
+    const active = !ST.layerFilter || ST.layerFilter === d.layer;
+    d3.select(this)
+      .attr('transform', `translate(${x},${y}) scale(${ST.mode === 'ecosystem' ? (active ? 1 : .92) : .94})`)
+      .attr('opacity', ST.mode === 'ecosystem' ? (active ? .82 : .24) : 0);
+  });
+}
+
+function communityRenderData(){
+  return [...communityMeta.values()].map(meta => {
+    const fallback = communityCenters.get(meta.id) || {x:W/2,y:H/2};
+    const groupNodes = nodes.filter(n => n.community === meta.id);
+    const activeCount = groupNodes.filter(n => !ST.layerFilter || n.layer === ST.layerFilter).length;
+    if(!groupNodes.length){
+      return { ...meta, center:fallback, radius:56, activeCount, label:meta.label };
+    }
+
+    const weights = groupNodes.map(n => Math.max(1.2, (n.weightedDegree || 0) + n.r * 0.35));
+    const weightSum = d3.sum(weights);
+    const cx = d3.sum(groupNodes, (n, idx) => n.x * weights[idx]) / weightSum;
+    const cy = d3.sum(groupNodes, (n, idx) => n.y * weights[idx]) / weightSum;
+    const radius = clamp(
+      d3.max(groupNodes, n => Math.hypot(n.x - cx, n.y - cy) + n.r + 22) || 48,
+      46,
+      190
+    );
+    const layerTop = d3.rollups(groupNodes, v => v.length, d => d.layer).sort((a,b) => b[1]-a[1])[0]?.[0] || groupNodes[0].layer;
+    const subTop = d3.rollups(groupNodes, v => v.length, d => d.subName).sort((a,b) => b[1]-a[1])[0]?.[0] || '';
+    const label = groupNodes.length >= 4
+      ? `${layerMap[layerTop]?.name || layerTop} · ${subTop}`
+      : `${layerMap[layerTop]?.name || layerTop}`;
+
+    return {
+      ...meta,
+      center:{x:cx,y:cy},
+      radius,
+      activeCount,
+      label
+    };
+  });
+}
+let communitySel = communityG.selectAll('g.community').data(communityRenderData(), d => d.id).join('g').attr('class','community');
+communitySel.append('circle').attr('class','community-bg');
+communitySel.append('text').attr('class','community-label').attr('text-anchor','middle');
+communitySel.append('text').attr('class','community-count').attr('text-anchor','middle');
+
+function updateCommunities(){
+  communitySel = communityG.selectAll('g.community')
+    .data(communityRenderData(), d => d.id)
+    .join(enter => {
+      const g = enter.append('g').attr('class','community');
+      g.append('circle').attr('class','community-bg');
+      g.append('text').attr('class','community-label').attr('text-anchor','middle');
+      g.append('text').attr('class','community-count').attr('text-anchor','middle');
+      return g;
+    });
+
+  communitySel.each(function(d){
+    const g = d3.select(this);
+    const selectedNode = ST.selected ? nodesById.get(ST.selected) : null;
+    const selectedActive = selectedNode && selectedNode.community === d.id;
+    const activeOpacity = ST.mode === 'correlation' ? ((!ST.layerFilter || d.activeCount > 0) ? 1 : .18) : 0;
+    g.attr('opacity', activeOpacity);
+    g.select('.community-bg')
+      .attr('cx', d.center.x)
+      .attr('cy', d.center.y)
+      .attr('r', d.radius)
+      .attr('fill', d.color)
+      .attr('stroke', d.color)
+      .attr('stroke-width', selectedActive ? 2 : 1)
+      .attr('fill-opacity', selectedActive ? .11 : .07)
+      .attr('stroke-opacity', selectedActive ? .32 : .18);
+    g.select('.community-label')
+      .attr('x', d.center.x)
+      .attr('y', d.center.y - d.radius - 12)
+      .attr('fill', d.color)
+      .text(d.label);
+    g.select('.community-count')
+      .attr('x', d.center.x)
+      .attr('y', d.center.y - d.radius + 3)
+      .attr('fill', d.color)
+      .text(`${d.size} nodes`);
+  });
+}
+
+let linkSel = linkG.selectAll('path.node-link').data([], d => edgeKey(d)).join('path');
+let nodeSel = nodeG.selectAll('g.node-wrap')
+  .data(nodes, d => d.id)
+  .join(enter => {
+    const g = enter.append('g').attr('class','node-wrap').style('cursor','pointer');
+    g.append('circle').attr('class','node-ring').attr('fill','none');
+    g.append('circle').attr('class','node-body');
+    g.append('circle').attr('class','node-core');
+    g.append('circle').attr('class','node-size-dot');
+    g.append('text').attr('class','node-label-out').attr('text-anchor','middle');
+    g.append('text').attr('class','node-label-in').attr('text-anchor','middle');
+    return g;
+  });
+
+function setLabelContent(){
+  nodeSel.each(function(d){
+    d3.select(this).select('.node-label-out')
+      .attr('dy', d.r + 18)
+      .attr('font-size', d.size === 'large' ? '11.5px' : d.size === 'mid' ? '10.5px' : '9.2px')
+      .text(oneLineLabel(d.id, d.size === 'large' ? 12 : 10));
+
+    const label = d3.select(this).select('.node-label-in');
+    label.selectAll('*').remove();
+    const lines = fitLabelLines(d.id, d.r);
+    const fontSize = d.r >= 30 ? 13 : d.r >= 24 ? 12 : d.r >= 18 ? 10.5 : 9;
+    const totalHeight = (lines.length - 1) * fontSize * 1.06;
+    label.attr('font-size', `${fontSize}px`).attr('stroke-width', ST.mode === 'correlation' ? 4 : 3.4);
+    lines.forEach((line, idx) => {
+      label.append('tspan')
+        .attr('x', 0)
+        .attr('y', -totalHeight/2 + idx * fontSize * 1.06)
+        .text(line);
+    });
+  });
+}
+setLabelContent();
+
+function bindLinks(){
+  const current = ST.mode === 'ecosystem' ? relationLinks : correlationLinks;
+  linkSel = linkG.selectAll('path.node-link')
+    .data(current, d => edgeKey(d))
+    .join(
+      enter => enter.append('path').attr('class','node-link'),
+      update => update,
+      exit => exit.remove()
+    );
+}
+bindLinks();
+
+function setNodeRadiusForMode(){
+  nodes.forEach(n => {
+    n.r = ST.mode === 'ecosystem' ? n.ecoR : n.corrR;
+  });
+  nodeSel.select('.node-ring').attr('r', d => d.r + (ST.mode === 'ecosystem' ? 7 : 6));
+  nodeSel.select('.node-body').attr('r', d => d.r);
+  nodeSel.select('.node-core').attr('r', d => Math.max(5, d.r - (ST.mode === 'ecosystem' ? 6 : 0)));
+  nodeSel.select('.node-size-dot')
+    .attr('cx', d => d.r * 0.58)
+    .attr('cy', d => d.r * 0.58)
+    .attr('r', 3.3);
+  setLabelContent();
+}
+
+const sim = d3.forceSimulation(nodes)
+  .alphaDecay(.048)
+  .velocityDecay(.42);
+
+function ecoClusterForce(alpha){
+  nodes.forEach(n => {
+    n.vx += (n.ecoTargetX - n.x) * 0.10 * alpha;
+    n.vy += (n.ecoTargetY - n.y) * 0.10 * alpha;
+  });
+}
+function corrClusterForce(alpha){
+  nodes.forEach(n => {
+    n.vx += (n.corrTargetX - n.x) * 0.14 * alpha;
+    n.vy += (n.corrTargetY - n.y) * 0.14 * alpha;
+  });
+}
+
+function configureSimulation(reheat=true){
+  updateTargets();
+  setNodeRadiusForMode();
+  bindLinks();
+
+  if(ST.mode === 'ecosystem'){
+    sim
+      .force('link', d3.forceLink(relationLinks).id(d => d.id)
+        .distance(d => ({group:88, tech:118, supply:134, invest:146}[d.type] || 122))
+        .strength(d => ({group:.14, tech:.08, supply:.07, invest:.06}[d.type] || .05)))
+      .force('charge', d3.forceManyBody().strength(d => d.size === 'large' ? -260 : d.size === 'mid' ? -205 : -160))
+      .force('collision', d3.forceCollide().radius(d => d.r + 10).strength(.96))
+      .force('cluster', ecoClusterForce)
+      .force('centerX', d3.forceX(W/2).strength(.018))
+      .force('centerY', d3.forceY(H/2).strength(.018));
+  } else {
+    sim
+      .force('link', d3.forceLink(correlationLinks).id(d => d.id)
+        .distance(d => clamp(138 - d.weight * 15, 42, 112))
+        .strength(d => clamp(d.weight / 8, .08, .42)))
+      .force('charge', d3.forceManyBody().strength(d => -110 - d.r * 7.6))
+      .force('collision', d3.forceCollide().radius(d => d.r + 6).strength(.94))
+      .force('cluster', corrClusterForce)
+      .force('centerX', d3.forceX(W/2).strength(.02))
+      .force('centerY', d3.forceY(H/2).strength(.02));
+  }
+  if(reheat) sim.alpha(.66).restart();
+}
+
+function edgePath(d){
+  const sx = d.source.x, sy = d.source.y;
+  const tx = d.target.x, ty = d.target.y;
+  const dx = tx - sx, dy = ty - sy;
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const key = edgeKey(d);
+  const bendBase = ST.mode === 'correlation' ? .16 : .07;
+  const bend = Math.min(ST.mode === 'correlation' ? 36 : 18, len * bendBase) * hashSign(key);
+  const mx = (sx + tx) / 2 + nx * bend;
+  const my = (sy + ty) / 2 + ny * bend;
+  return `M${sx},${sy}Q${mx},${my} ${tx},${ty}`;
+}
+
+function queryMatch(d,q){
+  if(!q) return true;
+  return d.id.toLowerCase().includes(q)
+    || (d.focus || '').toLowerCase().includes(q)
+    || (d.summary || '').toLowerCase().includes(q)
+    || (d.subName || '').toLowerCase().includes(q)
+    || (d.tags || []).some(t => String(t).toLowerCase().includes(q));
+}
+
+function getSelectionContext(){
+  const empty = { connected:new Map(), similar:new Set() };
+  if(!ST.selected || !nodesById.has(ST.selected)) return empty;
+  const base = nodesById.get(ST.selected);
+
+  if(ST.mode === 'ecosystem'){
+    const connected = new Map((relationAdjacency.get(base.id) || []).map(d => [d.id, d]));
+    const baseTags = new Set(base.tags || []);
+    const similar = new Set(
+      nodes
+        .filter(n => n.id !== base.id && !connected.has(n.id) && (n.sub === base.sub || n.tags.some(t => baseTags.has(t))))
+        .slice(0, 12)
+        .map(n => n.id)
+    );
+    return { connected, similar };
+  }
+
+  const connected = new Map((corrAdjacency.get(base.id) || []).map(d => [d.id, d]));
+  const sameComm = nodes
+    .filter(n => n.id !== base.id && !connected.has(n.id) && n.community === base.community)
+    .sort((a,b) => b.weightedDegree - a.weightedDegree || d3.ascending(a.id, b.id))
+    .slice(0, 12)
+    .map(n => n.id);
+  return { connected, similar:new Set(sameComm) };
+}
+
+function labelOpacityEcosystem(d, isActive, ctx){
+  if(ST.selected === d.id) return 1;
+  if(ctx.connected.has(d.id)) return .98;
+  if(ctx.similar.has(d.id)) return .88;
+  if(ST.selected) return 0;
+  if(!isActive) return 0;
+  if(d.size === 'large') return .98;
+  if(d.size === 'mid') return (ST.zoomK > 0.82 || ST.query || ST.layerFilter) ? .9 : .8;
+  if(ST.zoomK > 0.82 || ST.query || ST.layerFilter) return .76;
+  return .46;
+}
+function labelOpacityCorrelation(d, isActive, ctx){
+  if(ST.selected === d.id) return 1;
+  if(ctx.connected.has(d.id)) return 1;
+  if(ctx.similar.has(d.id)) return .9;
+  if(ST.selected) return .08;
+  if(!isActive) return .18;
+  return ST.zoomK > .55 ? .98 : .66;
+}
+
+function relationColor(type){ return REL_COL[type] || '#cbd5e1'; }
+
+function applyVisual(){
+  updateTargets();
+  updateSubpills();
+  updateCommunities();
+  const q = ST.query.trim().toLowerCase();
+  const ctx = getSelectionContext();
+  const selectedNode = ST.selected ? nodesById.get(ST.selected) : null;
+
+  zoneG.attr('opacity', ST.mode === 'ecosystem' ? 1 : 0);
+  subpillG.attr('opacity', ST.mode === 'ecosystem' ? 1 : 0);
+  communityG.attr('opacity', ST.mode === 'correlation' ? 1 : 0);
+
+  zoneG.selectAll('.zone-group').each(function(d,i){
+    const layerId = LAYER_DEFS[i].id;
+    const active = !ST.layerFilter || ST.layerFilter === layerId;
+    const highlight = selectedNode && selectedNode.layer === layerId;
+    d3.select(this).attr('opacity', ST.mode === 'ecosystem' ? (active ? 1 : .22) : 0);
+    d3.select(this).select('.zone-fill')
+      .attr('fill-opacity', active ? (highlight ? .08 : .055) : .02)
+      .attr('stroke-opacity', active ? (highlight ? .32 : .2) : .06);
+    d3.select(this).select('.zone-dash')
+      .attr('stroke-opacity', active ? .1 : .04);
+  });
+
+  nodeSel.each(function(d){
+    const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
+    const qMatch = queryMatch(d, q);
+    const active = layerMatch && qMatch;
+    const isSelected = ST.selected === d.id;
+    const isConnected = ctx.connected.has(d.id);
+    const isSimilar = ctx.similar.has(d.id);
+
+    let opacity = 1;
+    if(ST.selected){
+      opacity = isSelected ? 1 : isConnected ? 1 : isSimilar ? .82 : .08;
+    } else if(!active){
+      opacity = .12;
+    }
+
+    const g = d3.select(this);
+    const scale = isSelected ? 1.12 : isConnected ? 1.06 : isSimilar ? 1.03 : 1;
+    g.attr('opacity', opacity)
+      .attr('transform', `translate(${d.x},${d.y}) scale(${scale})`);
+
+    const ring = g.select('.node-ring');
+    const body = g.select('.node-body');
+    const core = g.select('.node-core');
+    const dot = g.select('.node-size-dot');
+    const labelOut = g.select('.node-label-out');
+    const labelIn = g.select('.node-label-in');
+
+    if(ST.mode === 'ecosystem'){
+      const ringColor = isSelected ? '#60a5fa' : isConnected ? relationColor(ctx.connected.get(d.id)?.type) : d.accent;
+      ring
+        .attr('stroke', ringColor)
+        .attr('stroke-width', isSelected ? 3.2 : isConnected ? 2.5 : isSimilar ? 2 : 1.8)
+        .attr('stroke-opacity', isSelected ? .98 : isConnected ? .9 : isSimilar ? .46 : 0)
+        .attr('filter', (isSelected || isConnected) ? 'url(#selected-glow)' : null);
+      body
+        .attr('fill', d.accent)
+        .attr('fill-opacity', isSelected ? .34 : isConnected ? .28 : .16)
+        .attr('stroke', isConnected ? ringColor : d.accent)
+        .attr('stroke-width', isSelected ? 3 : isConnected ? 2.4 : 1.8)
+        .attr('stroke-opacity', .94);
+      core
+        .attr('fill', d.sizeColor)
+        .attr('fill-opacity', .98)
+        .attr('opacity', 1)
+        .attr('stroke', (isSelected || isConnected) ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,0)')
+        .attr('stroke-width', isSelected ? 2 : 0);
+      dot.attr('fill', d.sizeColor).attr('opacity', .95);
+      labelOut.attr('opacity', labelOpacityEcosystem(d, active, ctx));
+      labelIn.attr('opacity', 0);
+    } else {
+      const ringColor = isSelected ? '#2563eb' : d.accent;
+      ring
+        .attr('stroke', ringColor)
+        .attr('stroke-width', isSelected ? 3 : isConnected ? 2.3 : 1.6)
+        .attr('stroke-opacity', isSelected ? .98 : .78)
+        .attr('filter', isSelected ? 'url(#selected-glow)' : null);
+      body
+        .attr('fill', d.communityColor)
+        .attr('fill-opacity', isSelected ? .96 : .92)
+        .attr('stroke', d.communityColor)
+        .attr('stroke-width', isSelected ? 3 : 2)
+        .attr('stroke-opacity', 1);
+      core
+        .attr('opacity', 0)
+        .attr('fill-opacity', 0)
+        .attr('stroke-width', 0);
+      dot.attr('fill', d.sizeColor).attr('opacity', .85);
+      labelOut.attr('opacity', 0);
+      labelIn.attr('opacity', labelOpacityCorrelation(d, active, ctx));
+    }
+  });
+
+  linkSel.each(function(d){
+    const s = typeof d.source === 'string' ? nodesById.get(d.source) : d.source;
+    const t = typeof d.target === 'string' ? nodesById.get(d.target) : d.target;
+    const bothActive = (!ST.layerFilter || (s.layer === ST.layerFilter || t.layer === ST.layerFilter))
+      && (!ST.query || queryMatch(s, q) || queryMatch(t, q));
+    const selectedHit = ST.selected && (s.id === ST.selected || t.id === ST.selected);
+    const path = d3.select(this);
+
+    if(ST.mode === 'ecosystem'){
+      path
+        .attr('stroke', ST.selected ? (selectedHit ? relationColor(d.type) : 'rgba(255,255,255,.1)') : relationColor(d.type))
+        .attr('stroke-width', ST.selected ? (selectedHit ? 2.4 : 1) : 1.2)
+        .attr('stroke-opacity', ST.selected ? (selectedHit ? .92 : .03) : (bothActive ? .16 : .05))
+        .attr('stroke-dasharray', d.type === 'invest' ? (ST.selected && selectedHit ? '6 4' : '4 3') : null)
+        .attr('d', edgePath(d));
+    } else {
+      const sameComm = s.community && t.community && s.community === t.community;
+      const baseColor = sameComm ? s.communityColor : getComputedStyle(document.body).getPropertyValue('--corr-edge').trim();
+      path
+        .attr('stroke', ST.selected ? (selectedHit ? baseColor : getComputedStyle(document.body).getPropertyValue('--corr-edge-muted').trim()) : baseColor)
+        .attr('stroke-width', ST.selected ? (selectedHit ? clamp((d.weight || 2) * .55, 1.6, 4.8) : 1) : clamp((d.weight || 2) * .5, .9, 4.3))
+        .attr('stroke-opacity', ST.selected ? (selectedHit ? .9 : .06) : (bothActive ? (sameComm ? .52 : .22) : .06))
+        .attr('stroke-dasharray', d.explicitType === 'invest' ? '4 4' : null)
+        .attr('d', edgePath(d));
+    }
+  });
+
+  updateSearchFeedback();
+  updateLegend();
+  updateStatsBar();
+}
+
+sim.on('tick', () => {
+  const ctx = getSelectionContext();
+  linkSel.attr('d', edgePath);
+  nodeSel.attr('transform', d => {
+    const isSelected = ST.selected === d.id;
+    const isConnected = ctx.connected.has(d.id);
+    const isSimilar = ctx.similar.has(d.id);
+    const scale = isSelected ? 1.12 : isConnected ? 1.06 : isSimilar ? 1.03 : 1;
+    return `translate(${d.x},${d.y}) scale(${scale})`;
+  });
+  if(ST.mode === 'correlation') updateCommunities();
+});
+
+const zoomBehavior = d3.zoom()
+  .scaleExtent([0.35, 4.5])
+  .on('zoom', ev => {
+    ST.zoomK = ev.transform.k;
+    zoomRoot.attr('transform', ev.transform);
+    applyVisual();
+    hideOnboardHint();
+  });
+svg.call(zoomBehavior);
+
+function fitGraph(duration=700){
+  const pts = nodes.map(n => ({
+    x1:n.x - n.r - 18,
+    y1:n.y - n.r - 18,
+    x2:n.x + n.r + 18,
+    y2:n.y + n.r + 18
+  }));
+  const minX = d3.min(pts, d => d.x1);
+  const minY = d3.min(pts, d => d.y1);
+  const maxX = d3.max(pts, d => d.x2);
+  const maxY = d3.max(pts, d => d.y2);
+  if(!isFinite(minX) || !isFinite(maxX)) return;
+  const width = Math.max(10, maxX - minX);
+  const height = Math.max(10, maxY - minY);
+  const pad = 56;
+  const maxScale = ST.mode === 'ecosystem' ? 1.22 : 1.12;
+  const scale = Math.min((W - pad*2)/width, (H - pad*2)/height, maxScale);
+  const tx = W/2 - scale*(minX + width/2);
+  const ty = H/2 - scale*(minY + height/2);
+  svg.transition().duration(duration).call(zoomBehavior.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+}
+
+function updateSearchFeedback(){
+  const q = ST.query.trim().toLowerCase();
+  const clearBtn = document.getElementById('search-clear');
+  const countEl = document.getElementById('search-count');
+  const emptyEl = document.getElementById('search-empty');
+
+  if(!q){
+    countEl.textContent = '';
+    clearBtn.classList.remove('visible');
+    emptyEl.classList.remove('visible');
+    return;
+  }
+  clearBtn.classList.add('visible');
+  const matched = nodes.filter(d => {
+    const layerMatch = !ST.layerFilter || d.layer === ST.layerFilter;
+    return layerMatch && queryMatch(d, q);
+  });
+  countEl.textContent = `${matched.length}건`;
+  emptyEl.classList.toggle('visible', matched.length === 0);
+}
+
+function updateLegend(){
+  const title = document.getElementById('legend-title');
+  const box = document.getElementById('legend-content');
+  if(ST.mode === 'ecosystem'){
+    title.textContent = '범례 · 생태계 배치';
+    box.innerHTML = `
+      <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.large.color}"></div>대기업</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.mid.color}"></div>중견·스케일업</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.startup.color}"></div>스타트업</div>
+      <div class="legend-item"><div class="legend-line" style="background:${REL_COL.group}"></div>그룹 계열</div>
+      <div class="legend-item"><div class="legend-line" style="background:${REL_COL.tech}"></div>기술 협력</div>
+      <div class="legend-item"><div class="legend-line" style="background:${REL_COL.supply}"></div>공급망 연결</div>
+      <div class="legend-item"><div class="legend-line" style="background:none;border-top:2px dashed ${REL_COL.invest}"></div>투자/파트너십</div>
+    `;
+  } else {
+    title.textContent = '범례 · 상관 네트워크';
+    box.innerHTML = `
+      <div class="legend-item"><div class="legend-swatch" style="background:${CORR_COLORS[0]}"></div>같은 군집</div>
+      <div class="legend-item"><div class="legend-line" style="background:var(--corr-edge)"></div>상관 링크</div>
+      <div class="legend-item"><div class="legend-line" style="background:none;border-top:2px dashed ${REL_COL.invest}"></div>명시 투자 링크</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:${SIZE_DEFS.mid.color}"></div>점 크기 = 연결 중심성</div>
+      <div class="legend-item"><div class="legend-line" style="background:${layerMap.service.accent}"></div>외곽선 = 원래 레이어</div>
+      <div class="legend-item" style="line-height:1.5;color:var(--text-muted)">임계값 ${ST.threshold.toFixed(1)} 이상만 남기고, 노드별 상위 연결을 보존합니다.</div>
+    `;
+  }
+}
+
+function updateStatsBar(){
+  const activeLayer = ST.layerFilter ? layerMap[ST.layerFilter]?.name || ST.layerFilter : '전체';
+  const modeVal = ST.mode === 'ecosystem' ? '배치' : '상관';
+  const extraVal = ST.mode === 'ecosystem' ? relationLinks.length : correlationLinks.length;
+  const extraLabel = ST.mode === 'ecosystem' ? '직접 관계' : '상관 링크';
+  document.getElementById('stats-bar').innerHTML = [
+    {val:nodes.length, lbl:'총 기업'},
+    ...LAYER_DEFS.map(l => ({val:layerCounts.get(l.id) || 0, lbl:l.name, col:l.accent})),
+    {val:extraVal, lbl:extraLabel},
+    {val:modeVal, lbl:'현재 모드'},
+    {val:activeLayer, lbl:'레이어 필터'}
+  ].map(s => `<div class="stat-item"><div class="stat-val"${s.col ? ` style="color:${s.col}"` : ''}>${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+}
+
+function updateDetail(){
+  const panel = document.getElementById('detail-panel');
+  if(!ST.selected || !nodesById.has(ST.selected)){
+    panel.classList.remove('visible');
+    return;
+  }
+  const d = nodesById.get(ST.selected);
+  document.getElementById('d-layer').textContent = d.layerName;
+  document.getElementById('d-layer').style.color = d.accent;
+  document.getElementById('d-name').textContent = d.id;
+  document.getElementById('d-subcat').textContent = d.subName;
+  document.getElementById('d-focus').textContent = d.focus || '';
+  document.getElementById('d-size').textContent = d.sizeName;
+  document.getElementById('d-size').style.color = d.sizeColor;
+  document.getElementById('d-size').style.borderColor = d.sizeColor;
+  document.getElementById('d-size').style.background = `${d.sizeColor}1A`;
+  document.getElementById('d-summary').textContent = d.summary || '';
+
+  if(ST.mode === 'ecosystem'){
+    const directCount = (relationAdjacency.get(d.id) || []).length;
+    document.getElementById('d-extra').textContent = `직접 관계 ${directCount}건`;
+    document.getElementById('d-related-title').textContent = '직접 관계·유사 플레이어';
+  } else {
+    const groupSize = nodes.filter(n => n.community === d.community).length;
+    document.getElementById('d-extra').textContent = `군집 ${d.community} · ${groupSize}개`;
+    document.getElementById('d-related-title').textContent = '강한 상관·같은 군집';
+  }
+
+  const tags = document.getElementById('d-tags');
+  tags.innerHTML = (d.tags || []).map(t => `<span class="detail-tag" data-tag="${t}">${t}</span>`).join('');
+  tags.querySelectorAll('.detail-tag').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('search-input').value = el.dataset.tag;
+      ST.query = el.dataset.tag;
+      ST.selected = null;
+      applyVisual();
+      updateDetail();
+    });
+  });
+
+  let html = '';
+  if(ST.mode === 'ecosystem'){
+    const direct = (relationAdjacency.get(d.id) || [])
+      .map(meta => ({...meta, node:nodesById.get(meta.id)}))
+      .filter(x => x.node)
+      .sort((a,b) => d3.ascending(a.node.id, b.node.id))
+      .slice(0, 10);
+    const baseTags = new Set(d.tags || []);
+    const similar = nodes
+      .filter(n => n.id !== d.id && !direct.some(x => x.id === n.id) && (n.sub === d.sub || n.tags.some(t => baseTags.has(t))))
+      .slice(0, 10);
+
+    if(direct.length){
+      html += `<div class="related-group-label">직접 관계</div>`;
+      html += direct.map(item => `
+        <div class="related-item" data-id="${item.node.id}">
+          <div class="related-dot" style="background:${relationColor(item.type)}"></div>
+          <div class="related-main">
+            <div class="related-name">${item.node.id}</div>
+            <div class="related-sub">${REL_LABELS[item.type] || item.type} · ${item.node.layerName}</div>
+          </div>
+          <div class="related-score">${item.type}</div>
+        </div>
+      `).join('');
+    }
+    if(similar.length){
+      html += `<div class="related-group-label">유사 플레이어</div>`;
+      html += similar.map(item => `
+        <div class="related-item" data-id="${item.id}">
+          <div class="related-dot" style="background:${item.accent}"></div>
+          <div class="related-main">
+            <div class="related-name">${item.id}</div>
+            <div class="related-sub">${item.subName} · ${(item.tags || []).slice(0,2).join(', ')}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } else {
+    const strong = (corrAdjacency.get(d.id) || [])
+      .map(meta => ({...meta, node:nodesById.get(meta.id)}))
+      .filter(x => x.node)
+      .sort((a,b) => b.weight - a.weight || d3.ascending(a.node.id, b.node.id))
+      .slice(0, 10);
+    const cluster = nodes
+      .filter(n => n.id !== d.id && n.community === d.community && !strong.some(x => x.id === n.id))
+      .sort((a,b) => b.weightedDegree - a.weightedDegree || d3.ascending(a.id, b.id))
+      .slice(0, 10);
+
+    if(strong.length){
+      html += `<div class="related-group-label">강한 상관</div>`;
+      html += strong.map(item => `
+        <div class="related-item" data-id="${item.node.id}">
+          <div class="related-dot" style="background:${item.node.communityColor}"></div>
+          <div class="related-main">
+            <div class="related-name">${item.node.id}</div>
+            <div class="related-sub">${item.reasons.slice(0,2).join(' · ') || item.node.subName}</div>
+          </div>
+          <div class="related-score">${item.weight.toFixed(1)}</div>
+        </div>
+      `).join('');
+    }
+    if(cluster.length){
+      html += `<div class="related-group-label">같은 군집</div>`;
+      html += cluster.map(item => `
+        <div class="related-item" data-id="${item.id}">
+          <div class="related-dot" style="background:${item.communityColor}"></div>
+          <div class="related-main">
+            <div class="related-name">${item.id}</div>
+            <div class="related-sub">${item.subName || item.layerName} · 중심성 ${item.weightedDegree.toFixed(1)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  document.getElementById('d-related').innerHTML = html || `<div style="font-size:11px;color:var(--text-faint)">관련 노드가 없습니다</div>`;
+  document.querySelectorAll('.related-item[data-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      ST.selected = el.dataset.id;
+      applyVisual();
+      updateDetail();
+    });
+  });
+
+  panel.classList.add('visible');
+}
+
+const tooltip = document.getElementById('node-tooltip');
+const ttName = document.getElementById('tt-name');
+const ttSub = document.getElementById('tt-sub');
+const ttTags = document.getElementById('tt-tags');
+
+nodeSel
+  .on('click', (ev, d) => {
+    ev.stopPropagation();
+    ST.selected = ST.selected === d.id ? null : d.id;
+    applyVisual();
+    updateDetail();
+    hideOnboardHint();
+  })
+  .on('mouseover', (ev, d) => {
+    ttName.textContent = d.id;
+    const modeLine = ST.mode === 'ecosystem'
+      ? `${d.layerName} · ${d.subName} · ${d.sizeName}\n${d.focus}`
+      : `${d.layerName} · ${d.subName} · 군집 ${d.community}\n중심성 ${d.weightedDegree.toFixed(1)} · ${d.focus}`;
+    ttSub.textContent = modeLine;
+    ttTags.innerHTML = (d.tags || []).slice(0,4).map(t => `<span>${t}</span>`).join('');
+    tooltip.classList.add('visible');
+  })
+  .on('mousemove', ev => {
+    const pad = 14;
+    let x = ev.clientX + pad;
+    let y = ev.clientY - 10;
+    if(x + 250 > window.innerWidth) x = ev.clientX - 250 - pad;
+    if(y + 120 > window.innerHeight) y = window.innerHeight - 126;
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+  })
+  .on('mouseleave', () => tooltip.classList.remove('visible'));
+
+svg.on('click', () => {
+  ST.selected = null;
+  applyVisual();
+  updateDetail();
+});
+
+function renderFilters(){
+  const row = document.getElementById('filter-row');
+  row.innerHTML = `<span class="row-label">레이어</span><button class="f-pill active" data-layer="">전체 <span class="pill-count">${nodes.length}</span></button>` +
+    LAYER_DEFS.map(l => `<button class="f-pill" data-layer="${l.id}">${l.name} <span class="pill-count">${layerCounts.get(l.id) || 0}</span></button>`).join('');
+  row.querySelectorAll('.f-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      row.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      ST.layerFilter = btn.dataset.layer || null;
+      configureSimulation(true);
+      applyVisual();
+    });
+  });
+}
+renderFilters();
+
+function applyTheme(theme){
+  ST.theme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', ST.theme);
+  localStorage.setItem('korea-ai-dual-theme', ST.theme);
+  document.querySelectorAll('.theme-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.themeMode === ST.theme));
+  drawBgGrid();
+  applyVisual();
+  updateDetail();
+}
+document.querySelectorAll('.theme-pill').forEach(btn => {
+  btn.addEventListener('click', () => applyTheme(btn.dataset.themeMode));
+});
+
+function switchMode(mode){
+  ST.mode = mode === 'correlation' ? 'correlation' : 'ecosystem';
+  document.body.dataset.mode = ST.mode;
+  document.querySelectorAll('.mode-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === ST.mode));
+  drawBgGrid();
+  configureSimulation(true);
+  applyVisual();
+  updateDetail();
+  setTimeout(() => fitGraph(600), 90);
+}
+document.querySelectorAll('.mode-pill').forEach(btn => {
+  btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+});
+
+document.getElementById('corr-threshold').addEventListener('input', e => {
+  ST.threshold = +e.target.value;
+  document.getElementById('corr-threshold-val').textContent = `${ST.threshold.toFixed(1)}+`;
+  buildCorrelationGraph();
+  updateTargets();
+  updateCommunities();
+  if(ST.mode === 'correlation'){
+    configureSimulation(true);
+  }
+  applyVisual();
+  updateDetail();
+});
+document.getElementById('btn-rebuild').addEventListener('click', () => {
+  buildCorrelationGraph();
+  updateTargets();
+  updateCommunities();
+  if(ST.mode === 'correlation') configureSimulation(true);
+  applyVisual();
+  updateDetail();
+});
+
+const searchInput = document.getElementById('search-input');
+searchInput.addEventListener('input', e => {
+  ST.query = e.target.value;
+  applyVisual();
+});
+document.getElementById('search-clear').addEventListener('click', () => {
+  searchInput.value = '';
+  ST.query = '';
+  applyVisual();
+  searchInput.focus();
+});
+
+document.getElementById('close-detail').addEventListener('click', ev => {
+  ev.stopPropagation();
+  ST.selected = null;
+  applyVisual();
+  updateDetail();
+});
+
+document.getElementById('btn-zi').addEventListener('click', () => svg.transition().duration(240).call(zoomBehavior.scaleBy, 1.28));
+document.getElementById('btn-zo').addEventListener('click', () => svg.transition().duration(240).call(zoomBehavior.scaleBy, 0.78));
+document.getElementById('btn-fit').addEventListener('click', () => fitGraph(500));
+
+let hintHidden = false;
+function hideOnboardHint(){
+  if(hintHidden) return;
+  hintHidden = true;
+  document.getElementById('onboard-hint').classList.add('hidden');
+}
+setTimeout(hideOnboardHint, 12000);
+
+document.addEventListener('keydown', e => {
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    searchInput.focus();
+    return;
+  }
+  if(e.key === 'Escape'){
+    if(document.activeElement === searchInput){
+      searchInput.blur();
+      return;
+    }
+    if(ST.selected){
+      ST.selected = null;
+      applyVisual();
+      updateDetail();
+    }
+    return;
+  }
+  if(e.key === '0' && document.activeElement !== searchInput){
+    fitGraph(500);
+  }
+  if(e.key === '1' && document.activeElement !== searchInput){
+    switchMode('ecosystem');
+  }
+  if(e.key === '2' && document.activeElement !== searchInput){
+    switchMode('correlation');
+  }
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    svg.attr('width', W).attr('height', H);
+    updateTargets();
+    updateCommunities();
+    drawBgGrid();
+    configureSimulation(true);
+    applyVisual();
+  }, 140);
+});
+
+applyTheme(ST.theme);
+drawBgGrid();
+configureSimulation(true);
+applyVisual();
+updateDetail();
+setTimeout(() => fitGraph(850), 900);
+</script>
+</body>
+</html>
