@@ -44,7 +44,7 @@
     font-size: 1.05rem; font-weight: 700; letter-spacing: 0.3px;
     padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
   }
-  .bio { max-width: 72ch; }
+  .bio { max-width: 72ch; text-align: justify; }  /* 줄글 문단: 어절 보존 + 양쪽 끝 맞춤 */
 
   .entry { display: grid; grid-template-columns: 150px 1fr; gap: 6px 18px; margin-bottom: 14px; }
   .entry .date { color: var(--muted); font-size: 0.9rem; padding-top: 2px; white-space: nowrap; }
@@ -64,7 +64,7 @@
   .proj .date { color: var(--muted); font-size: 0.9rem; font-weight: 400; margin-left: 6px; }
   .proj .gist { color: var(--muted); font-size: 0.92rem; }
   .proj .pbody { padding: 2px 0 8px 20px; }
-  .proj .desc { font-size: 0.95rem; }
+  .proj .desc { font-size: 0.95rem; text-align: justify; }
   .proj .result { font-size: 0.95rem; }
   .proj .result::before { content: "— "; color: var(--muted); }
   .proj .plink { font-size: 0.9rem; margin-top: 4px; }
