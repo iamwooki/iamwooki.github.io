@@ -19,8 +19,8 @@
     font-family: "Pretendard", "Malgun Gothic", "맑은 고딕", "Helvetica Neue", Arial, sans-serif;
     background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15.5px;
     -webkit-font-smoothing: antialiased;
-    /* 한국 뉴스사이트 방식: 글자 단위 줄바꿈으로 줄을 꽉 채움 (사용자 확정 2026-07-27) */
-    word-break: normal; overflow-wrap: break-word;
+    /* 어절 보존 + 줄글 문단은 양쪽 정렬 — 단어 안 잘리고 오른쪽도 반듯 (2026-07-27) */
+    word-break: keep-all; overflow-wrap: break-word;
   }
   .wrap { max-width: 820px; margin: 0 auto; padding: 48px 24px 56px; }
   a { color: var(--link); text-decoration: none; }
@@ -45,7 +45,7 @@
     font-size: 1.05rem; font-weight: 700; letter-spacing: 0.3px;
     padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
   }
-  .bio { max-width: 72ch; }
+  .bio { max-width: 72ch; text-align: justify; }
 
   .entry { display: grid; grid-template-columns: 150px 1fr; gap: 6px 18px; margin-bottom: 14px; }
   .entry .date { color: var(--muted); font-size: 0.9rem; padding-top: 2px; white-space: nowrap; }
@@ -65,7 +65,7 @@
   .proj .date { color: var(--muted); font-size: 0.9rem; font-weight: 400; margin-left: 6px; }
   .proj .gist { color: var(--muted); font-size: 0.92rem; }
   .proj .pbody { padding: 2px 0 8px 20px; }
-  .proj .desc { font-size: 0.95rem; }
+  .proj .desc { font-size: 0.95rem; text-align: justify; }
   .proj .result { font-size: 0.95rem; }
   .proj .result::before { content: "— "; color: var(--muted); }
   .proj .plink { font-size: 0.9rem; margin-top: 4px; }
