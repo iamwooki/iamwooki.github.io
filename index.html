@@ -92,10 +92,28 @@
     body { font-size: 13.5px; }
   }
 
-  @media (max-width: 540px) {
-    .profile { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .entry { grid-template-columns: 1fr; gap: 0 0; }
-    .entry .date { padding-top: 0; }
+  /* ===== 모바일 재배치 (600px 이하) ===== */
+  @media (max-width: 600px) {
+    .wrap { padding: 28px 18px 48px; }
+    section { margin-top: 32px; }
+
+    /* 프로필: 세로 배치, 사진 축소, 영문 이름은 둘째 줄 */
+    .profile { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .photo { width: 92px; height: 92px; }
+    .profile h1 { font-size: 1.45rem; }
+    .profile h1 .en { display: block; margin-left: 0; font-size: 0.95rem; margin-top: 2px; }
+
+    /* 날짜 컬럼 제거 → 날짜가 내용 위에 작게 */
+    .entry { grid-template-columns: 1fr; gap: 2px; margin-bottom: 18px; }
+    .entry .date { padding-top: 0; font-size: 0.83rem; }
+
+    /* 프로젝트: 개요(gist)를 둘째 줄로 내려 가독성 확보, 탭 타깃 확대 */
+    details.proj summary { padding: 8px 0; }
+    .proj .gist { display: block; margin-left: 20px; margin-top: 1px; }
+    .proj .pbody { padding-left: 14px; }
+
+    /* PDF 버튼: 축소 + 가장자리 여백 축소 */
+    .pdf-btn { right: 14px; bottom: 14px; padding: 9px 14px; font-size: 0.85rem; }
   }
 </style>
 </head>
