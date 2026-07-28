@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홍현욱 (Hyunwook Hong)</title>
+<meta name="description" content="홍현욱 — AI Policy &amp; Digital Transformation Project Manager">
+<style>
+  :root {
+    /* 주요색 #1a73e8 — 사용자 확정 (2026-07-27) */
+    --text: #222; --muted: #767676; --link: #1a73e8;
+    --line: #dddddd; --bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --text: #d9dde3; --muted: #8f97a3; --link: #8ab4f8; --line: #333a45; --bg: #14171c; }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Pretendard", "Malgun Gothic", "맑은 고딕", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15.5px;
+    -webkit-font-smoothing: antialiased;
+    word-break: keep-all; overflow-wrap: break-word;  /* 한글 어절 단위 줄바꿈 */
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 48px 24px 56px; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .profile { display: flex; gap: 28px; align-items: center; margin-bottom: 8px; }
+  .photo {
+    width: 128px; height: 128px; border-radius: 50%; flex-shrink: 0;
+    object-fit: cover; object-position: top;
+    background: #e9edf2; color: #9aa4b0; display: flex; align-items: center;
+    justify-content: center; font-size: 2rem; font-weight: 600; letter-spacing: 1px;
+  }
+  @media (prefers-color-scheme: dark) { .photo { background: #232933; color: #5d6673; } }
+  .profile h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.3px; }
+  .profile h1 .en { font-weight: 400; color: var(--muted); font-size: 1.15rem; margin-left: 8px; }
+  .profile .title { margin-top: 2px; }
+  .profile .affil { color: var(--muted); font-size: 0.95rem; }
+  .profile .contact { margin-top: 8px; font-size: 0.92rem; color: var(--muted); }
+
+  section { margin-top: 40px; }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; letter-spacing: 0.3px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+  }
+  .bio { max-width: 72ch; }
+
+  .entry { display: grid; grid-template-columns: 150px 1fr; gap: 6px 18px; margin-bottom: 14px; }
+  .entry .date { color: var(--muted); font-size: 0.9rem; padding-top: 2px; white-space: nowrap; }
+  .entry .body b { font-weight: 600; }
+  .orglogo { width: 20px; height: 20px; vertical-align: -4px; margin-right: 7px; }
+  .entry .body .sub { color: var(--muted); font-size: 0.93rem; }
+  .entry .body ul { margin: 4px 0 0 0; list-style: none; }
+  .entry .body ul li { font-size: 0.93rem; color: var(--muted); padding-left: 12px; text-indent: -12px; }
+  .entry .body ul li::before { content: "–"; margin-right: 7px; }
+
+  details.proj { margin-bottom: 8px; }
+  details.proj summary { cursor: pointer; list-style: none; padding: 3px 0; }
+  details.proj summary::-webkit-details-marker { display: none; }
+  details.proj summary::before { content: "▸"; color: var(--muted); margin-right: 8px; font-size: 0.8rem; }
+  details.proj[open] summary::before { content: "▾"; }
+  .proj .name { font-weight: 600; }
+  .proj .date { color: var(--muted); font-size: 0.9rem; font-weight: 400; margin-left: 6px; }
+  .proj .gist { color: var(--muted); font-size: 0.92rem; }
+  .proj .pbody { padding: 2px 0 8px 20px; }
+  .proj .desc { font-size: 0.95rem; }
+  .proj .result { font-size: 0.95rem; }
+  .proj .result::before { content: "— "; color: var(--muted); }
+  .proj .plink { font-size: 0.9rem; margin-top: 4px; }
+
+  ul.plain { list-style: none; }
+  ul.plain li { margin-bottom: 6px; padding-left: 14px; text-indent: -14px; }
+  ul.plain li::before { content: "·"; margin-right: 8px; color: var(--muted); }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line);
+           font-size: 0.85rem; color: var(--muted); }
+
+  /* PDF 내보내기 버튼 — 화면 전용, 인쇄물에는 미출력 */
+  .pdf-btn {
+    position: fixed; right: 24px; bottom: 24px;
+    background: var(--link); color: #fff; border: none; border-radius: 24px;
+    padding: 10px 18px; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  }
+  .pdf-btn:hover { opacity: 0.88; }
+  @media print {
+    .pdf-btn { display: none; }
+    .proj .plink { display: none; }  /* 종이에서는 클릭 불가 */
+    a { color: inherit; text-decoration: none; }  /* 인쇄물에서 링크 파랑 제거 */
+    body { font-size: 13.5px; }
+  }
+
+  @media (max-width: 540px) {
+    .profile { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .entry { grid-template-columns: 1fr; gap: 0 0; }
+    .entry .date { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="profile">
+    <img src="assets/photo.jpg" class="photo" alt="홍현욱 증명사진">
+    <div>
+      <h1>홍현욱<span class="en">Hyunwook Hong</span></h1>
+      <div class="title">AI Policy &amp; Digital Transformation Project Manager</div>
+      <div class="affil">국가인공지능전략위원회 정책기획국 총괄전략팀 · NIA 선임연구원</div>
+      <div class="contact">
+        Contact: <a href="mailto:hwhong.korea@gmail.com">hwhong.korea@gmail.com</a>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>About</h2>
+    <p class="bio">AI 정책과 디지털 전환의 접점에서 일합니다. 컴퓨터공학을 전공하고 NIA(한국지능정보사회진흥원)에서 디지털서비스 개방, 정부 디지털지갑, 디지털플랫폼정부 추진전략 등 정부 디지털 서비스를 기획했으며, 현재는 대통령직속 국가인공지능전략위원회에서 대한민국 인공지능행동계획 정책이행을 지원하고 있습니다. 기술과 정책, 그리고 사용자 경험을 연결하는 서비스 기획이 저의 전문 영역입니다.</p>
+  </section>
+
+  <section>
+    <h2>Experience</h2>
+    <div class="entry">
+      <div class="date">2025.03 – 현재</div>
+      <div class="body"><img src="assets/logo_council.png" class="orglogo" alt=""><b>대통령직속 국가인공지능전략위원회</b> · 전문관 (Specialist)
+        <div class="sub">정책기획국 총괄전략팀 · 서울</div>
+        <ul>
+          <li>대한민국 인공지능행동계획 기획 지원</li>
+          <li>데이터 분과 · 법률TF · CAIO협의회 운영 지원</li>
+          <li>공문서 마크다운 적용 기획 (<a href="https://www.aikorea.go.kr/web/board/brdDetail.do?menu_cd=000012&amp;num=363">보도자료</a>), 인공지능 동향 분석</li>
+        </ul>
+      </div>
+    </div>
+    <div class="entry">
+      <div class="date">2020.06 – 현재</div>
+      <div class="body"><img src="assets/logo_nia.png" class="orglogo" alt=""><b>NIA 한국지능정보사회진흥원</b> · 선임연구원 (Senior Researcher)
+        <div class="sub">디지털정부본부 (2020.06–2025.02) → 인공지능정책실 (2025.03–) · 대구</div>
+        <ul>
+          <li>디지털서비스 개방 · 정부 디지털지갑 기획</li>
+          <li>디지털플랫폼정부 추진전략 기획</li>
+          <li>전자정부 디자인 시스템 기획, 디지털정부서비스 디자인 공모전(UX/UI) 기획·운영</li>
+          <li>한국형 18F 도입 방안 연구</li>
+        </ul>
+      </div>
+    </div>
+    <div class="entry">
+      <div class="date">2019.11 – 2019.12</div>
+      <div class="body"><img src="assets/logo_nia.png" class="orglogo" alt=""><b>NIA 한국지능정보사회진흥원</b> · 인턴연구원 (Research Intern)
+        <div class="sub">공공데이터본부 · 대구</div>
+        <ul>
+          <li>공공데이터 활성화를 위한 이슈데이터(저출산·고령화) 발굴·운영</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Projects</h2>
+    <details class="proj">
+      <summary><span class="name">대한민국 인공지능행동계획</span> <span class="date">2025 –</span> <span class="gist">— 국가 AI 전략 실행계획 수립 지원 ('26.2 의결)</span></summary>
+      <div class="pbody">
+        <div class="desc">대통령직속 국가인공지능전략위원회에서 국가 AI 전략의 실행 계획 수립 지원. 데이터·법률·CAIO 등 분과 운영을 통해 범정부 이해관계를 조율.</div>
+      </div>
+    </details>
+    <details class="proj">
+      <summary><span class="name">디지털서비스 개방</span> <span class="date">2022 – 2025</span> <span class="gist">— 과태료 110억 예방 · 기업 결제액 연 4,183억 · 행정안전부 장관표창</span></summary>
+      <div class="pbody">
+        <div class="desc">여권재발급 신청, KTX 승차권 예약, 112/119 신고, 자동차검사·휴양림 예약, 고향사랑기부 등 12종 이상의 정부 서비스를 민간 앱(네이버·카카오·토스, KB국민·신한·IBK기업·하나 등)에서 이용할 수 있도록 기업 연계(API)를 기획하고 민관협의체·중계플랫폼을 운영. 여권 재발급은 외교부에 없던 온라인 결제 모델로, 법령 검토와 여신협회·카드사 간담회를 통해 부가수수료 문제를 해결하고 연계 성사.</div>
+        <div class="result">자동차검사 미필 과태료 약 110억 원 예방 ('23.9 기준)</div>
+        <div class="result">국립수목원 민간앱 예약 비중 약 51% · 콜센터 민원 49% 감소</div>
+        <div class="result">여권 재발급 결제 부가수수료 건당 2,000원 절감 · 기업 결제액 연 약 4,183억 원 발생</div>
+        <div class="result">2023 행정안전부 장관표창 · 2024 정부혁신박람회 우수부스 선정</div>
+        <div class="plink"><a href="https://openservice.go.kr">홈페이지 바로가기 ↗</a></div>
+      </div>
+    </details>
+    <details class="proj">
+      <summary><span class="name">공공 디지털지갑(지갑24)·마이AI 서비스 기획</span> <span class="date">2022 – 2023</span> <span class="gist">— DID·국제표준 분석 기반 사업계획 수립, 개인화 추천모델 제안</span></summary>
+      <div class="pbody">
+        <div class="desc">신분증·증명서·고지함·포인트 등을 담는 공공 디지털지갑(가칭 지갑24)의 사업계획 수립 — 지갑 컨텐츠 발굴, DID·모바일 신분증 국내외 사례 및 인증 국제표준 분석, 기획·기술·법제도 자문단 운영. 선제적·맞춤형 공공서비스를 위한 개인화 발전단계 정립과 마이AI 서비스 체계도·개인화 추천모델 제안.</div>
+      </div>
+    </details>
+    <details class="proj">
+      <summary><span class="name">전자정부 디자인 시스템</span> <span class="date">2021 – 2022</span> <span class="gist">— 한국형 디자인시스템 추진 전략 · UX/UI 공모전</span></summary>
+      <div class="pbody">
+        <div class="desc">정부 웹서비스의 일관된 UX/UI를 위한 한국형 디자인시스템 추진 전략 기획 — 해외 벤치마킹, Test bed, 표준프레임워크 내 공통 컴포넌트, 시빅해킹 커뮤니티 기능 선정. 디지털정부서비스 디자인 공모전(UX/UI)을 기획·운영하며 전문가 멘토링 체계와 수상작의 실제 반영을 위한 수상자-운영기관 간담회 추진.</div>
+      </div>
+    </details>
+    <details class="proj">
+      <summary><span class="name">한국형 18F 도입 방안 연구</span> <span class="date">2020</span> <span class="gist">— 국무회의 보고 연계 연구</span></summary>
+      <div class="pbody">
+        <div class="desc">미국 18F, 영국 GDS, 싱가포르 GovTech, 캐나다 CDS, 호주 DTA 등 주요국 정부 디지털 조직의 채용·조직·업무를 분석하고 David Eaves(Harvard Kennedy School, 前 GSA 18F) 자문을 거쳐 한국형 디지털서비스 전담조직(안) 연구 — 디지털 정부혁신 발전계획(2020.6.23 국무회의 보고) 과제의 일환.</div>
+      </div>
+    </details>
+    <details class="proj">
+      <summary><span class="name">공공데이터 이슈데이터 발굴</span> <span class="date">2019</span> <span class="gist">— 저출산·고령화 데이터 — 누적 18만 뷰 · 3.4만 건 활용</span></summary>
+      <div class="pbody">
+        <div class="desc">사회뉴스·정책 분석으로 '저출산·고령화' 이슈 키워드를 선정하고 관련 공공데이터(csv, open API)를 구성·개방 (NIA 공공데이터본부 인턴).</div>
+        <div class="result">누적 조회 약 18만 뷰, 데이터 활용 신청 약 3.4만 건 ('25.2 기준)</div>
+      </div>
+    </details>
+  </section>
+
+
+  <section>
+    <h2>Side Projects</h2>
+    <div class="proj" style="margin-bottom: 14px;">
+      <div class="name"><a href="https://mars-stock.vercel.app/">화성 갈끄니까 🚀</a> <span class="date"></span></div>
+      <div class="desc">포트폴리오·배당·리스크·월급예산을 한 화면에 모은 개인 자산관리 대시보드</div>
+    </div>
+    <div class="proj" style="margin-bottom: 14px;">
+      <div class="name"><a href="https://mars-food.vercel.app/">화성에서살아남기</a> <span class="date"></span></div>
+      <div class="desc">보유 재료만 입력하면 398개 레시피에서 만들 수 있는 요리를 찾아주는 서비스</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Skills</h2>
+    <ul class="plain">
+      <li>서비스 기획 · UI/UX</li>
+      <li>AI 정책 · 디지털정부 정책 기획</li>
+      <li>Connecting Information — 기술·정책·사용자를 잇는 문제 정의</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Talks</h2>
+    <div class="entry">
+      <div class="date">2024</div>
+      <div class="body"><b>영국 국무조정실(GDS) 상호작용설계팀</b>
+        <div class="sub">공공서비스 시연 및 민관협력 경험 발표</div>
+      </div>
+    </div>
+    <div class="entry">
+      <div class="date">2024</div>
+      <div class="body"><b>디지털정부 영프론티어 세션</b>
+        <div class="sub">공공서비스 연계 기획·인증방식·결제구조 발표</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Honors &amp; Awards</h2>
+    <div class="entry">
+      <div class="date">2023.12</div>
+      <div class="body"><img src="assets/logo_gov.png" class="orglogo" alt=""><b>행정안전부 장관표창</b> — 디지털정부 혁신 유공 (디지털서비스 개방)</div>
+    </div>
+    <div class="entry">
+      <div class="date">2021.12</div>
+      <div class="body"><img src="assets/logo_nia.png" class="orglogo" alt=""><b>NIA 원장표창</b> — 우수사례 우수상</div>
+    </div>
+    <div class="entry">
+      <div class="date">2018.11</div>
+      <div class="body"><b>한국방송·미디어공학회 장려상</b> — 학부 캡스톤 경진대회 (O2O기반 공유물류배송시스템)</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Education &amp; Certifications</h2>
+    <div class="entry">
+      <div class="date">2020.08</div>
+      <div class="body"><img src="assets/logo_knu.png" class="orglogo" alt=""><b>경북대학교</b> · 컴퓨터학부 심화컴퓨터공학전공
+        <div class="sub">Computer Science and Engineering, B.S.</div>
+      </div>
+    </div>
+    <div class="entry">
+      <div class="date">2024.10</div>
+      <div class="body">AICE Associate <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem;">— KT·한국경제신문 주관</span></div>
+    </div>
+    <div class="entry">
+      <div class="date">2019.11</div>
+      <div class="body">정보처리기사 <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem;">— 한국산업인력공단</span></div>
+    </div>
+  </section>
+
+  <footer>Last updated 2026-07</footer>
+
+</div>
+<button class="pdf-btn" onclick="window.print()" title="브라우저 인쇄 대화상자에서 'PDF로 저장'을 선택하세요">PDF로 저장</button>
+<script>
+  // 인쇄 시 접힌 프로젝트를 전부 펼치고, 인쇄 후 원상 복구
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details').forEach(function (d) {
+      d.dataset.wasOpen = d.open ? '1' : '';
+      d.open = true;
+    });
+  });
+  window.addEventListener('afterprint', function () {
+    document.querySelectorAll('details').forEach(function (d) {
+      d.open = d.dataset.wasOpen === '1';
+    });
+  });
+</script>
+</body>
+</html>

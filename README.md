@@ -1,2 +1,0 @@
-# iamwooki.github.io
-CV
