@@ -73,11 +73,13 @@
   details.proj[open] summary::before { content: "▾"; }
   .proj .name { font-weight: 600; }
   .proj .date { color: var(--muted); font-size: 0.9rem; font-weight: 400; margin-left: 6px; }
-  .proj .gist { color: var(--muted); font-size: 0.92rem; }
+  /* 구분은 대시(—) 대신 간격+회색으로 한다 (2026-09-20: 대시 반복이 AI 생성물처럼 보인다는 피드백) */
+  .proj .gist { color: var(--muted); font-size: 0.92rem; margin-left: 8px; }
+  .aside { color: var(--muted); margin-left: 10px; }
   .proj .pbody { padding: 2px 0 8px 20px; }
   .proj .desc { font-size: 0.95rem; text-align: justify; }
   .proj .result { font-size: 0.95rem; }
-  .proj .result::before { content: "— "; color: var(--muted); }
+  .proj .result::before { content: "· "; color: var(--muted); }
   .proj .plink { font-size: 0.9rem; margin-top: 4px; }
 
   ul.plain { list-style: none; }
@@ -156,7 +158,7 @@
 
   <section>
     <h2>About</h2>
-    <p class="bio">AI 정책과 공공디지털 전환의 접점에서 일합니다. 컴퓨터공학을 전공하고 NIA에서 정부 디지털서비스를 기획했으며, 현재는 대통령직속 국가인공지능전략위원회에서 대한민국 인공지능행동계획 정책이행을 지원하고 있습니다. 기술과 정책, 그리고 사용자 경험을 연결하는 서비스 기획이 제가 가장 즐기는 일입니다.</p>
+    <p class="bio">AI 정책과 공공디지털 전환의 접점에서 일합니다. 컴퓨터공학을 전공하고 NIA에서 정부 디지털서비스를 기획했으며 현재는 대통령직속 국가인공지능전략위원회에서 대한민국 인공지능행동계획 정책이행을 지원합니다. 기술과 정책, 사용자 경험을 연결하는 서비스 기획이 제가 가장 즐기는 일입니다.</p>
   </section>
 
   <section>
@@ -167,7 +169,7 @@
         <div class="sub">정책기획국 총괄전략팀 · 서울</div>
         <ul>
           <li>대한민국 인공지능행동계획 기획 지원</li>
-          <li>데이터 분과 · 법률TF · CAIO협의회 운영 지원</li>
+          <li>데이터 분과·법률TF·CAIO 협의회 운영 지원</li>
           <li>공문서 마크다운 적용 기획 (<a href="https://www.aikorea.go.kr/web/board/brdDetail.do?menu_cd=000012&amp;num=363" target="_blank" rel="noopener">보도자료</a>, <a href="archive/2026-03-05_press-release_markdown-docs.html" target="_blank" rel="noopener">사본</a>), 인공지능 동향 분석</li>
         </ul>
       </div>
@@ -197,15 +199,15 @@
   <section class="pb">
     <h2>Projects</h2>
     <details class="proj">
-      <summary><span class="name">대한민국 인공지능행동계획</span> <span class="date">2025 –</span> <span class="gist">— 국가 AI 전략 실행계획 수립 지원 ('26.2 의결)</span></summary>
+      <summary><span class="name">대한민국 인공지능행동계획</span> <span class="date">2025 – 현재</span> <span class="gist">국가 AI 전략 실행계획 수립 지원 ('26.2 의결)</span></summary>
       <div class="pbody">
-        <div class="desc">대통령직속 국가인공지능전략위원회에서 국가 AI 전략의 실행 계획 수립 지원. 데이터 분과·법률TF·CAIO 협의회 등 운영을 통해 범정부 이해관계를 조율.</div>
+        <div class="desc">대통령직속 국가인공지능전략위원회에서 국가 AI 전략의 실행 계획 수립 지원. 데이터 분과·법률TF·CAIO 협의회 등 운영으로 범정부 이해관계를 조율.</div>
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">디지털서비스 개방</span> <span class="date">2022 – 2025</span> <span class="gist">— 행정안전부 장관표창</span></summary>
+      <summary><span class="name">디지털서비스 개방</span> <span class="date">2022 – 2025</span> <span class="gist">행정안전부 장관표창</span></summary>
       <div class="pbody">
-        <div class="desc">여권재발급 신청, KTX 승차권 예약, 112/119 신고, 자동차검사·휴양림 예약, 고향사랑기부 등 12종 이상의 정부 서비스를 민간 앱(네이버·카카오·토스, KB국민·신한·IBK기업·하나 등)에서 이용할 수 있도록 기업 연계(API)를 기획하고 민관협의체·중계플랫폼을 운영. 여권 재발급은 외교부에 없던 온라인 결제 모델로, 법령 검토와 여신협회·카드사 간담회를 통해 부가수수료 문제를 해결하고 연계 성사.</div>
+        <div class="desc">여권 재발급 신청, KTX 승차권 예약, 112/119 신고, 자동차검사·휴양림 예약, 고향사랑기부 등 12종 이상의 정부 서비스를 민간 앱(네이버·카카오·토스, KB국민·신한·IBK기업·하나 등)에서 이용할 수 있도록 기업 연계(API)를 기획하고 민관협의체·중계플랫폼을 운영. 여권 재발급은 외교부에 없던 온라인 결제 모델로, 법령 검토와 여신협회·카드사 간담회를 통해 부가수수료 문제를 해결하고 연계 성사.</div>
         <div class="result">자동차검사 미필 과태료 약 110억 원 예방 ('23.9 기준)</div>
         <div class="result">국립수목원 민간앱 예약 비중 약 51% · 콜센터 민원 49% 감소</div>
         <div class="result">여권 재발급 결제 부가수수료 건당 2,000원 절감 · 기업 결제액 연 약 4,183억 원 발생</div>
@@ -214,38 +216,38 @@
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">공공 디지털지갑·마이AI 서비스 기획</span> <span class="date">2022 – 2023</span> <span class="gist">— DID·국제표준 분석 기반 사업계획 수립, 개인화 추천모델 제안</span></summary>
+      <summary><span class="name">공공 디지털지갑·마이AI 서비스 기획</span> <span class="date">2022 – 2023</span> <span class="gist">DID·국제표준 분석 기반 사업계획 수립, 개인화 추천모델 제안</span></summary>
       <div class="pbody">
-        <div class="desc">신분증·증명서·고지함·포인트 등을 담는 공공 디지털지갑(가칭 지갑24)의 사업계획 수립 — 지갑 컨텐츠 발굴, DID·모바일 신분증 국내외 사례 및 인증 국제표준 분석, 기획·기술·법제도 자문단 운영. 선제적·맞춤형 공공서비스를 위한 개인화 발전단계 정립과 마이AI 서비스 체계도·개인화 추천모델 제안.</div>
+        <div class="desc">신분증·증명서·고지함·포인트 등을 담는 공공 디지털지갑(가칭 지갑24)의 사업계획 수립. 지갑 콘텐츠 발굴, DID·모바일 신분증 국내외 사례 및 인증 국제표준 분석, 기획·기술·법제도 자문단 운영. 선제적·맞춤형 공공서비스를 위한 개인화 발전단계 정립과 마이AI 서비스 체계도·개인화 추천모델 제안.</div>
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">전자정부 디자인 시스템 기획</span> <span class="date">2021 – 2022</span> <span class="gist">— 한국형 디자인시스템 추진 전략 · UX/UI 공모전</span></summary>
+      <summary><span class="name">전자정부 디자인 시스템 기획</span> <span class="date">2021 – 2022</span> <span class="gist">한국형 디자인시스템 추진 전략 · UX/UI 공모전</span></summary>
       <div class="pbody">
-        <div class="desc">정부 웹서비스의 일관된 UX/UI를 위한 한국형 디자인시스템 추진 전략 기획 — 해외 벤치마킹, Test bed, 표준프레임워크 내 공통 컴포넌트, 시빅해킹 커뮤니티 기능 선정. 디지털정부서비스 디자인 공모전(UX/UI)을 기획·운영하며 전문가 멘토링 체계와 수상작의 실제 반영을 위한 수상자-운영기관 간담회 추진.</div>
+        <div class="desc">정부 웹서비스의 일관된 UX/UI를 위한 한국형 디자인시스템 추진 전략 기획(해외 벤치마킹, Test bed, 표준프레임워크 내 공통 컴포넌트, 시빅해킹 커뮤니티 기능 선정). 디지털정부서비스 디자인 공모전(UX/UI)을 기획·운영하며 전문가 멘토링 체계와 수상작의 실제 반영을 위한 수상자-운영기관 간담회 추진.</div>
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">디지털정부 기획보고서 (D.gov Issue Report)</span> <span class="date">2020 – 2022</span> <span class="gist">— 포스트 코로나 디지털정부 아젠다 · 지능형 서비스 사례분석</span></summary>
+      <summary><span class="name">디지털정부 기획보고서 (D.gov Issue Report)</span> <span class="date">2020 – 2022</span> <span class="gist">포스트 코로나 디지털정부 아젠다 · 지능형 서비스 사례분석</span></summary>
       <div class="pbody">
-        <div class="desc">디지털정부 정책 이슈를 분석·기획한 NIA 공개 보고서 집필 — 포스트 코로나 시대의 뉴노멀과 디지털정부 아젠다, 코로나19 이후 지능형 서비스 사례분석(보건의료·복지).</div>
+        <div class="desc">디지털정부 정책 이슈를 분석·기획한 NIA 공개 보고서 집필. 주제는 포스트 코로나 시대의 뉴노멀과 디지털정부 아젠다, 코로나19 이후 지능형 서비스 사례분석(보건의료·복지).</div>
         <div class="plink"><a href="https://nia.or.kr/site/nia_kor/ex/bbs/View.do?cbIdx=37989&bcIdx=22780&parentSeq=22780" target="_blank" rel="noopener">포스트 코로나 시대의 뉴노멀과 디지털정부 아젠다 (2020-1호) ↗</a></div>
         <div class="plink"><a href="https://nia.or.kr/site/nia_kor/ex/bbs/View.do?cbIdx=37989&bcIdx=24236&parentSeq=24236" target="_blank" rel="noopener">지능형 서비스 사례분석 - 보건의료 (2021-6호) ↗</a></div>
         <div class="plink"><a href="https://nia.or.kr/site/nia_kor/ex/bbs/View.do?cbIdx=37989&bcIdx=24238&parentSeq=24238" target="_blank" rel="noopener">지능형 서비스 사례분석 - 복지 (2021-8호) ↗</a></div>
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">한국형 18F 도입 방안 연구</span> <span class="date">2020</span> <span class="gist">— 디지털 정부혁신 발전계획 후속조치</span></summary>
+      <summary><span class="name">한국형 18F 도입 방안 연구</span> <span class="date">2020</span> <span class="gist">디지털 정부혁신 발전계획 후속조치</span></summary>
       <div class="pbody">
-        <div class="desc">미국 18F, 영국 GDS, 싱가포르 GovTech, 캐나다 CDS, 호주 DTA 등 주요국 정부 디지털 조직의 채용·조직·업무 분석을 통한 한국형 디지털서비스 전담조직(안) 연구 — 디지털 정부혁신 발전계획(2020.6.23 국무회의 보고) 후속조치</div>
+        <div class="desc">미국 18F, 영국 GDS, 싱가포르 GovTech, 캐나다 CDS, 호주 DTA 등 주요국 정부 디지털 조직의 채용·조직·업무 분석을 통한 한국형 디지털서비스 전담조직(안) 연구. 디지털 정부혁신 발전계획(2020.6.23 국무회의 보고) 후속조치.</div>
       </div>
     </details>
     <details class="proj">
-      <summary><span class="name">공공데이터 이슈데이터 발굴</span> <span class="date">2019</span> <span class="gist">— 저출산·고령화 데이터 — 누적 18만 뷰 · 3.4만 건 활용</span></summary>
+      <summary><span class="name">공공데이터 이슈데이터 발굴</span> <span class="date">2019</span> <span class="gist">저출산·고령화 데이터, 누적 18만 뷰 · 3.4만 건 활용</span></summary>
       <div class="pbody">
         <div class="desc">사회뉴스·정책 분석으로 '저출산·고령화' 이슈 키워드를 선정하고 관련 공공데이터(csv, open API)를 구성·개방 (NIA 공공데이터본부 인턴).</div>
         <div class="result">누적 조회 약 18만 뷰, 데이터 활용 신청 약 3.4만 건 ('25.2 기준)</div>
-        <div class="plink"><a href="https://www.data.go.kr/tcs/eds/idt/selectIssueData.do?issueId=343250&issueType=ISSUE&sortType=sort_order&perPage=10" target="_blank" rel="noopener">공공데이터포털 — 저출산·고령화 이슈데이터 ↗</a></div>
+        <div class="plink"><a href="https://www.data.go.kr/tcs/eds/idt/selectIssueData.do?issueId=343250&issueType=ISSUE&sortType=sort_order&perPage=10" target="_blank" rel="noopener">공공데이터포털 저출산·고령화 이슈데이터 ↗</a></div>
       </div>
     </details>
   </section>
@@ -255,7 +257,7 @@
     <ul class="plain">
       <li>서비스 기획 · UI/UX</li>
       <li>AI 정책 · 디지털정부 정책 기획</li>
-      <li>Connecting Information — 기술·정책·사용자를 잇는 문제 정의</li>
+      <li>Connecting Information, 기술·정책·사용자를 잇는 문제 정의</li>
     </ul>
   </section>
 
@@ -270,7 +272,7 @@
     <div class="entry">
       <div class="date">2024</div>
       <div class="body"><b>디지털정부 영프론티어 세션</b>
-        <div class="sub">디지털서비스개방 — 공공서비스 연계 기획·인증방식·결제구조 등 발표</div>
+        <div class="sub">디지털서비스 개방의 공공서비스 연계 기획·인증방식·결제구조 등 발표</div>
       </div>
     </div>
   </section>
@@ -279,15 +281,15 @@
     <h2>Honors &amp; Awards</h2>
     <div class="entry">
       <div class="date">2023.12</div>
-      <div class="body"><img src="assets/logo_gov.png" class="orglogo" alt=""><b>행정안전부 장관표창</b> — 디지털정부 혁신 유공 (디지털서비스 개방)</div>
+      <div class="body"><img src="assets/logo_gov.png" class="orglogo" alt=""><b>행정안전부 장관표창</b><span class="aside">디지털정부 혁신 유공 (디지털서비스 개방)</span></div>
     </div>
     <div class="entry">
       <div class="date">2021.12</div>
-      <div class="body"><img src="assets/logo_nia.png" class="orglogo" alt=""><b>NIA 원장표창</b> — 우수사례 우수상</div>
+      <div class="body"><img src="assets/logo_nia.png" class="orglogo" alt=""><b>NIA 원장표창</b><span class="aside">우수사례 우수상</span></div>
     </div>
     <div class="entry">
       <div class="date">2018.11</div>
-      <div class="body"><b>한국방송·미디어공학회 장려상</b> — 학부 캡스톤 경진대회 (O2O기반 공유물류배송시스템)</div>
+      <div class="body"><b>한국방송·미디어공학회 장려상</b><span class="aside">학부 캡스톤 경진대회 (O2O기반 공유물류배송시스템)</span></div>
     </div>
   </section>
 
@@ -301,15 +303,15 @@
     </div>
     <div class="entry">
       <div class="date">2024.10</div>
-      <div class="body">AICE Associate <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem;">— KT·한국경제신문 주관</span></div>
+      <div class="body">AICE Associate <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem; margin-left:8px;">KT·한국경제신문 주관</span></div>
     </div>
     <div class="entry">
       <div class="date">2019.11</div>
-      <div class="body">정보처리기사 <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem;">— 한국산업인력공단</span></div>
+      <div class="body">정보처리기사 <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem; margin-left:8px;">한국산업인력공단</span></div>
     </div>
     <div class="entry">
       <div class="date">2014.07 – 2016.04</div>
-      <div class="body">병역 — 육군 병장 만기전역</div>
+      <div class="body">병역 <span class="sub" style="display:inline; color:var(--muted); font-size:0.93rem; margin-left:8px;">육군 병장 만기전역</span></div>
     </div>
   </section>
 
