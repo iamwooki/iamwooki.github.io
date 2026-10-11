@@ -1,0 +1,2790 @@
+
+
+
+
+
+
+
+ 
+
+
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+		<meta name="format-detection" content="telephone=no">
+
+		
+		
+			
+			
+				<meta name="title" property="og:title" content="공공데이터 포털"/>
+			
+		
+
+		
+			
+			
+				<meta name="description" property="og:description" content="국가에서 보유하고 있는 다양한 데이터를『공공데이터의 제공 및 이용 활성화에 관한 법률(제11956호)』에 따라 개방하여 국민들이 보다 쉽고 용이하게 공유•활용할 수 있도록 공공데이터(Dataset)와 Open API로 제공하는 사이트입니다."/>
+			
+		
+
+		<meta name="url" property="og:url" content="https://www.data.go.kr/tcs/eds/idt/selectIssueData.do"/>
+		<meta name="type" property="og:type" content="website"/>
+		<meta name="image" property="og:image" content="http://data.go.kr/images/biz/data-search/bg-nation.png">
+		<link rel="icon" type="image/x-icon" href="assets/e06bec81_DATA.png">
+
+		<meta name="google-site-verification" content="bvyY6E17BJNPJP1TbX5pgXHq4N0tuRivFDVih6bRCXQ" />
+		<meta name="naver-site-verification" content="dddd02420b56aeebf384a2b9b68a8d20a3bcd1c7" />
+		<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+		
+			
+			
+				<title>공공데이터포털</title>
+			
+		
+
+		
+		
+		
+
+
+
+ 
+<!-- css -->
+<link rel="stylesheet" href="assets/c91ae09c_import.css" media="all">
+<link rel="stylesheet" href="assets/d544565e_app.min.css" media="all">
+
+<!-- js -->
+<script src="assets/17654bdc_jquery-1.12.4.js"></script>
+<script src="assets/8e7ffcc5_jquery-ui.1.12.1.js"></script>
+<script src="assets/e426ca75_jquery.easing.1.3.js"></script>
+<script src="assets/29f58c3d_tooltipster.bundle.js"></script>
+<script src="assets/7cf6a6ff_jquery.modal.js"></script>
+<script src="assets/46841dfb_dayjs.min.js"></script>
+<script src="assets/3683b9c7_ui.common.js"></script>
+<script src="assets/3df9321b_swiper.min.js"></script>
+	
+	<!-- UI/UX팀 작업결과물 -->
+		 
+ 
+<!-- js -->
+<script type="text/javascript" src="assets/eb17538e_jquery.form.min.js"></script>					<!-- JQUERY form -->
+<script type="text/javascript" src="assets/720200dd_placeholders.jquery.min.js"></script>			<!-- placeholder-->
+<script type="text/javascript" src="assets/e328ac34_script_codeSetting.js"></script>				<!-- 공통js : 공통코드 selectbox 세팅 -->
+<script type="text/javascript" src="assets/13fdd38f_script_cmmFunction.js"></script>				<!-- 공통js : 공통 기능 -->
+<script type="text/javascript" src="assets/52e44fc8_script_stringUtil.js"></script>					<!-- 공통js : 공통 문자열처리 -->
+<script type="text/javascript" src="assets/785730cc_script_numberUtil.js"></script>					<!-- 공통js : 공통 숫자처리 -->
+<script type="text/javascript" src="assets/ba98999c_script_openSourceSetting.js"></script>			<!-- 공통js : 오픈소스 세팅 - -->
+<script type="text/javascript" src="assets/6882198b_script_cmmPopup.js"></script>					<!-- 공통js : 공통 팝업 -->
+<script type="text/javascript" src="assets/aee0c9d2_moment.js"></script>							<!-- 공통js : 날짜 -->
+
+<script type="text/javascript" src="assets/d6b304cd_loading.js"></script>			             	<!-- 임시 스크립트 : 로딩바 -->
+<script type="text/javascript" src="assets/b7a9269a_underscore.js"></script>						<!-- 임시 스크립트 : 언더스코어 -->
+
+<!-- css -->
+<link rel="stylesheet" type="text/css" href="assets/a32bf7c5_style_cmmCustom.css">   				<!-- 개발팀 공통 css  -->
+
+<script src="assets/758c7644_kakao.min.js"></script> 									<!-- 공통js : 카카오 SDK  -->
+<script src="assets/70e4c7ec_clipboard.min.js"></script>  <!-- 공통js : copyJS  -->
+<script type="text/javascript" src="assets/1ff7d4c1_fallback-image.js"></script>                                <!-- 공통js : 이미지 폴백 -->
+<!-- Fine Uploader template w/ customization
+  ====================================================================== -->
+<script type="text/template" id="qq-template-validation">
+        <div class="qq-uploader-selector qq-uploader">
+            <div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+                <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+            </div>
+            <div class="qq-upload-button-selector qq-upload-button">
+                <div>파일 선택</div>
+            </div>
+            <ul class="qq-upload-list-selector qq-upload-list" aria-live="polite" aria-relevant="additions removals">
+                <li>
+                    <div class="qq-progress-bar-container-selector">
+                        <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-progress-bar-selector qq-progress-bar"></div>
+                    </div>
+                    <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+                    <img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
+                    <span class="qq-upload-file-selector qq-upload-file"></span>
+                    <span class="qq-upload-size-selector qq-upload-size"></span>
+                    <button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">[취소]</button>
+                    <button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">[재시도]</button>
+                    <button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">[삭제]</button>
+                    <span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+                </li>
+            </ul>
+            <dialog class="qq-alert-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">[닫기]</button>
+                </div>
+            </dialog>
+            <dialog class="qq-confirm-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">[아니오]</button>
+                    <button type="button" class="qq-ok-button-selector">[예]</button>
+                </div>
+            </dialog>
+
+            <dialog class="qq-prompt-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <input type="text">
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">[취소]</button>
+                    <button type="button" class="qq-ok-button-selector">[확인]</button>
+                </div>
+            </dialog>
+        </div>
+</script>
+ <script type="text/javascript">
+//  document.domain = "data.go.kr";
+
+	/**
+    * document Ready
+    */
+	$(document).ready(function(){
+		$('.date-from:text').each(function () {
+			$(this).prop("readonly", "true");
+		});
+		$('.date-to:text').each(function () {
+			$(this).prop("readonly", "true");
+		});
+		$('.date-picker-select:text').each(function () {
+			$(this).prop("readonly", "true");
+		});
+		
+	});
+</script>
+
+		<style>
+			
+			
+			#header {position:relative;z-index:100;height: 160px;color:#fff;background-color:#0b70b9;}
+
+			#header h1.logo {position:absolute;left:50%; top:70px; width:168px; height: 27px; margin:40px 0 0 -600px;padding: 0;}
+
+			#header .gov-info {display: flex; margin: 0 auto; vertical-align: bottom; padding: 18px 0 0px 11px; box-sizing:border-box; max-width: 1200px; height: 64px;}
+			#header .gov-info > ul {margin: 15px 0 0 0;}
+			#header .gov-info > ul img { vertical-align: middle; margin-right: 10px;}
+			#header .gov-info .gov-search {text-align: right;width: 400px;height: 40px;margin: 0px 0 0 auto;display: flex;}
+			#header .gov-info .input-text {width:400px; height: 100%;}
+			#header .gov-info .btn-search {overflow:hidden; display:block; right:0; top:0; width:40px; height:100%; text-indent:-9999px; background:#18a9ec url(assets/f4cd7770_btn-main-search2.png) no-repeat center;}
+			#header .gov-info .gov-search .atcmp_wrap {position:absolute; text-align: left; top:60px; z-index:2; width:400px; background-color:#fff; color:#333; border-top:1px solid #396fe1;}
+
+			#header .header-wrap {width:100%; height:100%; padding: 16px 0 0 0;}
+			#header .header-wrap .util {position:absolute; left:50%; top:0; width:600px; margin: 67px 0 0 0; text-align:right; line-height:1.1;}
+
+			#gnb ul.gnb-pc .depth2 {display:none; position:absolute;left:0; top: 160px;width:100%;margin:0;padding:0;background-color:#0b70b9;}
+			@media all and (max-width:1024px){
+
+				.inner-wrap {width:100%; max-width:100%;}
+
+				#header {position:fixed; left:0; top:0; z-index:10; width:100%; height:86px;}
+
+				#header h1.logo {position:absolute; left:20px; top:19px; width:116px; height:19px; margin:0; padding:0; margin-top: 30px;}
+				#header h1.logo a {background-size:100% auto;}
+
+				#header .btn-open-gnb {overflow:hidden; display:block; position:absolute; right:20px; top:20px; width:20px; height:17px; text-indent:-9999px; background:url(assets/5e799dde_btn-open-gnb.png) no-repeat 0 0; background-size:20px 17px; margin-top: 30px;}
+
+				#header .header-wrap {float:none; display:block; overflow:hidden; overflow-y:auto; position:fixed; left:100%; top:0; width:100%; height:100%; padding:56px 0 0 0; background-color:#0b70b9; transition:left 0.1s ease-in-out;}
+				#header .header-wrap.on {left:0;}
+				#header .header-wrap .logo {position:absolute; left:20px; top:19px; width:116px; height:19px; margin:0; padding:0;}
+				#header .header-wrap .logo a {overflow:hidden; display:block; width:100%; height:100%; text-indent:-9999px; background:url(assets/2611c548_logo-top.png) no-repeat 0 0 / 100% auto;}
+
+				#header .header-wrap .util {overflow:hidden; position:static; left:inherit; top:inherit; width:100%; height:auto; padding:20px 0 20px 0; font-size:1em; line-height:1.1; text-align:center; border:1px solid #2886c9; border-width:1px 0;}
+
+				#header .header-wrap .util .login {float:none; display:inline-block;}
+				#header .header-wrap .util .login a {float:none; margin:0 10px;}
+				#header .header-wrap .util .login a:first-of-type {margin-left:0;}
+				#header .header-wrap .util .login .before {float:none; display:inline-block;}
+				#header .header-wrap .util .login .after {float:none;}
+				#header .header-wrap .util .link {float:none; margin:0 0 0 10px; display:inline-block;}
+				#header .header-wrap .util .link a {float:none; margin:0 10px;}
+				#header .header-wrap .util .link a:first-of-type {margin-left:0;}
+
+				#header .header-wrap .btn-close-gnb {overflow:hidden; display:block; position:absolute; right:20px; top:20px; width:16px; height:16px; text-indent:-9999px; background:url(assets/790a0708_btn-close-gnb.png) no-repeat 0 0; background-size:16px 16px;}
+
+				#header .gov-info { margin-left: 15px;  display: inline-block; vertical-align: middle; margin-right: 10px; padding: 9px 0 3px 0;  margin-bottom: 20px; box-sizing:border-box; text-align:left; font-size: 12px;}
+				#header .gov-info img { vertical-align: bottom; margin-right: 10px;}
+				#header .gov-info .gov-search {width: 45%; height: 30px; margin: 5px 0px 0px 130px;display: flex; position: absolute;}
+				#header .gov-info .input-text {width: 100%; height: 100%; font-size:10px;}
+				#header .gov-info .btn-search {overflow:hidden; display:block; right:0; top:0; width:30px; height:100%; text-indent:-9999px; background:#18a9ec url(assets/f4cd7770_btn-main-search2.png) no-repeat center;}
+				#header .gov-info .gov-search .atcmp_wrap {position:absolute; text-align: left; top:86px; z-index:2; width:150px; background-color:#18a9ec; color:#fff; border-top:1px solid #396fe1;}
+
+				/* gnb */
+				#gnb {float:none; width:100%;}
+				#gnb ul.gnb-pc {display:none;}
+
+				#gnb ul.gnb-mb {display:block;}
+				#gnb ul.gnb-mb > li {position:relative; margin:0; padding:0; border-bottom:1px solid #2886c9;}
+				#gnb ul.gnb-mb > li:first-of-type {margin:0;}
+				#gnb ul.gnb-mb > li > a {display:block; position:relative; height:56px; padding:0 20px; font-size:1.2857em; line-height:55px; font-weight:700; letter-spacing:-0.05em;}
+				#gnb ul.gnb-mb > li > a:after {content:'; display:block; position:absolute; right:20px; top:50%; width:14px; height:8px; margin:-4px 0 0 0; padding:0; background:url(assets/50a4b71f_bg-gnb-arr-mb.png) no-repeat 0 0 / 100% auto;}
+				#gnb ul.gnb-mb > li > a:hover {color:#fff584; text-decoration:none;}
+				#gnb ul.gnb-mb > li > a:focus {text-decoration:none;}
+				#gnb ul.gnb-mb > li.active > a {color:#fff584;}
+				#gnb ul.gnb-mb > li.active > a:after {transform:rotate(180deg);}
+				#gnb ul.gnb-mb > li.active .depth2 {display:none;}
+
+				#gnb ul.gnb-mb .depth2 {display:none; width:100%; margin:0; padding:0 0 20px 0;}
+				#gnb ul.gnb-mb .depth2 a {color:#fff;}
+				#gnb ul.gnb-mb .depth2 a:hover {color:#fff584; text-decoration:none;}
+				#gnb ul.gnb-mb .depth2 a:focus {text-decoration:none;}
+				#gnb ul.gnb-mb .depth2 ul {padding-left:38px;}
+				#gnb ul.gnb-mb .depth2 ul li {margin-top:4px;}
+				#gnb ul.gnb-mb .depth2 ul li:first-child {margin-top:0;}
+				#gnb ul.gnb-mb .depth2 ul li a {font-size:1.0714em; letter-spacing:-0.05em;}
+				#gnb ul.gnb-mb .depth2 ul li.active a {color:#fff584;}
+				#gnb ul.gnb-mb .depth2 ul li:last-child .depth3 {padding-bottom:0;}
+
+				#gnb ul.gnb-mb .depth3 {width:100%; margin:0; padding:5px 0 15px 0;}
+				#gnb ul.gnb-mb .depth3 a {color:#fff;}
+				#gnb ul.gnb-mb .depth3 a:hover {color:#fff584; text-decoration:none;}
+				#gnb ul.gnb-mb .depth3 a:focus {text-decoration:none;}
+				#gnb ul.gnb-mb .depth3 ul {padding-left:18px;}
+				#gnb ul.gnb-mb .depth3 ul li {margin-top:4px;}
+				#gnb ul.gnb-mb .depth3 ul li:first-child {margin-top:0;}
+				#gnb ul.gnb-mb .depth3 ul li a {font-size:1em; letter-spacing:-0.05em;}
+				#gnb ul.gnb-mb .depth3 ul li.active a {color:#fff584;}
+			}
+			@media all and (max-width:355px){
+				#header .gov-info .gov-search {display:none;}
+			}
+			
+			
+			
+		</style>
+	</head>
+	<body ><meta name="robots" content="noindex"><link rel="canonical" href="https://www.data.go.kr/tcs/eds/idt/selectIssueData.do?issueType=ISSUE&amp;perPage=10&amp;issueId=343250&amp;sortType=sort_order">
+<div id="hhw-archive-banner" style="position:sticky;top:0;z-index:99999;background:#1f2328;color:#e6edf3;font:13px/1.5 -apple-system,'Malgun Gothic',sans-serif;padding:8px 16px;border-bottom:3px solid #1a73e8">
+<b>원본 페이지 보존본</b> 공공데이터포털 이슈데이터 「저출산/고령화」 — 원문 주소가 포털 개편으로 삭제되어(2026-10-12 확인) 인터넷 아카이브 2025-11-23 스냅샷의 HTML·CSS·이미지를 그대로 보존했습니다. 화면 안의 링크·검색·버튼은 동작하지 않습니다. 출처·저작권: 공공데이터포털(행정안전부·한국지능정보사회진흥원) ·
+<a href="../2025-11-23_portal_issue-data-low-birth-aging.html" style="color:#8ab4f8">정리본 사본</a> · <a href="https://web.archive.org/web/20251123233023/https://www.data.go.kr/tcs/eds/idt/selectIssueData.do?issueType=ISSUE&amp;perPage=10&amp;issueId=343250&amp;sortType=sort_order" style="color:#8ab4f8">web.archive.org 스냅샷</a> · <a href="../../" style="color:#8ab4f8">← CV</a></div>
+
+		<div class="skip">
+
+			<a href="#contents" >콘텐츠 바로가기</a>
+
+		</div>
+		
+		<div class="wrapper">
+			
+			<!-- 헤더+메뉴 -->
+			
+
+
+
+
+
+
+ 
+<script type="text/javascript">
+
+    /**
+     * document Ready
+     */
+    $(document).ready(function () {
+        //현재메뉴 표시
+        let currentMainMenuId = fn_getCookie("currentMainMenuId");
+        setMenu(currentMainMenuId);
+
+        window.addEventListener("resize", function () {
+            let currentMainMenuId = fn_getCookie("currentMainMenuId");
+            if(!fn_empty(currentMainMenuId)){
+                if($(window).width() <= 1024){
+                    currentMainMenuId = currentMainMenuId.replace("_pc", "_mb");
+                    fn_setCookie("currentMainMenuId", currentMainMenuId,1);
+                }else{
+                    currentMainMenuId = currentMainMenuId.replace("_mb", "_pc");
+                    fn_setCookie("currentMainMenuId", currentMainMenuId,1);
+                }
+            setMenu(currentMainMenuId);
+            }
+        })
+
+        function setMenu(currentMainMenuId) {
+            if (!fn_empty(currentMainMenuId)) {
+                $("#" + currentMainMenuId).addClass("active");
+                if(currentMainMenuId != undefined || currentMainMenuId != 'M0000000000') {
+                    $("#" + currentMainMenuId).addClass("on");
+                }
+                $("#" + currentMainMenuId).parent().parent().parent().parent().addClass("active");
+                if(currentMainMenuId != undefined || currentMainMenuId != 'M0000000000') {
+                    $("#" + currentMainMenuId).parent().parent().parent().parent().addClass("on");
+                }
+                if (currentMainMenuId.includes("M02")) { // 마이페이지 관련 하부 메뉴
+                    $("#" + currentMainMenuId).parent().parent().parent().parent().parent().addClass("active");
+                    $("#" + currentMainMenuId).parent().parent().prev().addClass("active");
+                    $("#" + currentMainMenuId).parent().parent().parent().parent().prevAll().addClass("active");
+                    $("#" + currentMainMenuId).parent().parent().parent().parent().parent().parent().parent().addClass("active");
+                }
+            } else {
+                $("#gnb").find(".active").each(function (idx, entry) {
+                    $(this).removeClass("active");
+                });
+                $(".gnb-mb").find(".depth2").slideUp(1,'easeInOutExpo');
+                $(".gnb-mb").find(".depth3").slideUp(1, 'easeInOutExpo');
+                $(".gnb-mb").find(".depth4").slideUp(1, 'easeInOutExpo');
+            }
+
+            //하위메뉴 없는 경우 불필요한 태그 삭제
+            $(".ulLower").each(function (idx, entry) {
+                if ($(this).find("li").length === 0) {
+                    $(this).parent().parent().remove();
+                }
+            });
+
+            //마이페이지는 모바일 시 depth4 스타일 지정되므로 불필요한 태그 삭제는 별도로 동작
+            $(".depth4").children('ul').each(function (idx, entry) {
+                if ($(this).find("li").length === 0) {
+                    $(this).parent().remove();
+                }
+            });
+            
+            // 마이페이지 모바일 depthg3 불필요한 태그 삭제 
+            $(".arrow > ul > li").each(function (idx, entry) {
+                if($(this).next().children("ul").children("li").length === 0){
+                    $(this).remove();
+                }
+            })
+
+            if($(window).width() <= 1024){
+                $(".gnb-mb").find(".depth2").slideUp(1,'easeInOutExpo');
+                $(".gnb-mb").find(".depth3").slideUp(1, 'easeInOutExpo');
+                $(".gnb-mb").find(".depth4").slideUp(1, 'easeInOutExpo');
+                $(".gnb-mb").find(".active").children(".depth2").slideDown(1, 'easeInOutExpo');
+                $(".gnb-mb").find(".active").next(".depth3").slideDown(1, 'easeInOutExpo');
+                $(".gnb-mb").find(".active").next(".depth4").slideDown(1, 'easeInOutExpo');
+            }
+        }
+
+        $(document).tooltip();
+
+        let mberId = "";
+        let personalPolicyAgreeYn = "";
+        let conditionAgreeYn = "";
+        let checkUrl = window.location.href;
+
+        if(mberId != "" && !checkUrl.includes("/checkAgreeYn.do")) {
+            if(personalPolicyAgreeYn == "N") {
+                showCheckAgreeVer2Popup();
+            } else if(personalPolicyAgreeYn == "Y" && conditionAgreeYn == "N") {
+                showCheckConditionAgreeVer2Popup();
+            }
+        }
+    });
+
+</script>
+<header id="header" tabIndex="-1">
+    
+        
+            <form action="/tcs/dss/selectDataSetList.do" method="get" id="searchHeaderFrm"
+                  onSubmit="return false;">
+                <div class="gov-info">
+                    <ul>
+                        <li>
+                            <img src="assets/03670635_eg_logo.png" alt="eg(전자정부)">이 누리집은 대한민국
+                            공식 전자정부 누리집입니다.
+                        </li>
+                    </ul>
+                    <div class="gov-search">
+                        <input type="search" id="keyword" name="keyword" title="검색어를 입력해 주세요"
+                               onKeyup="fn_searchKeyup(this);" placeholder="검색어를 입력해 주세요." autocomplete="off"
+                               class="input-text"/>
+                        <button type="button" class="btn-search" onclick="fn_searchDataList();"
+                                style="background-color:#1196d9;" title="검색하기">검색
+                        </button>
+                        <div id="autoCompleteDiv" class="atcmp_wrap suggest-wrap" style="display:none;">
+                            자동완성 기능<br/>자동완성 기능
+                        </div>
+                    </div>
+                </div>
+            </form>
+        
+        
+    
+    <div class="inner-wrap">
+
+
+        <h1 class="logo"><a href="https://www.data.go.kr/index.do" title="홈페이지 바로가기">공공데이터포털</a></h1>
+
+        <button type="button" class="btn-open-gnb just-mb">메뉴보기</button>
+
+        <div class="header-wrap">
+            <p class="logo just-mb"><a href="https://www.data.go.kr/index.do">공공데이터포털</a></p>
+
+            <div class="util">
+                
+                
+                
+                <div class="login">
+                    
+                        <!-- 로그인 전 -->
+                        <div class="before">
+                            <a href="javascript:window.location.href='https://www.data.go.kr/uim/login/loginView.do';"
+                               title="로그인 이동">로그인</a>
+                            <a href="javascript:window.location.href='https://www.data.go.kr/uim/login/signupView.do';"
+                               title="회원가입 이동">회원가입</a>
+                        </div>
+                    
+
+                    
+                </div>
+
+                <div class="link">
+                    <a href="javascript:window.location.href='https://www.data.go.kr/cmm/cmm/siteMap.do';" class=""
+                       title="사이트맵 이동">사이트맵</a>
+                    <a href="https://www.data.go.kr/en/index.do" class="en-link" title="영문으로 보기">ENGLISH</a>
+                </div>
+            </div>
+
+            <nav id="gnb">
+                <!-- pc 일때 gnb : 링크 pc, mb 일때 둘다 넣어주세요 -->
+                <ul class="gnb-pc">
+                    
+                        <li id="M0001000000_pc">
+                            
+                                
+                                
+                                
+                                    <a class="upperMenu" href="#" title="데이터찾기 페이지로 이동"
+                                       onClick="javascript:fn_movePage(this, 'M0001000000_pc','/');">데이터찾기</a>
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">데이터찾기<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                                <li id="M0001010000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0001010000_pc','/tcs/dss/selectDataSetList.do');"
+                                                                                                     title="데이터목록 페이지로 이동">데이터목록</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0001020000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0001020000_pc','/tcs/eds/selectCoreDataListView.do');"
+                                                                                                     title="국가중점데이터 페이지로 이동">국가중점데이터</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0001030000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0001030000_pc','/tcs/eds/idt/selectIssueDataList.do');"
+                                                                                                     title="이슈 및 추천데이터 페이지로 이동">이슈 및 추천데이터</a></li>
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li id="M0006000000_pc">
+                            
+                                
+                                    <a class="upperMenu" href="#"
+                                       onClick="javascript:fn_movePage(this, 'M0006000000_pc','/tcs/opd/ndm/view.do');"
+                                       title="국가데이터맵 페이지로 이동">국가데이터맵</a>
+                                
+                                
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">국가데이터맵<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li id="M0002000000_pc">
+                            
+                                
+                                
+                                
+                                    <a class="upperMenu" href="#" title="데이터요청 페이지로 이동"
+                                       onClick="javascript:fn_movePage(this, 'M0002000000_pc','/');">데이터요청</a>
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">데이터요청<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                <li id="M0002010000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0002010000_pc','/tcs/dor/insertDataOfferReqstProcssView.do');"
+                                                                                                     title="공공데이터 제공신청 페이지로 이동">공공데이터 제공신청</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0002020000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0002020000_pc','/tcs/dor/insertTrublMdatReqstProcssView.do');"
+                                                                                                     title="분쟁조정 신청 페이지로 이동">분쟁조정 신청</a></li>
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li id="M0008000000_pc">
+                            
+                                
+                                
+                                    <a class="upperMenu text-center d-flex align-items-center justify-content-center h-100 w-100" href="#"
+                                       onClick="javascript:fn_movePage(this, 'M0008000000_pc','/problem/main.do');"
+                                       title="기업 공공데이터 문제해결 지원센터 페이지로 이동" style="white-space: normal; line-height: 1.3;">기업 공공데이터 <br>문제해결 지원센터</a>
+                                
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">기업 공공데이터 문제해결 지원센터<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li id="M0004000000_pc">
+                            
+                                
+                                
+                                
+                                    <a class="upperMenu" href="#" title="정보공유 페이지로 이동"
+                                       onClick="javascript:fn_movePage(this, 'M0004000000_pc','/');">정보공유</a>
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">정보공유<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                <li id="M0004060000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0004060000_pc','/bbs/dnb/selectDeveloperNetworkListView.do');"
+                                                                                                     title="개발자 네트워크 페이지로 이동">개발자 네트워크</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0004040000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0004040000_pc','/bbs/ntc/selectNoticeListView.do');"
+                                                                                                     title="공지사항 페이지로 이동">공지사항</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0004030000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0004030000_pc','/bbs/faq/selectFaqList.do');"
+                                                                                                     title="문의하기 페이지로 이동">문의하기</a></li>
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li id="M0005000000_pc">
+                            
+                                
+                                
+                                
+                                    <a class="upperMenu" href="#" title="이용안내 페이지로 이동"
+                                       onClick="javascript:fn_movePage(this, 'M0005000000_pc','/');">이용안내</a>
+                                
+                            
+                            <div class="depth2">
+                                <div class="wrap" style="width: 1230px;">
+                                    <p class="tit">이용안내<i
+                                            class="iconset ico-arr-gnb-depth2"></i></p>
+                                    <ul class="ulLower">
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                <li id="M0005040000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0005040000_pc','/ugs/selectPublicDataUseGuideView.do');"
+                                                                                                     title="공공데이터 이용가이드 페이지로 이동">공공데이터 이용가이드</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0005010000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0005010000_pc','/ugs/selectPortalInfoView.do');"
+                                                                                                     title="공공데이터포털 소개 페이지로 이동">공공데이터포털 소개</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0005020000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0005020000_pc','/ugs/selectPortalPolicyView.do');"
+                                                                                                     title="공공데이터 정책 페이지로 이동">공공데이터 정책</a></li>
+                                            
+                                        
+                                            
+                                                <li id="M0005030000_pc"><a href="#"
+                                                                                                     onClick="javascript:fn_movePage(this, 'M0005030000_pc','/ugs/selectPublicDataQlityView.do');"
+                                                                                                     title="공공데이터 품질관리 페이지로 이동">공공데이터 품질관리</a></li>
+                                            
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    
+                </ul>
+
+                <!-- 모바일 일때 gnb : 링크 pc, mb 일때 둘다 넣어주세요 -->
+                <!-- 모바일 일때 국가데이터맵은 서비스 하지않음 -->
+                <ul class="gnb-mb">
+                    
+                        
+                            <li id="M0001000000_mb">
+                                <a class='upperMenu' href="#"
+                                   onClick="javascript:fn_movePage(this, 'M0001000000_mb','/',true);">데이터찾기</a>
+                                <div class="depth2">
+                                    <div class="wrap">
+                                        <ul class="ulLower">
+                                            
+                                                
+                                                    <li id="M0001010000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0001010000_mb','/tcs/dss/selectDataSetList.do');">데이터목록</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0001020000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0001020000_mb','/tcs/eds/selectCoreDataListView.do');">국가중점데이터</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0001030000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0001030000_mb','/tcs/eds/idt/selectIssueDataList.do');">이슈 및 추천데이터</a></li>
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        
+                    
+                        
+                    
+                        
+                            <li id="M0002000000_mb">
+                                <a class='upperMenu' href="#"
+                                   onClick="javascript:fn_movePage(this, 'M0002000000_mb','/',true);">데이터요청</a>
+                                <div class="depth2">
+                                    <div class="wrap">
+                                        <ul class="ulLower">
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                                    <li id="M0002010000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0002010000_mb','/tcs/dor/insertDataOfferReqstProcssView.do');">공공데이터 제공신청</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0002020000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0002020000_mb','/tcs/dor/insertTrublMdatReqstProcssView.do');">분쟁조정 신청</a></li>
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        
+                    
+                        
+                            <li id="M0008000000_mb">
+                                <a class='upperMenu' href="#"
+                                   onClick="javascript:fn_movePage(this, 'M0008000000_mb','/problem/main.do',true);">기업 공공데이터 문제해결 지원센터</a>
+                                <div class="depth2">
+                                    <div class="wrap">
+                                        <ul class="ulLower">
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        
+                    
+                        
+                            <li id="M0004000000_mb">
+                                <a class='upperMenu' href="#"
+                                   onClick="javascript:fn_movePage(this, 'M0004000000_mb','/',true);">정보공유</a>
+                                <div class="depth2">
+                                    <div class="wrap">
+                                        <ul class="ulLower">
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                                    <li id="M0004060000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0004060000_mb','/bbs/dnb/selectDeveloperNetworkListView.do');">개발자 네트워크</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0004040000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0004040000_mb','/bbs/ntc/selectNoticeListView.do');">공지사항</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0004030000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0004030000_mb','/bbs/faq/selectFaqList.do');">문의하기</a></li>
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        
+                    
+                        
+                            <li id="M0005000000_mb">
+                                <a class='upperMenu' href="#"
+                                   onClick="javascript:fn_movePage(this, 'M0005000000_mb','/',true);">이용안내</a>
+                                <div class="depth2">
+                                    <div class="wrap">
+                                        <ul class="ulLower">
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                            
+                                                
+                                                    <li id="M0005040000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0005040000_mb','/ugs/selectPublicDataUseGuideView.do');">공공데이터 이용가이드</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0005010000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0005010000_mb','/ugs/selectPortalInfoView.do');">공공데이터포털 소개</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0005020000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0005020000_mb','/ugs/selectPortalPolicyView.do');">공공데이터 정책</a></li>
+                                                
+                                            
+                                                
+                                                    <li id="M0005030000_mb"><a href="#"
+                                                                                                         onClick="javascript:fn_movePage(this,'M0005030000_mb','/ugs/selectPublicDataQlityView.do');">공공데이터 품질관리</a></li>
+                                                
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        
+                    
+                    <!-- 모바일 일때 마이페이지 메뉴도 제공 -->
+                    
+                </ul>
+            </nav>
+            <button type="button" class="btn-close-gnb just-mb">메뉴보기</button>
+        </div>
+    </div>
+</header>
+<script src="assets/4012f622_check-agree-popup.min.js"></script>
+<script type="text/javascript">
+
+    /**
+     * 페이지 이동
+     * @param  : menuId - 메뉴 ID
+     * @param  : menuUrl - 이동 menuUrl
+     * @return : 없음
+     */
+    function fn_movePage(obj, menuId, menuUrl) {
+
+        if (fn_empty(menuUrl)) return;
+
+        //상위메뉴가 아닌 경우만 URL 호출
+        if ($(obj).prop("class") != "upperMenu") {
+            if (menuUrl == "/") {
+                alert("서비스 준비중입니다.");
+                return;
+            }
+
+            fn_setCookie("currentMainMenuId", menuId, 1);
+            menuId = menuId.replace("_mb","")
+            fn_setCookie("currentMyMenuId", menuId, 1);
+            if (menuUrl == "/ssoMyPage") {
+                getMypageUrl();
+                return;
+            } else {
+                document.location.href = menuUrl;
+
+            }
+            //상위메뉴면서 하위메뉴가 없는 경우, URL 호출
+        } else {
+            if ($(obj).next().length == 0) {
+                if (menuUrl == "/") {
+                    alert("서비스 준비중입니다.");
+                    return;
+                } else {
+                    fn_setCookie("currentMainMenuId", menuId, 1);
+                    menuId = menuId.replace("_mb","")
+                    fn_setCookie("currentMyMenuId", menuId, 1);
+
+                    if (menuUrl == "/ssoMyPage") {
+                        getMypageUrl();
+                        return;
+                    } else {
+                        document.location.href = menuUrl;
+
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    function getMypageUrl() {
+        $.ajax({
+            url		: "/iim/api/myPageUrl.do",
+            success	: function(data) {
+                var jsonObj	= JSON.parse(data);
+                //console.log(jsonObj);
+                if(jsonObj.result) {
+                    location.href = jsonObj.url;
+                } else {
+                    alert("마이페이지로 이동 할 수 없습니다. 문제가 계속 될 경우 관리자에게 문의하여 주세요.");
+                }
+            }
+        })
+    }
+
+    /*
+    * 검색
+    */
+    function fn_searchDataList() {
+
+        if (!checkCloseRoundBrackets($('#keyword').val())) {
+            alert('괄호를 닫거나, 제거한 후 재검색하여 주시기 바랍니다');
+            return false;
+        }
+
+        if (checkSpecial($('#keyword').val())) {
+            alert('해당 특수문자는 검색에서 사용될 수 없습니다. 특수문자를 제외하고 재검색하여 주시기 바랍니다.');
+            return false;
+        }
+
+        $('#searchHeaderFrm').attr("onSubmit", "");
+        $('#searchHeaderFrm').submit();
+    }
+
+    /*
+    * 검색 텍스트 영역 키다운 이벤트
+    */
+    function fn_searchKeyup(target) {
+        var searchKeyword = target.value;
+
+        if (event.keyCode === 13) {
+            fn_searchDataList();
+            return;
+        }
+
+        fn_autoComplete(searchKeyword);
+    }
+
+    /*
+    * 자동완성
+    */
+    function fn_autoComplete(searchKeyword) {
+
+        var dataObj = {
+            keyword: searchKeyword
+        }
+
+        $.ajax({
+            "url": "/tcs/dss/selectAutoComplete.do",
+            "data": dataObj,
+
+            success: function (data) {
+                var dataArr = JSON.parse(data);
+                var $autoCompleteDiv = $("#autoCompleteDiv");
+
+                if (dataArr.length > 0) {
+                    $autoCompleteDiv.show();
+                    $autoCompleteDiv.html("");
+
+                    for (var i = 0; i < dataArr.length; i++) {
+                        var tempObj = dataArr[i];
+
+                        $autoCompleteDiv.append("<p onclick='fn_autoCompleteClick(\"" + tempObj.text + "\")'>" + tempObj.text + "</p>");
+                    }
+
+                } else {
+                    $autoCompleteDiv.hide();
+                }
+            }
+        })
+    }
+
+    /*
+    * 자동완성 텍스트 클릭시 호출 메서드
+    */
+    function fn_autoCompleteClick(keyword) {
+        $("#keyword").val(keyword);
+
+        fn_searchData();
+    }
+
+    function moveMyPage() {
+        window.location = '/iim/main/mypageMain.do';
+    }
+
+    // 특수문자 체크
+    function checkSpecial(str) {
+        const regExp = /[!?@#$%^&*:;-=~{}<>\[\]\|\\\"\'\,\.\/\`\₩]/g;
+        return regExp.test(str);
+    }
+
+    // 소괄호 닫힘 체크
+    function checkCloseRoundBrackets(str) {
+        //결과 초기값 true
+        var result = true;
+        //괄호만 넣을 빈 배열 생성
+        var s_arr = [];
+        var map = {
+            '(': ')',
+            '[': ']',
+            '{': '}'
+        }
+        for (var i = 0; i < str.length; i++) {
+            //문자열 str 의 ( 만 추출해서 배열에 담는다.
+            if (str[i] === "(" || str[i] === "[" || str[i] === "{") {
+                s_arr.push(str[i]);
+            } else if (str[i] === ")" || str[i] === "]" || str[i] === "}") {
+                //닫는 괄호가 나오면 여는괄호 모아둔데 가장 바깥꺼를 s_key로 담고 지금 str[i] 와 비교
+                var s_key = s_arr.pop();
+                if (str[i] !== map[s_key]) {
+                    return false;
+                }
+            }
+        }
+
+        //남은 (가 있어도 false
+        if (s_arr.length !== 0) {
+            result = false;
+        }
+
+        return result;
+    }
+</script>
+
+			
+			<!-- 임시 스타일 지정 -->
+			<div class="container">
+				
+					<!-- 본문 상단 네비게이터 : 메인화면에서 표출 X-->
+					
+
+
+
+
+
+
+ <script type="text/javascript">
+	
+	/**
+	 * document Ready
+	 */
+	$(document).ready(function(){
+		
+		//현재메뉴 표시
+		var currentMenuId = fn_getCookie("currentMainMenuId");
+		if(!fn_empty(currentMenuId)){
+			//depth1
+			$(".location > .locationDepth1").text($('#gnb > ul > li.active > a').text());
+			//depth2
+			// $(".location > .locationDepth2").text($('#gnb > ul > li.active > .depth2').find('.active').text());
+			$(".location > .locationDepth2").append($('#gnb > ul > li.active > .depth2').find('li.active').html());
+			//depth3
+			$(".location > .locationDepth3").append($('#gnb > ul > li.active > .depth2').find('.active').next().find('.active').html());
+			//depth4
+			$(".location > .locationDepth4").append($('#gnb > ul > li.active > .depth2').find('.active').next().find('.active').next().find('.active').html());
+
+			$(".location > .locationDepth1").show();
+			$(".location > .locationDepth2").show();
+			$(".location > .locationDepth3").show();
+			$(".location > .locationDepth4").show();
+		} else {
+			$(".location").hide();
+		}
+
+		$(".location").find("span:empty").remove(); // span중 빈 값 삭제
+		$(".location").find("span:last").css("font-weight","700"); // 마지막값 설정
+		
+	});
+ 
+</script>
+			<div class="location">
+				<span><a href="https://www.data.go.kr/index.do">홈</a></span>
+				<span class="locationDepth1"><a href=""></a></span>
+				<span class="locationDepth2"></span>
+				<span class="locationDepth3"></span>
+				<span class="locationDepth4"></span>
+			</div>
+				
+				
+				<!-- url에 '/iim/' 또는 '/mypage/'이 포함되어있으면 마이페이지 왼쪽메뉴 표시 -->
+				
+				
+					
+					
+						<div class="content-layout">
+							<div id="contents">
+								<!-- 본문 -->
+								
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+ <!-- 시각화  참조 jsp --> 
+<link rel="stylesheet" type="text/css" href="assets/c1da7526_tui-chart.min.css" />
+<link rel="stylesheet" type="text/css" href="assets/08b77658_tui-grid.css" />
+<link rel="stylesheet" type="text/css" href="assets/1a7b3174_jui-grid.classic.css" />
+<link rel="stylesheet" type="text/css" href="assets/dc0d8d10_jui-ui.min.classic.css" />
+<link rel="stylesheet" type="text/css" href="assets/47f10544_grid-jennifer.min.css" />
+<link rel="stylesheet" type="text/css" href="assets/8a1b5983_grid.min.css" />
+<link rel="stylesheet" type="text/css" href="assets/3c92981b_ui-jennifer.min.css" />
+<link rel="stylesheet" type="text/css" href="assets/e2ce60e3_ui.min.css" />
+	
+<script type="text/javascript" src="assets/96a8bb11_tui-chart-all.min.js"></script>
+<script type="text/javascript" src="assets/12794b72_tui-grid.js"></script>
+<script type="text/javascript" src="assets/192d2f20_jui-core.min.js"></script>
+<script type="text/javascript" src="assets/a408938b_jui-grid.min.js"></script>
+<script type="text/javascript" src="assets/41fb1909_jui-ui.min.js"></script>
+<script type="text/javascript" src="assets/ee215094_jui-chart.min.js"></script>
+<script type="text/javascript" src="assets/72d71807_south-korea.js"></script>
+<script type="text/javascript" src="assets/b3e53503_papaparse.min.js"></script> 
+<script type="text/javascript" src="assets/3af8bfd3_html2canvas.min.js"></script>
+<script type="text/javascript" src="assets/ed8ab2c9_es6-promise.min.js"></script>
+<script type="text/javascript" src="assets/68dba5c4_es6-promise.auto.min.js"></script>
+<script type="text/javascript" src="assets/fba32676_script_visual.js"></script>
+<script type="text/javascript" src="assets/fa83123e_script_errorReport.js"></script>
+<script type="text/javascript">
+
+	/**
+	 * document ready 함수
+	 */
+
+	$(function(){
+		function updateElementTitle() {
+			// 텍스트를 title 속성으로 복사하는 함수
+			function setTitleFromText(selector) {
+				$(selector).each(function() {
+					const text = $(this).text();
+					$(this).attr('title', text);
+				});
+			}
+
+			// 기본 title 설정
+			setTitleFromText('#issue-tab-ul li a');
+			setTitleFromText('.issue-filter-area .analyze-btn-wrap button');
+
+			// 선택된 항목 강조
+			const tabText = $('#issue-tab-ul .on').text();
+			$('#issue-tab-ul .on a').attr('title', ` 선택됨`);
+
+			const buttonText = $('.issue-filter-area .analyze-btn-wrap .on').text();
+			$('.issue-filter-area .analyze-btn-wrap .on').attr('title', ` 선택됨`);
+		}
+
+
+		// $(this).prop("title", "공공데이터포털 - 데이터 셋 파일데이터");
+		var h2 = $("#contents").find("h2").text();
+		var h4 = $("#contents").find("h4").text();
+		var springTitle = "공공데이터포털";
+
+		$(this).prop("title", (h4 ? h4 + " | " : "") + (h2 ? h2 + " | " : "") + springTitle);
+
+		updateElementTitle();
+	});
+
+</script>
+
+<link rel="stylesheet" href="assets/a4c6e378_font-awesome.min.css">
+<script>
+	$(function(){
+
+		$(document).on('click', '.analyze-btn-wrap .button', function(){
+			$(this).addClass('on').siblings().removeClass('on');
+		});
+
+	})
+</script>
+<!--
+lnb 없을 때
+<div class="content-layout">
+
+lnb 있을 때
+<div class="content-layout has-lnb">
+-->
+<!-- page-title-area -->
+<div class="page-title-area">
+	<h2 class="tit just-pc">이슈데이터</h2>
+
+	<div class="page-move just-mb">
+		<button type="button" class="now">이슈데이터</button>
+
+		<ul class="list">
+			<li><a href="">데이터셋</a></li>
+			<li><a href="">국가중점데이터</a></li>
+		</ul>
+	</div>
+</div>
+<!--// page-title-area -->
+
+<div class="issue-data-text">
+	<p class="reset">현재 사회적으로 관심을 받거나 이슈화되고 있는 주제에 대하여, 일목요연하게 공공데이터를 확인할 수 있습니다.<br />함께 논의하고 싶은 이슈데이터가 있으면 자유롭게 제안해 주세요.</p>
+
+	<a href="#layer_issuedata_suggest" rel="modal:open" class="button h32 white" title="이슈데이터 제안 바로가기">이슈데이터 제안하기</a>
+</div>
+
+<!-- 레이어팝업 - 이슈데이터 제안하기 -->
+
+<div id="layer_issuedata_suggest" class="modal large">
+	<a href="#focus" class="disabled layer-focus">레이어로 포커스 이동 됨</a>
+
+	<div class="layer-title">이슈데이터 제안하기</div>
+
+	<!-- layer-contents -->
+	<div class="layer-contents">
+		<div class="box-lightblue">
+			<p class="reset a-c">함께 논의하고 싶은 이슈데이터가 있으면 자유롭게 제안해주세요.</p>
+			<form id="issueForm" onSubmit="return false;" action="/tcs/eds/idt/selectIssueData.do?issueType=ISSUE&amp;perPage=10&amp;issueId=343250&amp;sortType=sort_order" method="post">
+				<textarea id="title" name="title" title="이슈데이터 제안 입력" placeholder="내용을 입력해주세요." class="input-textarea mt20" rows="5" cols="100"></textarea>
+			</form>
+			<div class="limit a-r">
+				<em>0</em>
+				<span> /100</span>
+			</div>
+		</div>
+	</div>
+	<!--// layer-contents -->
+
+	<!-- layer-bottom -->
+	<div class="layer-bottom">
+		<div class="button-group a-c">
+			<a href="javascript:fn_cancel();" class="button navy">취소</a>
+			<button type="button" class="button blue" onclick="javascript:fn_save();">제안하기</button>
+		</div>
+	</div>
+	<!--// layer-bottom -->
+</div>
+<!--// 레이어팝업 - 이슈데이터 제안하기 -->
+
+<form id="searchVO" name="searchVO" action="/tcs/eds/idt/selectIssueData.do?issueType=ISSUE&amp;perPage=10&amp;issueId=343250&amp;sortType=sort_order" method="post" onsubmit="return false;">
+	<input id="pageIndex" name="pageIndex" type="hidden" value="1"/>
+	<input id="searchCondition1" name="searchCondition1" type="hidden" value=""/>
+	<input id="issueId" name="issueId" type="hidden" value="343250"/>
+	<input id="id" name="id" type="hidden" value="624"/>
+	<input id="dType" name="dType" style="display:none;" type="hiidden" value=""/>
+	<input id="sortType" name="sortType" type="hidden" value="sort_order"/>
+
+	<h4 class="tit color-blue">저출산/고령화</h4>
+	
+	<div class="list-top">
+		<div class="search-wrap">
+			<div class="form-area">
+				<input type="search" id="data-keyword" title="검색어 입력" placeholder="검색어를 입력하세요" class="search-input" value="" onkeyup="javascript:fn_searchKeyUp()"/>
+
+				<button type="button" class="btn-search" onclick="javascript:fn_list(1,'keyword');" title="검색 하기">
+					<i class="iconset ico-search">검색</i>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="tab-list sort col-2">
+		<ul id="issue-tab-ul">
+			
+				<li value="624" class="on">
+					<a href="javascript:void(0)" onclick='javascript:fn_menu("343250","624");' style="cursor:pointer;">
+						복지/지원
+					</a>
+				</li>
+			
+				<li value="625" class="">
+					<a href="javascript:void(0)" onclick='javascript:fn_menu("343250","625");' style="cursor:pointer;">
+						노인일자리
+					</a>
+				</li>
+			
+				<li value="626" class="">
+					<a href="javascript:void(0)" onclick='javascript:fn_menu("343250","626");' style="cursor:pointer;">
+						노인복지
+					</a>
+				</li>
+			
+		</ul>
+	</div>
+
+	<div class="data-set-list">
+		<div class="list-top mt10">
+			<span class="count big float-l">총 <strong>9</strong>건이 검색되었습니다. </span>
+		</div>
+		<div class="list-top mt10">
+			<div class="mb10 w-100">
+				<div class="issue-filter-area">
+					<div class="analyze-btn-wrap issue-filter-btn-area">
+						<button onclick="javascript:fn_type('TOTAL');" type="button" class="button h32 issue-filter-btn on">전체</button>
+						<button onclick="javascript:fn_type('FILE');" type="button" id="dTypeFile" class="button h32 issue-filter-btn
+						">파일데이터</button>
+						<button onclick="javascript:fn_type('API');" type="button" id="dTypeApi" class="button h32 issue-filter-btn
+						">Open API</button>
+					</div>
+					<div class="issue-filter-dropdown-area">
+						<select title="정렬 기준 선택" id="selectSort" onchange="javascript:fn_list(1)" class="issue-filter-dropdown orgSearch">
+							<option value="sort_order" selected>중요도순</option>
+							<option value="updt_dt" >수정일자순</option>
+							<option value="inqire_cd" >조회많은순</option>
+							<option value="req_co" >활용많은순</option>
+							<option value="dwn_cd" >다운로드순</option>
+						</select>
+						<select title="노출 개수 선택" id="selectSize" class="issue-filter-dropdown per-page-option" onchange="javascript:fn_list(1)">
+							<option value="5" >5개씩</option>
+							<option value="10" selected>10개씩</option>
+							<option value="20" >20개씩</option>
+							<option value="30" >30개씩</option>
+							<option value="40" >40개씩</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="result-list">
+			<ul>
+				<!-- 반복 -->
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('3072692', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">국가행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '3072692', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										보건복지부_전국 지역보건의료기관 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">전국 지역보건의료기관 현황으로 시도, 시군구, 보건기관 유형, 상위 보건기관명, 보건기관명, 주소, 읍면동명, 도서지역여부, 대표전화번호 등에 대한 정보를 제공합니다.&lt;데이터 이용 시 참고사항&gt;1. 전국의 지역보건의료기관은 지역 주민의 건강을 증진하고 질병을 예방하기 위해 설립된 공공의료기관2. 보건소 : 예방접종, 감염병 관리, 만성질환 관리, 건강검진 등 포괄적인 보건서비스 제공3. 보건지소 : 보건 지원기능, 1차 진료, 건강관리, 임산부/노인 대상 서비스4. 보건진료소 : 방문진료, 응급처치, 기초진료, 건강상담 등의 역할 </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2024-02-19
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">34903</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">11336</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('3072692')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('15083359', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '15083359', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										부산광역시_보건소 검사정보
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">부산광역시 구군 보건소에서 건강 및 예방 차원의 목적으로 검사 가능한 정보 현황에 대한 데이터로 구,군별 보건소 검사 항목 및 비용 정보와 검사 여부 현황에 대한 정보를 제공하고 있습니다.* 부산시 해당 보건소 : 16개 구군 보건소                                        (중구,서구,동구,영도구,부산진구,동래구,남구,북구,해운대구,사하구,금정구,연제구,강서구,수영구,사상구,기장군)* 제공항목: 16개 구군 보건소 검사 항목 및 비용정보, 검사 여부 현황 * 좀 더 세부적인 검사 항목 및 비용, 주소지 관련 검사 가능 여부 등은 해당 보건소 홈페이지 또는 전화 문의하여 확인하시기 바랍니다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2025-08-07
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">6897</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">1876</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('15083359')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('3081361', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '3081361', '343250')">
+									
+									
+										
+									
+									
+										
+										
+											<span class="tagset json">
+												XLSX
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										전북특별자치도_보건소 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">이 데이터는 전북특별자치도 내에 분포한 모든 지역보건의료기관의 현황을 보여주는 공식 목록입니다. 각 시군별로 최상위 기관인 보건소를 비롯하여, 건강생활지원센터, 보건지소, 그리고 농어촌 의료 최일선에 있는 보건진료소까지 기관의 유형별로 상세히 분류하고 있습니다. 각 시설의 정식 명칭, 도로명 주소, 그리고 대표 전화번호를 포함하여 지역 공공 보건 시스템의 전체적인 구조와 접근성을 파악할 수 있도록 돕습니다. 이 자료는 지역 주민의 일차 의료 및 건강 증진 서비스를 담당하는 공공 인프라 현황을 파악하고, 보건 정책을 수립하는 데 필수적인 기초 데이터입니다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2019-03-04
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">5323</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">4857</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('3081361')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('15083327', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보육·가족및여성</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '15083327', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										울산광역시_다자녀 사랑카드 참여업체 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">본 데이터는 다자녀 사랑카드 제도에 참여하는 업체의 현황 정보이다. 업체명, 업종, 소재지, 연락처, 할인 내용, 할인율, 이용 조건, 참여 기간 등의 상세 정보를 포함한다. 다자녀 사랑카드는 다자녀 가정의 경제적 부담을 경감하고 출산을 장려하기 위한 복지 제도로, 참여 업체에서 제품이나 서비스 이용 시 할인 혜택을 제공한다. 본 정보는 다자녀 가정 지원 정책 운영, 참여 업체 관리, 제도 홍보, 협력 업체 확대 전략 수립 등에 활용되며, 다자녀 가정의 복지 향상을 위한 기초 자료로 제공된다. 참여 업체 현황을 통해 다자녀 가정이 실질적인 혜택을 누릴 수 있도록 정보를 제공하고, 저출산 문제 해소와 가족 친화적 사회 환경 조성에 기여한다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2025-11-14
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">4622</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">1443</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('15083327')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('15083363', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '15083363', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										울산광역시_보건소 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">본 데이터는 관내에 소재한 보건소 및 보건지소의 운영 현황 정보이다. 각 기관의 명칭, 소재지, 연락처, 운영 시간, 제공 서비스, 의료 인력 현황 등의 세부 내용을 포함한다. 보건소는 지역 주민의 건강 증진과 질병 예방을 위한 공공 의료 기관으로서 예방접종, 건강 검진, 만성 질환 관리, 모자 보건 사업 등 다양한 서비스를 제공한다. 해당 자료는 공공 보건 의료 정책 수립, 취약 계층 건강 지원 사업, 지역 보건 의료 인프라 확충 계획에 활용된다. 시민들이 가까운 보건소를 쉽게 찾고 필요한 보건 서비스를 이용할 수 있도록 지원한다. 또한 감염병 발생 시 방역 및 대응 체계 구축에 필요한 기초 정보를 제공하며, 건강 증진 프로그램 운영 현황 파악에도 활용된다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2025-11-11
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">6876</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">1455</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('15083363')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('3068470', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '3068470', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										전라남도_보건소현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">- 전라남도내 시군의 보건소현황(보건소명, 전화번호, 도로명 주소, 위치 등)에 관한 데이터를 조회하실 수 있습니다.- 보건소는 지방자치단체(시·군·구)가 운영하는 공공의료기관으로, 지역 주민의 건강을 증진하고 감염병을 예방하며 보건 행정을 수행하는 지역 보건의 중심기관입니다.- 보건소는 1차 진료, 건강검진, 예방접종, 만성질환·모자보건·정신건강 등 종합 보건 서비스를 제공합니다.- 각 보건소에는 보건진료소 및 보건지소가 산하에 있어 읍·면 주민들도 가까운 곳에서 이용할 수 있습니다.- 전화번호로 운영시간, 검진 항목, 접종 가능 여부 등 구체적인 정보 문의가 가능합니다.- 운영 시간: 보통 평일 오전 9시 ~ 오후 6시 (점심시간 12~1시) </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2019-07-08
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">3977</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">1433</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('3068470')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('3076499', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">보건의료</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '3076499', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										부산광역시_보건소 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">부산광역시 소재 16개 구(군) 보건소 기본 정보인 보건소 명칭, 전화번호, 주소 등 현황에 대한 자료를 제공합니다.1. 보건소명: 16개 구군 보건소 명칭    -중구,서구, 동구, 영도구, 부산진구, 동래구, 남구, 북구, 해운대구, 사하구, 금정구, 연제구, 강서구, 수영구, 사상구, 기장군2. 우편번호3. 주소: 도로명 주소4. 전화번호: 보건소 대표번호5. 팩스번호: 보건소 대표 팩스번호6. 위치(위도, 경도 포함): 보건소 위치 찾기 상세설명 및 위도, 경도 정보 이 외 보건소  사업담당자 연락처, 부서별 추진사업및 사업내용, 사업별 프로그램 안내 등은 보건소 개별 홈페이지를 활용하시기 바랍니다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2025-07-25
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">6002</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">1340</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('3076499')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('15025701', 'FILE')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						파일데이터
+						
+					</span>
+							<span class="labelset brown">유아및초·중등교육</span>
+							<span class="labelset red">공공기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('FILE', '15025701', '343250')">
+									
+									
+									
+										
+										
+											<span class="tagset csv">
+												CSV
+											</span>
+										
+									
+									<span class="title">
+								
+									
+									
+										한국보육진흥원_마음성장 프로젝트(직무역량강화) 교육 개최 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">이 데이터는 한국보육진흥원이 운영하는 「마음성장 프로젝트」 교육의 개최 현황을 정리한 통계 자료입니다. 해당 프로젝트는 보육교직원을 대상으로 한 심리·정서 지원 및 직무역량 강화 목적의 교육 프로그램으로, 교육 운영 실적을 수치로 기록하고 있습니다. 데이터는 교육명, 교육월, 교육횟수, 이수인원의 항목으로 구성되어 있으며, 각 항목은 교육별 운영 내역을 확인할 수 있도록 표 형식의 집계 구조로 제공됩니다. 이를 통해 특정 시기의 교육 횟수나 이수 규모, 월별 운영 패턴 등 정량적 교육 활동 이력을 확인할 수 있는 형태로 구성되어 있습니다. 교육 운영 실적에 대한 연속적 데이터로, 시계열 분석 또는 연간 교육 추진 현황 비교에 활용 가능한 구조입니다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2017-11-14
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">3791</span>
+							</p>
+							<p>
+								
+									<span class="tit">다운로드</span>
+									<span class="data">2835</span>
+								
+
+								
+							</p>
+						</div>
+						
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" class="button h32 white" onclick="fn_fileDataDown('15025701')" title="파일 다운로드"><i class="iconset ico-down black"></i> 다운로드</a>
+								</div>
+							
+							
+							
+							
+						
+					</li>
+				
+					<li>
+						<a href="javascript:void(0)" onclick="searchObj.fn_preview('15034075', 'API')" class="btn-preview">미리보기</a>
+
+						<p class="tag-area">
+					<span class="labelset purple">
+						
+						오픈 API
+					</span>
+							<span class="labelset brown">보육·가족및여성</span>
+							<span class="labelset red">자치행정기관</span>
+						</p>
+
+						<dl>
+							<dt>
+								<a href="javascript:void(0)" onclick="searchObj.fn_detailPage('API', '15034075', '343250')">
+									
+									
+										
+									
+									
+										
+											<span class="tagset xml">XML</span>
+											<span class="tagset json">JSON</span>
+										
+										
+									
+									<span class="title">
+								
+									
+									
+										부산광역시_가족사랑카드 참여업체 현황
+									
+								
+							</span>
+								</a>
+							</dt>
+							<dd class="ellipsis">가족사랑카드 참여업체는 시의 예산지원 없이 출산, 가족친화적 시책에 동참하고자 자발적으로 다자녀가정에 할인 혜택을 제공하는 업체입니다.
+
+이 홈페이지 에서는 가족사랑카드 참여업체 위치 및 우대혜택 등 정보를 제공하고, 아울러 참여하고자 하는 업체에서 직접 등록 및 수정이 가능한 페이지를 제공합니다.
+
+2025년 7월 기준, 3000여곳의 민간기업과 업체에서 다자녀가정을 위한 다양한 혜택을 제공하고 있습니다.
+
+또한, 다자녀가정에 대한 이벤트 등 다양한 혜택을 제공하는 알림게시판도 운영하고 있습니다. </dd>
+						</dl>
+
+						<div class="info-data">
+							<p>
+								<span class="tit">수정일</span>
+								<span class="data">
+
+
+
+							2025-08-07
+						</span>
+							</p>
+							<p>
+								<span class="tit">조회수</span>
+								<span class="data">4457</span>
+							</p>
+							<p>
+								
+
+								
+									<span class="tit">활용신청</span>
+									<span class="data">138</span>
+								
+							</p>
+						</div>
+						
+							
+							
+							
+							
+								<div class="bottom-area">
+									<a href="javascript:void(0)" onclick="fn_goOpenAPIRequestForm('15034075')" class="button h32 white orgSearch" title="활용신청 바로가기"><i class="iconset ico-pencil black"></i> 활용신청</a>
+								</div>
+							
+						
+					</li>
+				
+				<!-- // 반복 -->
+			</ul>
+		</div>
+
+		<!-- 레이어팝업 - 파일데이터 미리보기 -->
+		<div id="layer_filedata_preview" class="modal large">
+		</div>
+		<!--// 레이어팝업 - 파일데이터 미리보기 -->
+		<!-- 레이어팝업 - open api 미리보기 -->
+		<div id="layer_openapi_preview" class="modal large">
+		</div>
+		<!--// 레이어팝업 - open api 미리보기 -->
+
+		<!-- pagination -->
+		<nav class='pagination'><strong class="active">1<span class="sr-only">현재 페이지</span></strong></nav>
+
+		<!--// pagination -->
+
+		<div class="button-group a-r">
+			<a href="javascript:location.href='https://www.data.go.kr/tcs/eds/idt/selectIssueDataList.do';" class="button blue" title="목록 바로가기">이슈 및 추천데이터 목록</a>
+		</div>
+
+	</div>
+</form>
+<script type="text/javascript">
+	//이슈데이터 제안 글자수 세기
+	$('.input-textarea').keyup(function (e){
+		var content = $(this).val();
+		$('.limit em').html(content.length);    //글자수 실시간 카운팅
+
+		if (content.length > 100){
+			alert("최대 100자까지 입력 가능합니다.");
+			$(this).val(content.substring(0, 100));
+			$('.limit em').html("100");
+		}
+	});
+
+	//제안하기 등록
+	function fn_save(){
+
+		// 제안내용 입력 확인
+		if(fn_empty($("#title").val())) {
+			alert("내용을 입력해 주세요.");
+			$(".input-textarea").focus();
+			return;
+		}
+
+		if(!confirm("저장하시겠습니까?")) return;
+
+		$.ajax({
+			type :"POST",
+			url : "/tcs/eds/idt/insertIssueRequest.json",
+			data : $("#issueForm").serialize(),
+			dataType : "json",
+			success : function(result){
+				if(result.status){
+					alert("정상적으로 저장되었습니다.");
+					fn_cancel();
+
+				}else{
+					alert("저장이 실패하였습니다.");
+				}
+			},
+			error : function(xhr, status, error) {
+				alert("저장이 실패하였습니다.");
+			}
+		});
+	}
+
+	//제안하기 취소 시 textarea reset
+	function fn_cancel(){
+		$('#title').val('');
+		$.modal.close();
+	}
+
+	//탭 메뉴 선택시 호출
+	function fn_menu(issueId,id){
+		$("#searchCondition1").val("Y");
+		$("#issueId").val(issueId);
+		$("#id").val(id);
+		$("#dType").val("");
+		fn_list(1);
+	}
+
+	//데이터 타입 선택시 호출
+	function fn_type(dType){
+		$("#dType").val(dType);
+		fn_list(1);
+	}
+
+	//리스트 호출
+	function fn_list(pageIndex, type){
+		$("#pageIndex").val(pageIndex);
+		$("#searchVO").attr("onSubmit","");
+		//$("#searchVO").attr("action", "/tcs/eds/idt/selectIssueData.do").submit();
+
+		var page = pageIndex;
+		var issueId = $('#issueId').val();
+		var id = $('#id').val();
+		var dType = $('#dType').val();
+		var sortType = $("#selectSort").val();
+		var perPage = $("#selectSize").val();
+		var hrefUrl = '/tcs/eds/idt/selectIssueData.do?searchCondition1=Y&issueId='+issueId+'&id='+id+'&dType='+dType+'&issueType=ISSUE&pageIndex='+page+'&sortType='+sortType+'&perPage='+perPage;
+
+		var searchKeyword = '';
+		if(type == 'keyword') {
+			searchKeyword = $("#data-keyword").val();
+			if(searchKeyword != null && searchKeyword != undefined && searchKeyword != '') {
+				hrefUrl = hrefUrl.concat('&searchKeyword=',searchKeyword)
+			}
+
+		}
+
+		location.href = hrefUrl;
+	}
+
+	var fn_searchKeyUp = function () {
+		if (event.keyCode === 13) {
+			fn_list(1, 'keyword');
+			return;
+		}
+	}
+
+	//파일다운로드
+	var fn_fileDataDown = function(publicDataPk) {
+
+		$.ajax({
+			url		: "/tcs/dss/selectFileDataDownload.do",
+			data	: {"publicDataPk"	: publicDataPk},
+
+			success	: function(data) {
+				var jsonObj = JSON.parse(data);
+
+				if (jsonObj.status === true) {
+					fn_fileDownload(jsonObj.atchFileId, jsonObj.fileDetailSn);
+				} else {
+					alert("파일 다운로드에 실패했습니다.");
+				}
+			}
+		})
+	}
+
+	//검색조건 객체
+	var conditionObj = {
+		dType		: ["TOTAL"],				// 데이터 타입
+		brm			: [],						// 분류체계(필터)
+		instt		: [],						// 제공기관(필터)
+		svcType		: [],						// 서비스유형(필터)
+		kwrd		: [],						// 키워드(필터)
+		extsn		: [],						// 확장자(필터)
+		org			: [],						// 기관명(필터, 제공기간 상세검색)
+		coreDataNmArray	: [],						// 중요데이터(필터, 국가중점데이터로 판단)
+		keyword		: "",						// 키워드(검색어)
+		sort		: "_score",					// 정렬대상(활용도순, 조회순, 정확도순, 등록순, 가나다순)
+		sort_order	: "desc",					// 정렬기준
+		operator	: "",						// 조회조건(and, or)
+		must_not	: "",						// 조회조건(not in)
+		size		: 5,						// 페이징(5, 10, 20, 30, 40)
+		currentPage	: 1,						// 현재 페이지
+		currentSelectedCond : "",				// 마지막으로 선택된 필터
+		page		: 0
+	}
+
+	var searchObj = {
+
+		mberId				: "",
+		selectedCondIdArr	: [], // 선택한 조건 배열
+
+		// 자동완성 메서드 호출 및 키워드 검색
+		fn_searchKeyup	: function(obj) {
+			var searchKeyword = obj.value;
+
+			if (event.keyCode === 13) {
+				// 검색 컨트롤러 서브밋 호출. 아마 최초 호출
+				location.href = "/tcs/dss/selectDataSetList.do" + "?keyword=" + searchKeyword;
+				return;
+			}
+
+			searchObj.fn_autoComplete(searchKeyword);
+		},
+
+		// 필터링, 정렬, 데이터타입 수정시 호출
+		fn_searchAjax		: function(condition) {
+			var paramDataObj = {};
+
+			for (var i in conditionObj) {
+
+				if (typeof conditionObj[i] === "object") {
+					paramDataObj[i] = conditionObj[i].join(",");
+				} else {
+					paramDataObj[i] = conditionObj[i];
+				}
+			}
+
+			// 시작페이지 셋팅 및 보여질 페이징 갯수 셋팅
+			paramDataObj["page"] = (conditionObj["page"]) * conditionObj["size"];
+			paramDataObj["size"] = conditionObj["size"];
+			paramDataObj["url"]	= "/tcs/dss/selectConditionSearch.do";
+			paramDataObj["conditionType"]	= condition;
+
+			if (condition === "dType") {
+				searchObj.fn_CmmnAjax(paramDataObj, searchObj.fn_dTypeCb);
+			} else {
+				searchObj.fn_CmmnAjax(paramDataObj, searchObj.fn_commonCb);
+			}
+		},
+
+		fn_dTypeCb		: function(result) {
+			var dType = conditionObj["dType"].join("");
+
+			// 탭 활성화
+			$(".dType").removeClass("on");
+			$("#dType" + dType).addClass("on")
+
+			// 불필요 리스트 제거
+			$(".dTypeList").remove();
+
+			$("#contents").append(result);
+		},
+
+		fn_commonCb		: function(result) {
+			$("#fileDataList, #apiDataList, #stdDataList").remove();
+			$("#contents").append(result);
+		},
+
+		// 자동완성 호출
+		fn_autoComplete		: function(searchKeyword) {
+
+			var dataObj = {
+				keyword	: searchKeyword,
+				url		: "/tcs/dss/selectAutoComplete.do"
+			}
+
+			searchObj.fn_CmmnAjax(dataObj, searchObj.fn_autoCompleteCb);
+		},
+
+		// 자동완성 콜백
+		fn_autoCompleteCb	: function(data) {
+			var dataArr = JSON.parse(data);
+			var $autoCompleteDiv = $("#autoCompleteDiv");
+
+			if (dataArr.length > 0) {
+				$autoCompleteDiv.show();
+				$autoCompleteDiv.html("");
+
+				for (var i = 0; i < dataArr.length; i++) {
+					var tempObj = dataArr[i];
+
+					$autoCompleteDiv.append("<p onclick='eventFnObj.fn_autoCompleteClick(this)' style='cursor:pointer'>" + tempObj.text + "</p>");
+				}
+
+			} else {
+				$autoCompleteDiv.hide();
+			}
+		},
+
+		// 에이젝스 공통
+		fn_CmmnAjax	: function(dataObj, callbackFn) {
+
+			$.ajax({
+				data	: dataObj,
+				url		: dataObj.url,
+				type	: "post",
+				success	: callbackFn
+			})
+		},
+
+		// 상세페이지 이동
+		fn_detailPage	: function(dType, pk, issueId) {
+			var url = "/tcs/dss";
+
+			if (dType === "FILE") {
+				url += "/selectFileDataDetailView.do"
+			} else if (dType === "API") {
+				url += "/selectApiDataDetailView.do"
+			} else {
+				url += "/selectStdDataDetailView.do"
+			}
+
+			location.href = url + "?publicDataPk=" + pk ;
+
+			// var issueDetailId = $("#issue-tab-ul li.on").val();
+			// $.ajax({
+			// 	type:"post",
+			// 	url: '/tcs/eds/idt/updateIssueDataReqCount.json',
+			// 	data : {
+			// 		issueId: issueId,
+			// 		issueDetailId: issueDetailId,
+			// 		publicDataPk: pk
+			// 	},
+			// 	dataType : "json",
+			// 	success: function (data) {
+			//
+			// 	},
+			// 	error: function(xhr, status, error) {
+			// 		alert("오류가 발생했습니다.");
+			// 	}
+			// });
+
+
+		},
+
+		fn_preview	: function(publicDataPk, dType) {
+
+			// 내부에 있는 기존 미리보기 내용 제거
+			if (dType === "FILE") {
+				$("#layer_filedata_preview").children().remove();
+			} else if (dType === "API") {
+				$("#layer_openapi_preview").children().remove();
+			}
+
+			var dataObj = {
+				"publicDataPk"	: publicDataPk,
+				"dType"			: dType,
+				"url"			: "/tcs/dss/selectPreview.do"
+			}
+
+			searchObj.fn_CmmnAjax(dataObj, searchObj.fn_previewCb);
+		},
+
+		fn_previewCb	: function(data) {
+
+			if (data.indexOf("layer_filedata_preview_pop") > -1) {
+				$("#layer_filedata_preview").append(data);
+				$("#layer_filedata_preview").modal("open");
+			} else if (data.indexOf("layer_openapi_preview_pop") > -1) {
+				$("#layer_openapi_preview").append(data);
+				$("#layer_openapi_preview").modal("open");
+			}
+		},
+
+		fn_orgPopCall	: function() {
+			$("#layer_search_condition").children().remove();
+
+			var dataObj	= {
+				"url"	: "/tcs/dss/selectOrgCodePop.do"
+			}
+
+			searchObj.fn_CmmnAjax(dataObj, searchObj.fn_orgPopCallCb);
+		},
+
+		fn_orgPopCallCb	: function(data) {
+			$("#layer_search_condition").append(data).modal("open");
+			orgPopObj.fn_init();
+		},
+
+		fn_trim			: function(str)	{
+			return str.replace(/(^\s*)|(\s*$)/gi, "");
+		}
+	}
+
+
+	$(".control.first").remove();
+	$(".control.last").remove();
+
+
+	var fn_goUrlLink = function(publicDataPk) {
+
+		$.ajax({
+			url		: "/tcs/dss/selectApiLinkUrl.do",
+			data	: {"publicDataPk"	: publicDataPk},
+
+			success	: function(data) {
+				var jsonObj	= JSON.parse(data);
+
+				if (jsonObj.status === true) {
+					var openNewWindow = window.open("about:blank");
+
+					openNewWindow.location.href = jsonObj.linkUrl;
+					fn_LinkApiRequest(jsonObj.publicDataDetailPk);
+				} else {
+					alert(jsonObj.errorDc);
+				}
+			}
+		})
+	}
+
+	var fn_fileDataGoLink = function(publicDataPk) {
+
+		$.ajax({
+			url		: "/tcs/dss/selectLinkUrl.do",
+			data	: {"publicDataPk"	: publicDataPk},
+
+			success	: function(data) {
+				var jsonObj	= JSON.parse(data);
+
+				if (jsonObj.status === true) {
+					var openNewWindow = window.open("about:blank");
+
+					openNewWindow.location.href = jsonObj.linkUrl;
+				} else {
+					alert(jsonObj.errorDc);
+				}
+			}
+		})
+	}
+
+	var fn_goOpenAPIRequestForm = function(publicDataPk) {
+
+		if (fn_empty(searchObj.mberId)) {
+
+			if (confirm("로그인이 필요한 서비스입니다.\n로그인 페이지로 이동하시겠습니까?")) {
+				location.href = "/uim/login/loginView.do";
+				return;
+			} else {
+				return;
+			}
+		}
+		fn_setCookie("currentMyMenuId", "M020105", 1);
+		location.href = "/tcs/dss/redirectDevAcountRequestForm.do?publicDataPk=" + publicDataPk;
+	}
+
+	var fn_LinkApiRequest = function(publicDataDetailPk) {
+
+		$.ajax({
+			url: "/tcs/dss/addApiLinkPrcuse.do",
+			data	: {"param"	: publicDataDetailPk},
+			error: function(err) {
+				console.log(err);
+			}
+		});
+	}
+</script>
+
+							</div>
+						</div>
+					
+				
+			</div>
+			
+			<aside class="quick-area">
+				<a href="#top" class="btn-go-top" title="맨 위로 가기">상단가기</a>
+			</aside>
+			
+			
+
+
+
+
+
+
+ <!-- footer -->
+<footer id="footer" tabIndex="-1">
+	<div class="inner-wrap">
+		<div class="footer-util">
+			<div class="tel">
+				<i class="iconset ico-tel"></i> <strong>공공데이터 개방문의</strong> <a title="바로 전화 걸기" href="tel:1566-0025">1566-0025</a>
+			</div>
+			
+			<div class="email">
+				<a title="이메일 바로가기" href="mailto:opendata_help@nia.or.kr"><i class="iconset ico-email"></i> 운영자 메일상담</a>
+			</div>
+			
+			<div class="sns-share">
+
+				<a href="http://www.facebook.com/koreadataportal" target="_blank" title="새창 열림">
+					<i class="iconset ico-facebook">페이스북 공유</i>
+				</a>
+				<a href="https://twitter.com/koreadataportal" target="_blank" title="새창 열림">
+					<i class="iconset ico-twitter">트위터 공유</i>
+				</a>
+				<a href="http://blog.naver.com/nia_korea" target="_blank" title="새창 열림">
+					<i class="iconset ico-blog">블로그 공유</i>
+				</a>
+			</div>
+			<!-- 2020-02-19 뉴스레터 신청 레이어 팝업 -->
+			<div id="layer_newsletter_request" class="modal medium">
+				<p class="layer-title">뉴스레터 신청</p>
+				<div class="layer-contents">
+					<div class="newsletter-request-box">
+						<label for="newsletter_request" class="title req">이메일주소</label>
+
+						<input type="text" id="newsletter_request" class="input-text" placeholder="sample@sample.com" style="ime-mode:disabled">
+
+						<p class="reset">
+							<input type="checkbox" id="check_agree" value="Y">
+							<label for="check_agree">수신동의</label>
+						</p>
+
+						<p class="reset">
+							* 수신 미동의 시 뉴스레터 신청 서비스에 제한이 있습니다.
+						</p>
+					</div>
+
+					청
+				</div>
+			</div>
+			<!-- // 2020-02-19 뉴스레터 신청 레이어 팝업 -->
+		</div>
+		
+		<div class="footer-link">
+			<ul class="list">
+				<li><a title="새 창으로 이용약관 열기" href="https://www.data.go.kr/ugs/selectPortalPolicyView.do#use_stplat" target="_blank">이용약관</a></li>
+				<li class="privacy"><a title="새 창으로 개인정보처리방침 열기" href="https://www.data.go.kr/ugs/selectPortalPolicyView.do#indvdlinfo_process" target="_blank">개인정보처리방침</a></li>
+				<li><a title="새 창으로 공공데이터포털 소개 열기" href="https://www.data.go.kr/ugs/selectPortalInfoView.do#portal_info" target="_blank">공공데이터포털 소개</a></li>
+				<li><a title="분쟁조정신청 바로가기" href="https://www.data.go.kr/tcs/dor/insertTrublMdatReqstProcssView.do">분쟁조정신청</a></li>
+			</ul>
+			
+
+
+
+			
+			<div class="site-select">
+				<select class="selectSiteList" title="관련사이트 선택">
+
+					<option value="http://www.mois.go.kr/">행정안전부</option>
+					<option value="http://www.data.go.kr/odsc/intro/index.do">공공데이터전략위원회</option>
+					<option value="http://www.data.go.kr/odmc/intro/index.do">공공데이터분쟁조정위원회</option>
+					<option value="http://odf.or.kr/">오픈데이터포럼</option>
+					<option value="https://www.data.go.kr/osd/opensquare.do">오픈스퀘어-D</option>
+
+
+					
+
+
+				</select>
+				
+				<button type="button" title="새창 열림" class="btnGoSite button">이동</button>
+			</div>
+		</div>
+		
+		<div class="footer-info">
+			<div class="logo">
+				<a href="https://www.mois.go.kr/" target="_blank" title="새창 열림"><img src="assets/029784d9_logo-footer-01.png" alt="행정안전부" /></a>
+
+			</div>
+			
+			<div class="address">
+				<div>
+					<p>(30112) 세종특별자치시 도움6로 42(어진동) </p>
+					<p class="tel">대표번호 : <a title="바로 전화 걸기" href="tel:1566-0025">1566-0025</a></p>
+					<p>문의시간 : 09:00~18:00 (월~금)</p>
+
+				</div>
+				
+
+
+
+				
+				<div>
+					<p>ⓒ행정안전부. All rights reserved.</p>
+				</div>
+			</div>
+			
+
+
+
+
+		</div>
+	</div>
+</footer>
+
+<script type="text/javascript">
+
+	/*
+	 * 사이트 이동 버튼 클릭
+	*/
+	$(".btnGoSite").click( function(e) {
+		var url = $('.selectSiteList').val();
+		if(url != "#") {
+			var w = window.open( url, '_blank');
+			w.document.title = "새창";
+		}
+	});
+	
+	/*
+	 * 뉴스레터 신청
+	*/
+	function fn_saveNewsLetter(){
+		
+		//이메일 입력확인
+		if(fn_empty($("#newsletter_request").val())){
+			alert("이메일 주소는 필수입력 항목입니다.");
+			$("#newsletter_request").focus();
+	        return;
+		}
+		
+		//이메일 형식 확인
+		var regExp = fn_regExp("email");
+		if ( !regExp.test($("#newsletter_request").val()) ) {
+			alert("이메일주소를 올바르게 입력해주세요.");
+			$("#newsletter_request").focus();
+			return;
+		}
+		
+		if(fn_empty($("#check_agree").val()) || !$("#check_agree").is(":checked")){
+			alert("이메일 수신에 동의하셔야 뉴스레터를 신청하실 수 있습니다.");
+			$("#check_agree").focus();
+	        return;
+		}
+		
+		if(confirm("뉴스레터를 신청하시겠습니까?")){
+			$.ajax({
+				type:"POST",
+				url: '/insertNewsLetterUser.json',
+				data : {userEmail : $("#newsletter_request").val(), agreeYn : $("#check_agree").val()} ,
+				dataType : "json",
+				traditional : true,
+				success: function(result){
+					if(result.status){
+						if(result.duplUserAt){
+							alert("이미 뉴스레터 신청이 완료된 이메일주소를 입력하셨습니다.\n다른 이메일주소를 입력해주세요.");
+							return;
+						}else{
+							alert("뉴스레터 신청이 완료되었습니다.");
+							$("#newsletter_request").val("");
+							$("#check_agree").removeProp("checked");
+							$.modal.close();
+						}
+					}else{
+						alert("뉴스레터 신청 중 오류가 발생하였습니다.");
+						return;
+					}
+				},
+				error: function(xhr, status, error) {
+					alert("뉴스레터 신청 중 오류가 발생하였습니다.");
+					return;
+				}
+			});
+		}
+	}
+</script>
+
+<!-- Google tag (gtag.js)  - Google Analytics -->
+<script async src="assets/aebea5ab_js"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+
+	gtag('config', 'G-7TYF9K5TBJ');
+</script>
+<!--// footer -->
+		</div>
+	</body>
+</html>
