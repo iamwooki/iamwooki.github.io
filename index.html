@@ -29,7 +29,7 @@
     font-family: "Pretendard", "Malgun Gothic", "맑은 고딕", "Helvetica Neue", Arial, sans-serif;
     background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15.5px;
     -webkit-font-smoothing: antialiased;
-    /* 어절 보존 + 줄글 문단은 양쪽 정렬 — 단어 안 잘리고 오른쪽도 반듯 (2026-07-27) */
+    /* 어절 보존(keep-all). 양쪽 정렬은 좁은 화면에서 단어 간격이 벌어져 2026-10-27 제거 */
     word-break: keep-all; overflow-wrap: break-word;
   }
   /* 2026-09-21 리디자인: 폭 820→900, 타이포 위계·섹션 여백 강화 (사용자 확정) */
@@ -56,7 +56,7 @@
     font-size: 1.35rem; font-weight: 700; letter-spacing: -0.2px;
     padding-bottom: 9px; border-bottom: 1px solid var(--line); margin-bottom: 20px;
   }
-  .bio { text-align: justify; font-size: 1rem; }
+  .bio { font-size: 1rem; }
 
   .entry { display: grid; grid-template-columns: 140px 1fr; gap: 8px 22px; margin-bottom: 20px; }
   .entry .date { color: var(--muted); font-size: 0.9rem; padding-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -89,7 +89,7 @@
   .proj .gist { color: var(--muted); font-size: 0.92rem; }
   .aside { color: var(--muted); margin-left: 10px; }
   .proj .pbody { padding: 0 0 16px 26px; }
-  .proj .desc { font-size: 0.95rem; text-align: justify; margin-bottom: 6px; }
+  .proj .desc { font-size: 0.95rem; margin-bottom: 6px; }
   .proj .result { font-size: 0.95rem; }
   .proj .result::before { content: "· "; color: var(--muted); }
   .proj .plink { font-size: 0.9rem; margin-top: 4px; }
